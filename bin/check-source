@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+export PYTHONDONTWRITEBYTECODE=1
+PYTHONPATH="$root/runtime/ssd${PYTHONPATH:+:$PYTHONPATH}" python3 -m unittest discover -s "$root/tests" -v
+"$root/bin/PhaseTieing-controller" coordinator --help >/dev/null
+"$root/bin/PhaseTieing-controller" ssd --help >/dev/null
+"$root/bin/PhaseTieing-controller" cxl --help >/dev/null
+python3 "$root/tools/check_release.py"

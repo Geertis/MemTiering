@@ -1,0 +1,1254 @@
+--- a/mm/PhaseTieing/Makefile
++++ b/mm/PhaseTieing/Makefile
+@@ -2,7 +2,7 @@
+ 
+ obj-$(CONFIG_DEMETER) += PhaseTieing_placement.o
+ 
+-PhaseTieing_placement-objs += module.o sysfs.o core.o vector.o
++PhaseTieing_placement-objs += module.o sysfs.o core.o vector.o sandbox.o
+ 
+ # obj-$(CONFIG_DEMETER_TEST) += PhaseTieing_test.o
+ 
+@@ -11,4 +11,3 @@
+ obj-$(CONFIG_DEMETER) += PhaseTieing_balloon.o
+ 
+ PhaseTieing_balloon-objs += balloon.o
+-
+--- a/mm/PhaseTieing/sysfs.c
++++ b/mm/PhaseTieing/sysfs.c
+@@ -11,6 +11,7 @@
+ #include <linux/module.h>
+ 
+ #include "PhaseTieing.h"
++#include "sandbox.h"
+ 
+ DEFINE_MUTEX(demeter_sysfs_lock);
+ 
+@@ -65,6 +66,10 @@
+ 		return -EINVAL;
+ 	}
+ 	if (!mutex_trylock(&demeter_sysfs_lock)) {
++		return -EBUSY;
++	}
++	if (pid != -1 && sandbox_enabled()) {
++		mutex_unlock(&demeter_sysfs_lock);
+ 		return -EBUSY;
+ 	}
+ 	if (t->target) {
+@@ -183,10 +188,16 @@
+ 	if (err || nr < 0) {
+ 		return -EINVAL;
+ 	}
++	if (nr > 256)
++		return -EBUSY;
+ 	struct demeter_sysfs_targets *targets =
+ 		container_of(kobj, struct demeter_sysfs_targets, kobj);
+ 	if (!mutex_trylock(&demeter_sysfs_lock))
+ 		return -EBUSY;
++	if (nr && sandbox_enabled()) {
++		mutex_unlock(&demeter_sysfs_lock);
++		return -EBUSY;
++	}
+ 	err = demeter_sysfs_targets_add_dirs(targets, nr);
+ 	mutex_unlock(&demeter_sysfs_lock);
+ 	if (err)
+@@ -218,6 +229,10 @@
+ 
+ static struct kobject *demeter_sysfs_root;
+ static struct demeter_sysfs_targets *demeter_sysfs_targets;
++bool demeter_legacy_enabled(void)
++{
++	return demeter_sysfs_targets && demeter_sysfs_targets->nr != 0;
++}
+ int __init demeter_sysfs_init(void)
+ {
+ 	demeter_sysfs_root = kobject_create_and_add("demeter", mm_kobj);
+@@ -235,10 +250,16 @@
+ 		return err;
+ 	}
+ 
+-	return 0;
++	err = sandbox_sysfs_init(demeter_sysfs_root);
++	if (err) {
++		kobject_put(&demeter_sysfs_targets->kobj);
++		kobject_put(demeter_sysfs_root);
++	}
++	return err;
+ }
+ void __exit demeter_sysfs_exit(void)
+ {
++	sandbox_sysfs_exit();
+ 	if (!demeter_sysfs_root) {
+ 		return;
+ 	}
+--- /dev/null
++++ b/mm/PhaseTieing/sandbox.c
+@@ -0,0 +1,1116 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Sandbox-scoped placement. No virtual address, heat or pin crosses an mm.
++ * One bounded worker serves all Sandboxes. Perf callbacks only enqueue samples;
++ * descriptors are resolved and revalidated immediately before migration.
++ */
++#include <linux/cgroup.h>
++#include <linux/kthread.h>
++#include <linux/mm.h>
++#include <linux/mm_inline.h>
++#include <linux/mmu_notifier.h>
++#include <linux/memcontrol.h>
++#include <linux/migrate.h>
++#include <linux/module.h>
++#include <linux/nsproxy.h>
++#include <linux/mutex.h>
++#include <linux/perf_event.h>
++#include <linux/sched/signal.h>
++#include <linux/sched/cputime.h>
++#include <linux/sort.h>
++#include <linux/xarray.h>
++#include <../internal.h>
++#include "module.h"
++#include "mpsc.h"
++#include "sandbox.h"
++
++#define SB_MAX 8
++#define SB_TASK_MAX 64
++#define SB_REGION_MAX 4096
++#define SB_POOL_MAX 256
++#define SB_REGION_SHIFT 16
++#define SB_REGION_PAGES (1U << (SB_REGION_SHIFT - PAGE_SHIFT))
++#define SB_RING_BYTES (1 << 20)
++#define SB_PROFILE_MAX 64
++#define SB_NS_MS 1000000ULL
++
++static unsigned int sandbox_period_ms = 50;
++module_param(sandbox_period_ms, uint, 0444);
++static unsigned int sandbox_scan_pages = 8192;
++module_param(sandbox_scan_pages, uint, 0444);
++static unsigned int sandbox_batch_pages = 256;
++module_param(sandbox_batch_pages, uint, 0444);
++static unsigned int sandbox_wait_grace_ms = 300;
++module_param(sandbox_wait_grace_ms, uint, 0644);
++static unsigned int sandbox_cooldown_ms = 1000;
++module_param(sandbox_cooldown_ms, uint, 0644);
++/* Explicit calibration inputs, in nanoseconds; neither is a PEBS weight. */
++static unsigned int sandbox_latency_delta_ns = 80;
++module_param(sandbox_latency_delta_ns, uint, 0644);
++static unsigned int sandbox_criticality_permille = 250;
++module_param(sandbox_criticality_permille, uint, 0644);
++static unsigned long sandbox_initial_copy_ns = 20000;
++module_param(sandbox_initial_copy_ns, ulong, 0644);
++
++struct sb_region {
++	unsigned long base, last_addr, last_pfn, pfn_addr;
++	/* rate/history are accesses per millisecond, independent of wake cadence. */
++	u64 accesses, rate, history[4], last_sample_ns, moved_ns;
++	u64 phase_seq;
++	unsigned int kind;
++};
++struct sb_mm {
++	struct list_head link;
++	struct mm_struct *mm;
++	struct sandbox *sandbox;
++	struct mmu_notifier notifier;
++	atomic64_t mapping_epoch;
++	u64 epoch_seen, generation, born_ns;
++	struct xarray regions;
++	unsigned int nr_regions, refs, kind;
++	unsigned long cursor;
++	char comm[TASK_COMM_LEN];
++};
++struct sb_task {
++	struct list_head link;
++	struct task_struct *task;
++	struct sb_mm *space;
++	struct perf_event *events[MAX_EVENTS];
++	struct sandbox *sandbox;
++	bool seen, enabled;
++};
++struct sb_sample {
++	u64 generation, epoch, phase_seq, time_ns, addr, accesses;
++};
++struct sb_candidate {
++	struct sb_mm *space;
++	unsigned long addr, pfn;
++	u64 epoch, benefit_ns;
++};
++struct sb_lifetime {
++	char comm[TASK_COMM_LEN];
++	unsigned int kind, count;
++	u64 duration_ns;
++};
++struct sandbox {
++	struct kobject kobj;
++	unsigned int id;
++	struct cgroup *cgroup;
++	struct list_head tasks, spaces;
++	mpsc_t samples;
++	unsigned int nr_tasks, nr_regions;
++	u64 sequence, phase_seq, phase_start_ns, deadline_ns;
++	unsigned int phase, kind;
++	unsigned long quota_pages, fast_pages, slow_pages;
++	u64 feedback_ns, decision_ns, copy_ns;
++	struct sb_lifetime lifetimes[SB_PROFILE_MAX];
++	struct sb_candidate hot[SB_POOL_MAX], cold[SB_POOL_MAX];
++	u64 sampled, stale, overflow, registrations, perf_errors, capacity_misses;
++	u64 decisions, hot_candidates, cold_candidates, rejected_benefit;
++	u64 promotions, demotions, exchanges, cross_mm_exchanges, failed, invalid;
++	u64 worker_ns, worker_cpu_ns, migration_ns;
++	atomic64_t sampling_ns;
++};
++static DEFINE_MUTEX(sb_lock);
++static struct kobject *sb_root;
++static struct sandbox *sandboxes[SB_MAX];
++static unsigned int nr_sandboxes;
++static unsigned long sb_budget_pages;
++static struct task_struct *sb_worker;
++static atomic64_t mm_sequence = ATOMIC64_INIT(0);
++extern struct mutex demeter_sysfs_lock;
++extern int demeter_migrate_folio_to_node(struct folio *, int);
++extern int folio_exchange_isolated(struct folio *, struct folio *, enum migrate_mode);
++extern bool folio_isolate_lru(struct folio *);
++extern void folio_putback_lru(struct folio *);
++
++bool sandbox_enabled(void)
++{
++	return READ_ONCE(nr_sandboxes) != 0;
++}
++
++static int sb_invalidate(struct mmu_notifier *notifier,
++			 const struct mmu_notifier_range *range)
++{
++	struct sb_mm *space = container_of(notifier, struct sb_mm, notifier);
++	/* Migrations change PFNs, not virtual identities. Unmap/mremap and VMA
++	 * replacement invalidate the entire bounded context conservatively.
++	 */
++	if (range->event == MMU_NOTIFY_UNMAP ||
++	    range->event == MMU_NOTIFY_PROTECTION_VMA)
++		atomic64_inc(&space->mapping_epoch);
++	return 0;
++}
++static const struct mmu_notifier_ops sb_notifier_ops = {
++	.invalidate_range_start = sb_invalidate,
++};
++
++static void sb_clear_regions(struct sandbox *sb, struct sb_mm *space)
++{
++	unsigned long index;
++	struct sb_region *region;
++	xa_for_each(&space->regions, index, region)
++		kfree(region);
++	xa_destroy(&space->regions);
++	xa_init(&space->regions);
++	sb->nr_regions -= space->nr_regions;
++	space->nr_regions = 0;
++	space->epoch_seen = atomic64_read(&space->mapping_epoch);
++}
++
++static struct sb_lifetime *sb_profile(struct sandbox *sb, struct sb_mm *space,
++				     unsigned int kind, bool create)
++{
++	struct sb_lifetime *empty = NULL;
++	unsigned int i;
++	for (i = 0; i < SB_PROFILE_MAX; i++) {
++		struct sb_lifetime *p = &sb->lifetimes[i];
++		if (!p->count) {
++			if (!empty)
++				empty = p;
++		} else if (p->kind == kind && !strncmp(p->comm, space->comm, TASK_COMM_LEN))
++			return p;
++	}
++	if (create && empty) {
++		strscpy(empty->comm, space->comm, TASK_COMM_LEN);
++		empty->kind = kind;
++		return empty;
++	}
++	return NULL;
++}
++
++static void sb_space_drop(struct sandbox *sb, struct sb_mm *space)
++{
++	struct sb_lifetime *p = sb_profile(sb, space, space->kind, true);
++	/* Only complete mm lifetimes are observations. Controller teardown must
++	 * not train the duration predictor with censored observations.
++	 */
++	if (p && !space->refs) {
++		u64 duration = ktime_get_ns() - space->born_ns;
++		p->duration_ns = p->count ? (3 * p->duration_ns + duration) / 4 : duration;
++		p->count = min(p->count + 1, 1000U);
++	}
++	list_del(&space->link);
++	mmu_notifier_unregister(&space->notifier, space->mm);
++	sb_clear_regions(sb, space);
++	mmput(space->mm);
++	kfree(space);
++}
++
++static void sb_overflow(struct perf_event *event, struct perf_sample_data *data,
++			struct pt_regs *regs)
++{
++	struct sb_task *target = event->overflow_handler_context;
++	struct sb_sample sample;
++	u64 started = ktime_get_mono_fast_ns();
++	perf_prepare_sample(data, event, regs);
++	/* exec may change this task's mm before the discovery tick. An old mm
++	 * can remain live in a CLONE_VM sibling: generation lookup alone would
++	 * then accept a new address in the old context. Reject it at capture.
++	 */
++	if (data->tid_entry.tid != target->task->pid ||
++	    READ_ONCE(target->task->mm) != target->space->mm)
++		return;
++	sample.generation = target->space->generation;
++	sample.epoch = atomic64_read(&target->space->mapping_epoch);
++	sample.phase_seq = READ_ONCE(target->sandbox->phase_seq);
++	sample.time_ns = ktime_get_mono_fast_ns();
++	sample.addr = data->addr;
++	sample.accesses = event->attr.sample_period;
++	/* Non-inheriting events are explicitly installed on each discovered
++	 * thread, so each mm has a single shared heat table without duplicates.
++	 */
++	mpsc_send(target->sandbox->samples, &sample, sizeof(sample));
++	atomic64_add(ktime_get_mono_fast_ns() - started, &target->sandbox->sampling_ns);
++}
++
++static void sb_task_drop(struct sandbox *sb, struct sb_task *target)
++{
++	unsigned int i;
++	for (i = 0; i < MAX_EVENTS; i++)
++		if (target->events[i])
++			perf_event_release_kernel(target->events[i]);
++	list_del(&target->link);
++	target->space->refs--;
++	put_task_struct(target->task);
++	kfree(target);
++	sb->nr_tasks--;
++}
++
++static struct sb_mm *sb_space_get(struct sandbox *sb, struct mm_struct *mm,
++				  struct task_struct *task)
++{
++	struct sb_mm *space;
++	list_for_each_entry(space, &sb->spaces, link)
++		if (space->mm == mm) {
++			mmput(mm);
++			return space;
++		}
++	space = kzalloc(sizeof(*space), GFP_KERNEL);
++	if (!space) {
++		mmput(mm);
++		return NULL;
++	}
++	space->mm = mm;
++	space->sandbox = sb;
++	space->generation = atomic64_inc_return(&mm_sequence);
++	space->born_ns = ktime_get_ns();
++	space->kind = sb->kind;
++	get_task_comm(space->comm, task);
++	xa_init(&space->regions);
++	atomic64_set(&space->mapping_epoch, 0);
++	space->notifier.ops = &sb_notifier_ops;
++	if (mmu_notifier_register(&space->notifier, mm)) {
++		mmput(mm);
++		kfree(space);
++		return NULL;
++	}
++	list_add_tail(&space->link, &sb->spaces);
++	return space;
++}
++
++static void sb_discover(struct sandbox *sb)
++{
++	struct task_struct *leader, *task, *found[SB_TASK_MAX];
++	struct sb_task *target, *tmp;
++	struct sb_mm *space, *next;
++	unsigned int count = 0, i;
++	list_for_each_entry(target, &sb->tasks, link)
++		target->seen = false;
++	rcu_read_lock();
++	for_each_process_thread(leader, task) {
++		if (task->flags & (PF_KTHREAD | PF_EXITING))
++			continue;
++		if (!cgroup_is_descendant(task_dfl_cgroup(task), sb->cgroup))
++			continue;
++		if (count == SB_TASK_MAX) {
++			sb->capacity_misses++;
++			break;
++		}
++		get_task_struct(task);
++		found[count++] = task;
++	}
++	rcu_read_unlock();
++	for (i = 0; i < count; i++) {
++		struct mm_struct *mm = get_task_mm(found[i]);
++		bool exists = false;
++		if (!mm) {
++			put_task_struct(found[i]);
++			continue;
++		}
++		list_for_each_entry(target, &sb->tasks, link) {
++			if (target->task == found[i] && target->space->mm == mm) {
++				target->seen = true;
++				exists = true;
++				break;
++			}
++		}
++		if (exists) {
++			mmput(mm);
++			put_task_struct(found[i]);
++			continue;
++		}
++		space = sb_space_get(sb, mm, found[i]);
++		target = kzalloc(sizeof(*target), GFP_KERNEL);
++		if (!space || !target) {
++			kfree(target);
++			put_task_struct(found[i]);
++			continue;
++		}
++		target->task = found[i];
++		target->space = space;
++		target->sandbox = sb;
++		target->seen = true;
++		space->refs++;
++		list_add_tail(&target->link, &sb->tasks);
++		sb->nr_tasks++;
++		for (unsigned int e = 0; e < MAX_EVENTS; e++) {
++			struct perf_event_attr attr = event_attrs[e];
++			struct perf_event *event;
++			attr.inherit = 0;
++			attr.inherit_thread = 0;
++			attr.disabled = 1;
++			event = perf_event_create_kernel_counter(&attr, -1, target->task,
++							 sb_overflow, target);
++			if (IS_ERR(event)) {
++				sb->perf_errors++;
++				pr_warn_ratelimited("demeter_sandbox: PEBS pid=%d event=%u error=%ld\n",
++						target->task->pid, e, PTR_ERR(event));
++				continue;
++			}
++			target->events[e] = event;
++			if (sb->phase) {
++				perf_event_enable(event);
++				target->enabled = true;
++			}
++		}
++		sb->registrations++;
++	}
++	list_for_each_entry_safe(target, tmp, &sb->tasks, link)
++		if (!target->seen)
++			sb_task_drop(sb, target);
++	list_for_each_entry_safe(space, next, &sb->spaces, link)
++		if (!space->refs)
++			sb_space_drop(sb, space);
++}
++
++static void sb_samples(struct sandbox *sb)
++{
++	struct sb_sample sample;
++	unsigned int batch = 0;
++	while (batch++ < 32768 && mpsc_recv(sb->samples, &sample, sizeof(sample)) > 0) {
++		struct sb_mm *space, *match = NULL;
++		struct sb_region *r;
++		unsigned long index = sample.addr >> SB_REGION_SHIFT;
++		list_for_each_entry(space, &sb->spaces, link)
++			if (space->generation == sample.generation) {
++				match = space;
++				break;
++			}
++		if (!match || !sample.addr || !sb->phase || sample.phase_seq != sb->phase_seq ||
++		    sample.epoch != atomic64_read(&match->mapping_epoch)) {
++			sb->stale++;
++			continue;
++		}
++		if (match->epoch_seen != sample.epoch)
++			sb_clear_regions(sb, match);
++		r = xa_load(&match->regions, index);
++		if (!r) {
++			if (sb->nr_regions == SB_REGION_MAX) {
++				sb->overflow++;
++				continue;
++			}
++			r = kzalloc(sizeof(*r), GFP_KERNEL);
++			if (!r) {
++				sb->overflow++;
++				continue;
++			}
++			r->base = index << SB_REGION_SHIFT;
++			if (xa_err(xa_store(&match->regions, index, r, GFP_KERNEL))) {
++				kfree(r);
++				sb->overflow++;
++				continue;
++			}
++			match->nr_regions++;
++			sb->nr_regions++;
++		}
++		/* The history belongs to this exact mm and mapping epoch. A phase
++		 * change never imports the preceding process's virtual addresses.
++		 */
++		if (r->phase_seq != sb->phase_seq) {
++			r->accesses = 0;
++			r->rate = 0;
++			r->phase_seq = sb->phase_seq;
++		}
++		r->accesses = min(r->accesses + sample.accesses, 1000000000ULL);
++		r->last_addr = sample.addr & PAGE_MASK;
++		r->last_sample_ns = sample.time_ns;
++		r->kind = sb->kind;
++		sb->sampled++;
++	}
++}
++
++/* Caller holds mmap_read_lock. FOLL_GET references never escape candidate
++ * generation. Only private, writable, order-0 anonymous folios are supported.
++ */
++static struct folio *sb_resolve(struct sb_mm *space, unsigned long addr)
++{
++	struct vm_area_struct *vma = vma_lookup(space->mm, addr);
++	struct page *page;
++	struct folio *folio;
++	struct mem_cgroup *memcg;
++	bool owned;
++	if (!vma || !(vma->vm_flags & VM_WRITE) || (vma->vm_flags & (VM_SHARED | VM_LOCKED)))
++		return NULL;
++	page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP);
++	if (IS_ERR_OR_NULL(page))
++		return NULL;
++	folio = page_folio(page);
++	if (!folio_test_anon(folio) || folio_order(folio) ||
++	    folio_mapcount(folio) != 1 || folio_test_ksm(folio)) {
++		folio_put(folio);
++		return NULL;
++	}
++	/* A task can retain pages charged before joining the Sandbox, or share
++	 * its mm with a task in another cgroup. Those pages cannot fund this
++	 * Sandbox's quota ledger and must not be managed by this executor.
++	 */
++	rcu_read_lock();
++	memcg = folio_memcg(folio);
++	owned = memcg && cgroup_is_descendant(memcg->css.cgroup, space->sandbox->cgroup);
++	rcu_read_unlock();
++	if (!owned) {
++		folio_put(folio);
++		return NULL;
++	}
++	return folio;
++}
++
++static u64 sb_benefit(struct sandbox *sb, struct sb_mm *space,
++		      struct sb_region *r, u64 now)
++{
++	u64 horizon, accesses, benefit, rate;
++	struct sb_lifetime *p;
++	if (!sb->phase || now - r->moved_ns < sandbox_cooldown_ms * SB_NS_MS)
++		return 0;
++	horizon = sb->deadline_ns > now ? sb->deadline_ns - now : 100 * SB_NS_MS;
++	/* Unknown processes receive a conservative half-second lifetime prior.
++	 * Completed lifetimes share only duration experience, never page heat.
++	 */
++	p = sb_profile(sb, space, sb->kind, false);
++	if (p && p->count >= 2) {
++		u64 age = now - space->born_ns;
++		horizon = min(horizon, p->duration_ns > age ? p->duration_ns - age : 100 * SB_NS_MS);
++	} else
++		horizon = min(horizon, 500 * SB_NS_MS);
++	horizon = min(horizon, 5000 * SB_NS_MS);
++	rate = r->rate;
++	if (r->phase_seq != sb->phase_seq || now - r->last_sample_ns > 200 * SB_NS_MS)
++		rate = r->history[sb->kind] / 4;
++	accesses = min(div64_u64(rate * horizon, SB_NS_MS) /
++		       SB_REGION_PAGES, 1000000000ULL);
++	benefit = div64_u64(accesses * min(sandbox_latency_delta_ns, 5000U) *
++			   min(sandbox_criticality_permille, 1000U), 1000);
++	return benefit;
++}
++
++static int sb_hot_cmp(const void *a, const void *b)
++{
++	const struct sb_candidate *x = a, *y = b;
++	return (x->benefit_ns < y->benefit_ns) - (x->benefit_ns > y->benefit_ns);
++}
++static int sb_cold_cmp(const void *a, const void *b)
++{
++	const struct sb_candidate *x = a, *y = b;
++	return (x->benefit_ns > y->benefit_ns) - (x->benefit_ns < y->benefit_ns);
++}
++
++static void sb_candidates(struct sandbox *sb, u64 now, u64 elapsed,
++			  unsigned int *hot_count, unsigned int *cold_count)
++{
++	struct sb_mm *space;
++	unsigned int scan_left = sandbox_scan_pages, spaces = 0;
++	bool wait_settled = !sb->phase &&
++		now - sb->phase_start_ns >= sandbox_wait_grace_ms * SB_NS_MS;
++	*hot_count = *cold_count = 0;
++	list_for_each_entry(space, &sb->spaces, link)
++		spaces++;
++	list_for_each_entry(space, &sb->spaces, link) {
++		struct sb_region *r;
++		unsigned long index;
++		unsigned int per_mm = max(1U, sandbox_scan_pages / max(spaces, 1U));
++		unsigned int hot_limit = min(SB_POOL_MAX, *hot_count +
++					      max(1U, SB_POOL_MAX / max(spaces, 1U)));
++		unsigned int cold_limit = min(SB_POOL_MAX, *cold_count +
++					       max(1U, SB_POOL_MAX / max(spaces, 1U)));
++		if (space->epoch_seen != atomic64_read(&space->mapping_epoch))
++			sb_clear_regions(sb, space);
++		mmap_read_lock(space->mm);
++		xa_for_each(&space->regions, index, r) {
++			u64 benefit;
++			struct folio *sampled;
++			/* Active-time estimates freeze during WAIT. */
++			if (sb->phase && r->phase_seq == sb->phase_seq) {
++				u64 per_ms = div64_u64(r->accesses * SB_NS_MS,
++						     max(elapsed, SB_NS_MS));
++				r->rate = (r->rate + per_ms) / 2;
++				r->accesses = 0;
++				if (r->rate)
++					r->history[sb->kind] = (3 * r->history[sb->kind] + r->rate) / 4;
++			}
++			benefit = sb_benefit(sb, space, r, now);
++			if (!benefit || *hot_count == hot_limit)
++				continue;
++			/* Detect COW/PFN replacement at the sampled address. */
++			sampled = sb_resolve(space, r->last_addr);
++			if (!sampled)
++				continue;
++			if (r->last_pfn && r->pfn_addr == r->last_addr &&
++			    r->last_pfn != folio_pfn(sampled)) {
++				r->rate = r->accesses = 0;
++				memset(r->history, 0, sizeof(r->history));
++				benefit = 0;
++			}
++			r->last_pfn = folio_pfn(sampled);
++			r->pfn_addr = r->last_addr;
++			folio_put(sampled);
++			if (benefit <= sb->copy_ns) {
++				sb->rejected_benefit++;
++				continue;
++			}
++			for (unsigned long addr = r->base;
++			     addr < r->base + (1UL << SB_REGION_SHIFT) && *hot_count < hot_limit;
++			     addr += PAGE_SIZE) {
++				struct folio *folio = sb_resolve(space, addr);
++				if (!folio)
++					continue;
++				if (folio_nid(folio) == SMEM_NID)
++					sb->hot[(*hot_count)++] = (struct sb_candidate) {
++						.space = space, .addr = addr, .pfn = folio_pfn(folio),
++						.epoch = space->epoch_seen, .benefit_ns = benefit,
++					};
++				folio_put(folio);
++			}
++		}
++		/* A persistent scan cursor covers actual VMAs without waiting for
++		 * samples to refine huge sparse heap/mmap roots. Quota demotion can
++		 * make progress even if there are no hot slow pages anywhere.
++		 */
++		{
++			VMA_ITERATOR(vmi, space->mm, space->cursor);
++			struct vm_area_struct *vma;
++			bool completed = true;
++			for_each_vma(vmi, vma) {
++				unsigned long addr = max(space->cursor, vma->vm_start);
++				if (!(vma->vm_flags & VM_WRITE) ||
++				    (vma->vm_flags & (VM_SHARED | VM_LOCKED))) {
++					space->cursor = vma->vm_end;
++					continue;
++				}
++				for (; addr < vma->vm_end; addr += PAGE_SIZE) {
++					struct folio *folio;
++					u64 benefit;
++					if (!scan_left || !per_mm || *cold_count == cold_limit) {
++						space->cursor = addr;
++						completed = false;
++						goto scan_done;
++					}
++					scan_left--;
++					per_mm--;
++					folio = sb_resolve(space, addr);
++					if (!folio)
++						continue;
++					r = xa_load(&space->regions, addr >> SB_REGION_SHIFT);
++					benefit = r ? sb_benefit(sb, space, r, now) : 0;
++					if (folio_nid(folio) == FMEM_NID &&
++					    (!r || now - r->moved_ns >= sandbox_cooldown_ms * SB_NS_MS) &&
++					    (wait_settled || (sb->phase && benefit < sb->copy_ns)))
++						sb->cold[(*cold_count)++] = (struct sb_candidate) {
++							.space = space, .addr = addr, .pfn = folio_pfn(folio),
++							.epoch = space->epoch_seen, .benefit_ns = benefit,
++						};
++					folio_put(folio);
++				}
++				space->cursor = vma->vm_end;
++			}
++scan_done:
++			if (completed)
++				space->cursor = 0;
++		}
++		mmap_read_unlock(space->mm);
++	}
++	sort(sb->hot, *hot_count, sizeof(sb->hot[0]), sb_hot_cmp, NULL);
++	sort(sb->cold, *cold_count, sizeof(sb->cold[0]), sb_cold_cmp, NULL);
++	sb->hot_candidates += *hot_count;
++	sb->cold_candidates += *cold_count;
++}
++
++static struct folio *sb_validate(struct sandbox *sb, struct sb_candidate *c, int nid)
++{
++	struct folio *folio;
++	if (!c->space->refs || c->epoch != atomic64_read(&c->space->mapping_epoch))
++		goto invalid;
++	mmap_read_lock(c->space->mm);
++	folio = sb_resolve(c->space, c->addr);
++	mmap_read_unlock(c->space->mm);
++	if (!folio)
++		goto invalid;
++	if (folio_pfn(folio) != c->pfn || folio_nid(folio) != nid) {
++		folio_put(folio);
++		goto invalid;
++	}
++	return folio;
++invalid:
++	sb->invalid++;
++	return NULL;
++}
++
++static void sb_mark_moved(struct sb_candidate *c, u64 now)
++{
++	struct sb_region *r = xa_load(&c->space->regions, c->addr >> SB_REGION_SHIFT);
++	if (r) {
++		r->moved_ns = now;
++		/* Migration changes the PFN while preserving virtual identity. */
++		r->last_pfn = 0;
++	}
++}
++
++static int sb_move(struct sandbox *sb, struct sb_candidate *c, bool up, u64 now)
++{
++	struct folio *folio = sb_validate(sb, c, up ? SMEM_NID : FMEM_NID);
++	u64 started;
++	int err;
++	if (!folio)
++		return -ENOENT;
++	started = ktime_get_ns();
++	/* The helper consumes the FOLL_GET reference, including error paths. */
++	err = demeter_migrate_folio_to_node(folio, up ? FMEM_NID : SMEM_NID);
++	sb->migration_ns += ktime_get_ns() - started;
++	if (!err) {
++		sb->copy_ns = (7 * sb->copy_ns + ktime_get_ns() - started) / 8;
++		if (up) {
++			sb->promotions++;
++			sb->fast_pages++;
++			sb->slow_pages -= min(sb->slow_pages, 1UL);
++		} else {
++			sb->demotions++;
++			sb->fast_pages -= min(sb->fast_pages, 1UL);
++			sb->slow_pages++;
++		}
++		sb_mark_moved(c, now);
++	} else {
++		sb->failed++;
++		/* Back off failed ranges too; retrying every tick cannot repay. */
++		sb_mark_moved(c, now);
++	}
++	return err;
++}
++
++static bool sb_isolate(struct folio *folio)
++{
++	if (!folio_isolate_lru(folio)) {
++		folio_put(folio);
++		return false;
++	}
++	/* Remove FOLL_GET; retain only the isolation reference, as required by
++	 * Demeter's exchange support check. No long-lived candidate pins.
++	 */
++	folio_put(folio);
++	node_stat_mod_folio(folio, NR_ISOLATED_ANON, 1);
++	return true;
++}
++static void sb_putback(struct folio *folio)
++{
++	node_stat_mod_folio(folio, NR_ISOLATED_ANON, -1);
++	folio_putback_lru(folio);
++}
++static int sb_exchange(struct sandbox *sb, struct sb_candidate *hot,
++			struct sb_candidate *cold, u64 now)
++{
++	struct folio *p = sb_validate(sb, hot, SMEM_NID), *d;
++	u64 started;
++	int err;
++	if (!p)
++		return -ENOENT;
++	d = sb_validate(sb, cold, FMEM_NID);
++	if (!d) {
++		folio_put(p);
++		return -ENOENT;
++	}
++	if (!sb_isolate(p)) {
++		folio_put(d);
++		return -EBUSY;
++	}
++	if (!sb_isolate(d)) {
++		sb_putback(p);
++		return -EBUSY;
++	}
++	started = ktime_get_ns();
++	err = folio_exchange_isolated(p, d, MIGRATE_ASYNC);
++	sb->migration_ns += ktime_get_ns() - started;
++	if (!err) {
++		sb->exchanges++;
++		sb->cross_mm_exchanges += hot->space != cold->space;
++		sb->copy_ns = (7 * sb->copy_ns + (ktime_get_ns() - started) / 2) / 8;
++	} else
++		sb->failed++;
++	sb_putback(p);
++	sb_putback(d);
++	sb_mark_moved(hot, now);
++	sb_mark_moved(cold, now);
++	return err;
++}
++
++static void sb_decide(struct sandbox *sb, u64 now)
++{
++	unsigned int nh, nc, h = 0, c = 0, budget = sandbox_batch_pages;
++	u64 elapsed = sb->decision_ns ? now - sb->decision_ns : sandbox_period_ms * SB_NS_MS;
++	sb->decision_ns = now;
++	sb->decisions++;
++	sb_candidates(sb, now, elapsed, &nh, &nc);
++	/* Missing telemetry suspends actions. A stale quota may remain reserved,
++	 * but no unaccounted promotion or speculative freeing is permitted.
++	 */
++	if (now - sb->feedback_ns > 500 * SB_NS_MS)
++		return;
++	while (budget && c < nc && sb->fast_pages > sb->quota_pages) {
++		sb_move(sb, &sb->cold[c++], false, now);
++		budget--;
++	}
++	if (!sb->phase)
++		return;
++	while (budget && h < nh) {
++		struct sb_candidate *hot = &sb->hot[h++];
++		if (sb->fast_pages < sb->quota_pages) {
++			if (hot->benefit_ns > sb->copy_ns)
++				sb_move(sb, hot, true, now);
++			else
++				sb->rejected_benefit++;
++		} else if (c < nc && budget >= 2) {
++			struct sb_candidate *cold = &sb->cold[c++];
++			if (hot->benefit_ns > cold->benefit_ns + 2 * sb->copy_ns) {
++				sb_exchange(sb, hot, cold, now);
++				budget--;
++			} else
++				sb->rejected_benefit++;
++		} else
++			break;
++		budget--;
++	}
++}
++
++static int sb_work(void *unused)
++{
++	while (!kthread_should_stop()) {
++		unsigned int i;
++		mutex_lock(&sb_lock);
++		for (i = 0; i < nr_sandboxes; i++) {
++			struct sandbox *sb = sandboxes[i];
++			struct sb_task *target;
++			u64 started = ktime_get_ns();
++			u64 user_before, system_before, user_after, system_after;
++			if (!sb->cgroup)
++				continue;
++			task_cputime_adjusted(current, &user_before, &system_before);
++			sb_discover(sb);
++			list_for_each_entry(target, &sb->tasks, link) {
++				bool enable = sb->phase != 0;
++				if (target->enabled == enable)
++					continue;
++				for (unsigned int e = 0; e < MAX_EVENTS; e++)
++					if (target->events[e]) {
++						if (enable)
++							perf_event_enable(target->events[e]);
++						else
++							perf_event_disable(target->events[e]);
++					}
++				target->enabled = enable;
++			}
++			sb_samples(sb);
++			sb_decide(sb, ktime_get_ns());
++			sb->worker_ns += ktime_get_ns() - started;
++			task_cputime_adjusted(current, &user_after, &system_after);
++			sb->worker_cpu_ns += user_after + system_after - user_before - system_before;
++		}
++		mutex_unlock(&sb_lock);
++		schedule_timeout_interruptible(msecs_to_jiffies(sandbox_period_ms));
++	}
++	return 0;
++}
++
++static void sb_reset(struct sandbox *sb)
++{
++	struct sb_task *target, *tmp;
++	struct sb_mm *space, *next;
++	list_for_each_entry_safe(target, tmp, &sb->tasks, link)
++		sb_task_drop(sb, target);
++	list_for_each_entry_safe(space, next, &sb->spaces, link) {
++		space->refs = 1; /* Censored teardown must not train the lifetime prior. */
++		sb_space_drop(sb, space);
++	}
++	if (sb->cgroup) {
++		cgroup_put(sb->cgroup);
++		sb->cgroup = NULL;
++	}
++}
++static void sb_release(struct kobject *kobj)
++{
++	struct sandbox *sb = container_of(kobj, struct sandbox, kobj);
++	mutex_lock(&sb_lock);
++	sb_reset(sb);
++	mutex_unlock(&sb_lock);
++	if (sb->samples)
++		mpsc_drop(sb->samples);
++	kfree(sb);
++}
++#define SB_FROM_KOBJ(k) container_of(k, struct sandbox, kobj)
++static ssize_t cgroup_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	struct sandbox *sb = SB_FROM_KOBJ(kobj);
++	int ret;
++	mutex_lock(&sb_lock);
++	buf[0] = '\0';
++	ret = sb->cgroup ? cgroup_path_ns(sb->cgroup, buf, PAGE_SIZE - 2,
++					current->nsproxy->cgroup_ns) : 0;
++	if (ret >= 0)
++		ret = strlcat(buf, "\n", PAGE_SIZE);
++	mutex_unlock(&sb_lock);
++	return ret;
++}
++static ssize_t cgroup_store(struct kobject *kobj, struct kobj_attribute *attr,
++			    const char *buf, size_t count)
++{
++	struct sandbox *sb = SB_FROM_KOBJ(kobj);
++	struct cgroup *group = NULL;
++	char *path = kstrndup(buf, count, GFP_KERNEL);
++	int err = 0;
++	if (!path)
++		return -ENOMEM;
++	strim(path);
++	if (strcmp(path, "-")) {
++		if (path[0] != '/' || !strcmp(path, "/")) {
++			kfree(path);
++			return -EINVAL;
++		}
++		group = cgroup_get_from_path(path);
++		if (IS_ERR(group)) {
++			kfree(path);
++			return PTR_ERR(group);
++		}
++	}
++	kfree(path);
++	mutex_lock(&sb_lock);
++	for (unsigned int i = 0; group && i < nr_sandboxes; i++) {
++		struct cgroup *other = sandboxes[i]->cgroup;
++		if (sandboxes[i] != sb && other &&
++		    (cgroup_is_descendant(group, other) || cgroup_is_descendant(other, group))) {
++			err = -EINVAL;
++			goto out;
++		}
++	}
++	sb_reset(sb);
++	sb->cgroup = group;
++	group = NULL;
++	sb->phase = 0;
++	sb->phase_start_ns = ktime_get_ns();
++out:
++	mutex_unlock(&sb_lock);
++	if (group)
++		cgroup_put(group);
++	return err ? err : count;
++}
++static ssize_t phase_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	struct sandbox *sb = SB_FROM_KOBJ(kobj);
++	return sysfs_emit(buf, "%u %u\n", READ_ONCE(sb->phase), READ_ONCE(sb->kind));
++}
++static ssize_t phase_store(struct kobject *kobj, struct kobj_attribute *attr,
++			   const char *buf, size_t count)
++{
++	struct sandbox *sb = SB_FROM_KOBJ(kobj);
++	unsigned int phase, kind, horizon_ms;
++	if (sscanf(buf, "%u %u %u", &phase, &kind, &horizon_ms) != 3 ||
++	    phase > 1 || kind > 3 || horizon_ms > 60000)
++		return -EINVAL;
++	mutex_lock(&sb_lock);
++	sb->phase = phase;
++	sb->kind = kind;
++	sb->phase_seq++;
++	sb->phase_start_ns = ktime_get_ns();
++	sb->deadline_ns = sb->phase_start_ns + horizon_ms * SB_NS_MS;
++	if (sb_worker)
++		wake_up_process(sb_worker);
++	mutex_unlock(&sb_lock);
++	return count;
++}
++static ssize_t quota_pages_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	return sysfs_emit(buf, "%lu\n", READ_ONCE(SB_FROM_KOBJ(kobj)->quota_pages));
++}
++static ssize_t quota_pages_store(struct kobject *kobj, struct kobj_attribute *attr,
++				 const char *buf, size_t count)
++{
++	unsigned long quota;
++	unsigned long committed = 0;
++	if (kstrtoul(buf, 10, &quota) || quota > node_present_pages(FMEM_NID))
++		return -EINVAL;
++	mutex_lock(&sb_lock);
++	for (unsigned int i = 0; i < nr_sandboxes; i++)
++		if (sandboxes[i] != SB_FROM_KOBJ(kobj))
++			committed += sandboxes[i]->quota_pages;
++	if (!sb_budget_pages || quota > sb_budget_pages - min(sb_budget_pages, committed)) {
++		mutex_unlock(&sb_lock);
++		return -ENOSPC;
++	}
++	SB_FROM_KOBJ(kobj)->quota_pages = quota;
++	mutex_unlock(&sb_lock);
++	return count;
++}
++static ssize_t residency_store(struct kobject *kobj, struct kobj_attribute *attr,
++			       const char *buf, size_t count)
++{
++	struct sandbox *sb = SB_FROM_KOBJ(kobj);
++	unsigned long fast, slow;
++	if (sscanf(buf, "%lu %lu", &fast, &slow) != 2)
++		return -EINVAL;
++	mutex_lock(&sb_lock);
++	sb->fast_pages = fast;
++	sb->slow_pages = slow;
++	sb->feedback_ns = ktime_get_ns();
++	mutex_unlock(&sb_lock);
++	return count;
++}
++static ssize_t stats_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	struct sandbox *s = SB_FROM_KOBJ(kobj);
++	ssize_t ret;
++	mutex_lock(&sb_lock);
++	ret = sysfs_emit(buf,
++		"phase %u\nkind %u\nquota_pages %lu\nfast_pages %lu\nslow_pages %lu\n"
++		"tasks %u\nregions %u\nsampled %llu\nstale %llu\nmetadata_overflow %llu\n"
++		"ring_overruns %lu\nregistrations %llu\nperf_errors %llu\ncapacity_misses %llu\n"
++		"decisions %llu\nhot_candidates %llu\ncold_candidates %llu\nrejected_benefit %llu\n"
++		"promotions %llu\ndemotions %llu\nexchanges %llu\ncross_mm_exchanges %llu\n"
++		"failed %llu\ninvalid %llu\ncopy_ns %llu\nworker_ns %llu\nworker_cpu_ns %llu\n"
++		"sampling_ns %lld\nmigration_ns %llu\n",
++		s->phase, s->kind, s->quota_pages, s->fast_pages, s->slow_pages,
++		s->nr_tasks, s->nr_regions, s->sampled, s->stale, s->overflow,
++		s->samples ? ring_buffer_overruns(s->samples) : 0UL,
++		s->registrations, s->perf_errors, s->capacity_misses,
++		s->decisions, s->hot_candidates, s->cold_candidates, s->rejected_benefit,
++		s->promotions, s->demotions, s->exchanges, s->cross_mm_exchanges,
++		s->failed, s->invalid, s->copy_ns, s->worker_ns, s->worker_cpu_ns,
++		atomic64_read(&s->sampling_ns), s->migration_ns);
++	mutex_unlock(&sb_lock);
++	return ret;
++}
++static struct kobj_attribute sb_cgroup = __ATTR_RW_MODE(cgroup, 0600);
++static struct kobj_attribute sb_phase = __ATTR_RW_MODE(phase, 0600);
++static struct kobj_attribute sb_quota = __ATTR_RW_MODE(quota_pages, 0600);
++static struct kobj_attribute sb_residency = __ATTR(residency, 0200, NULL, residency_store);
++static struct kobj_attribute sb_stats = __ATTR_RO(stats);
++static struct attribute *sb_attrs[] = {
++	&sb_cgroup.attr, &sb_phase.attr, &sb_quota.attr, &sb_residency.attr, &sb_stats.attr, NULL,
++};
++ATTRIBUTE_GROUPS(sb);
++static const struct kobj_type sb_ktype = {
++	.release = sb_release, .sysfs_ops = &kobj_sysfs_ops, .default_groups = sb_groups,
++};
++static ssize_t nr_sandboxes_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	return sysfs_emit(buf, "%u\n", READ_ONCE(nr_sandboxes));
++}
++static ssize_t nr_sandboxes_store(struct kobject *kobj, struct kobj_attribute *attr,
++				  const char *buf, size_t count)
++{
++	unsigned int n;
++	struct sandbox *retired[SB_MAX];
++	unsigned int nr_retired = 0;
++	int err = 0;
++	if (kstrtouint(buf, 10, &n) || n > SB_MAX)
++		return -EINVAL;
++	/* Switching policy requires clearing legacy slots first. */
++	mutex_lock(&demeter_sysfs_lock);
++	mutex_lock(&sb_lock);
++	if (n && (nr_sandboxes || demeter_legacy_enabled())) {
++		err = -EBUSY;
++		goto out;
++	}
++	if (!n) {
++		while (nr_sandboxes)
++			retired[nr_retired++] = sandboxes[--nr_sandboxes];
++		goto out;
++	}
++	for (unsigned int i = 0; i < n; i++) {
++		struct sandbox *sb = kzalloc(sizeof(*sb), GFP_KERNEL);
++		if (!sb) {
++			err = -ENOMEM;
++			break;
++		}
++		sb->id = i;
++		sb->copy_ns = sandbox_initial_copy_ns;
++		sb->phase_start_ns = ktime_get_ns();
++		INIT_LIST_HEAD(&sb->tasks);
++		INIT_LIST_HEAD(&sb->spaces);
++		sb->samples = mpsc_new(SB_RING_BYTES);
++		if (!sb->samples) {
++			kfree(sb);
++			err = -ENOMEM;
++			break;
++		}
++		err = kobject_init_and_add(&sb->kobj, &sb_ktype, sb_root, "%u", i);
++		if (err) {
++			retired[nr_retired++] = sb;
++			break;
++		}
++		sandboxes[nr_sandboxes++] = sb;
++	}
++	if (err)
++		while (nr_sandboxes)
++			retired[nr_retired++] = sandboxes[--nr_sandboxes];
++out:
++	mutex_unlock(&sb_lock);
++	/* kernfs removal waits for active show/store callbacks. They take
++	 * sb_lock, so it must be released before putting any published kobject.
++	 * demeter_sysfs_lock keeps mode changes serialized during retirement.
++	 */
++	for (unsigned int i = 0; i < nr_retired; i++)
++		kobject_put(&retired[i]->kobj);
++	mutex_unlock(&demeter_sysfs_lock);
++	return err ? err : count;
++}
++static struct kobj_attribute sb_nr = __ATTR_RW_MODE(nr_sandboxes, 0600);
++static ssize_t budget_pages_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++	return sysfs_emit(buf, "%lu\n", READ_ONCE(sb_budget_pages));
++}
++static ssize_t budget_pages_store(struct kobject *kobj, struct kobj_attribute *attr,
++				 const char *buf, size_t count)
++{
++	unsigned long budget, committed = 0;
++	if (kstrtoul(buf, 10, &budget) || budget > node_present_pages(FMEM_NID))
++		return -EINVAL;
++	mutex_lock(&sb_lock);
++	for (unsigned int i = 0; i < nr_sandboxes; i++)
++		committed += sandboxes[i]->quota_pages;
++	if (budget < committed) {
++		mutex_unlock(&sb_lock);
++		return -EBUSY;
++	}
++	sb_budget_pages = budget;
++	mutex_unlock(&sb_lock);
++	return count;
++}
++static struct kobj_attribute sb_budget = __ATTR_RW_MODE(budget_pages, 0600);
++
++int sandbox_sysfs_init(struct kobject *root)
++{
++	int err;
++	if (!sandbox_period_ms || sandbox_period_ms > 1000 ||
++	    !sandbox_scan_pages || sandbox_scan_pages > 65536 ||
++	    !sandbox_batch_pages || sandbox_batch_pages > SB_POOL_MAX)
++		return -EINVAL;
++	sb_root = kobject_create_and_add("sandboxes", root);
++	if (!sb_root)
++		return -ENOMEM;
++	err = sysfs_create_file(sb_root, &sb_nr.attr);
++	if (err)
++		goto fail;
++	err = sysfs_create_file(sb_root, &sb_budget.attr);
++	if (err)
++		goto fail;
++	sb_worker = kthread_run(sb_work, NULL, "demeter-sandbox");
++	if (IS_ERR(sb_worker)) {
++		err = PTR_ERR(sb_worker);
++		sb_worker = NULL;
++		goto fail;
++	}
++	return 0;
++fail:
++	kobject_put(sb_root);
++	sb_root = NULL;
++	return err;
++}
++void sandbox_sysfs_exit(void)
++{
++	struct sandbox *retired[SB_MAX];
++	unsigned int count = 0;
++	struct task_struct *worker;
++	if (sb_root)
++		sysfs_remove_file(sb_root, &sb_nr.attr);
++	mutex_lock(&sb_lock);
++	worker = sb_worker;
++	sb_worker = NULL;
++	mutex_unlock(&sb_lock);
++	if (worker)
++		kthread_stop(worker);
++	mutex_lock(&demeter_sysfs_lock);
++	mutex_lock(&sb_lock);
++	while (nr_sandboxes)
++		retired[count++] = sandboxes[--nr_sandboxes];
++	mutex_unlock(&sb_lock);
++	for (unsigned int i = 0; i < count; i++)
++		kobject_put(&retired[i]->kobj);
++	mutex_unlock(&demeter_sysfs_lock);
++	if (sb_root)
++		kobject_put(sb_root);
++}
+--- /dev/null
++++ b/mm/PhaseTieing/sandbox.h
+@@ -0,0 +1,9 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef DEMETER_SANDBOX_H
++#define DEMETER_SANDBOX_H
++#include <linux/kobject.h>
++int sandbox_sysfs_init(struct kobject *root);
++void sandbox_sysfs_exit(void);
++bool sandbox_enabled(void);
++bool demeter_legacy_enabled(void);
++#endif
+--- a/mm/exchange.c
++++ b/mm/exchange.c
+@@ -1104,6 +1104,37 @@
+ }
+ EXPORT_SYMBOL(migrate_folio_to_node);
+ 
++/* Consume the caller's FOLL_GET reference on every path.  Unlike the test
++ * helper above, bounded placement must also put back pages on negative errors
++ * and must not enter direct reclaim while holding its controller mutex.
++ */
++int demeter_migrate_folio_to_node(struct folio *folio, int node)
++{
++	LIST_HEAD(pagelist);
++	struct migration_target_control mtc = {
++		.nid = node,
++		.gfp_mask = GFP_NOWAIT | __GFP_HIGHMEM | __GFP_MOVABLE |
++			    __GFP_THISNODE | __GFP_NOWARN,
++	};
++	int err;
++
++	if (!folio_isolate_lru(folio)) {
++		folio_put(folio);
++		return -EBUSY;
++	}
++	folio_put(folio);
++	list_add_tail(&folio->lru, &pagelist);
++	node_stat_mod_folio(folio, NR_ISOLATED_ANON + folio_is_file_lru(folio),
++			    folio_nr_pages(folio));
++	err = migrate_pages(&pagelist, alloc_migration_target, NULL,
++			    (unsigned long)&mtc, MIGRATE_ASYNC, MR_NUMA_MISPLACED,
++			    NULL);
++	if (!list_empty(&pagelist))
++		putback_movable_pages(&pagelist);
++	return err;
++}
++EXPORT_SYMBOL_GPL(demeter_migrate_folio_to_node);
++
+ int folio_bimigrate(struct folio *old, struct folio *new,
+ 		    enum migrate_mode mode)
+ {

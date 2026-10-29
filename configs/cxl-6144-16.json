@@ -1,0 +1,9 @@
+{
+  "capacity": {
+    "active_mib": 6144,
+    "wait_mib": 16
+  },
+  "placement": {
+    "mode": "native"
+  }
+}

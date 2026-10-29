@@ -1,0 +1,194 @@
+--- a/mm/PhaseTieing/sandbox.c
++++ b/mm/PhaseTieing/sandbox.c
+@@ -7,6 +7,8 @@
+ #include <linux/PhaseTieing_alloc.h>
+ #include <linux/kthread.h>
+ #include <linux/irq_work.h>
++#include <linux/tracepoint.h>
++#include <linux/binfmts.h>
+ #include <linux/mm.h>
+ #include <linux/mm_inline.h>
+ #include <linux/mmu_notifier.h>
+@@ -31,6 +33,10 @@
+ module_param(sandbox_allocation_enabled, bool, 0444);
+ static bool sandbox_sample_wakeup = true;
+ module_param(sandbox_sample_wakeup, bool, 0444);
++static unsigned int sandbox_sample_wake_us = 2000;
++module_param(sandbox_sample_wake_us, uint, 0444);
++static bool sandbox_lifecycle_wakeup = true;
++module_param(sandbox_lifecycle_wakeup, bool, 0444);
+ static bool sandbox_sample_batch = true;
+ module_param(sandbox_sample_batch, bool, 0444);
+ 
+@@ -199,6 +205,7 @@
+ 	mpsc_t samples;
+ 	struct irq_work sample_wake;
+ 	atomic64_t sample_wakeups;
++	atomic64_t sample_last_wake_ns;
+ 	unsigned int nr_tasks, nr_regions;
+ 	u64 sequence, phase_seq, phase_start_ns, deadline_ns;
+ 	unsigned int phase, kind;
+@@ -236,6 +243,14 @@
+ static unsigned long sb_budget_pages;
+ static struct task_struct *sb_worker;
+ static DEFINE_SPINLOCK(sb_wake_lock);
++static struct irq_work sb_lifecycle_work;
++static atomic_t sb_lifecycle_pending = ATOMIC_INIT(0);
++static atomic_t sb_consumer_pending = ATOMIC_INIT(0);
++static atomic64_t sb_fork_notifications = ATOMIC64_INIT(0);
++static atomic64_t sb_exec_notifications = ATOMIC64_INIT(0);
++static atomic64_t sb_lifecycle_discoveries = ATOMIC64_INIT(0);
++static struct tracepoint *sb_fork_tp, *sb_exec_tp;
++static bool sb_fork_registered, sb_exec_registered;
+ static atomic64_t mm_sequence = ATOMIC64_INIT(0);
+ extern struct mutex demeter_sysfs_lock;
+ extern int demeter_migrate_folio_to_node(struct folio *, int);
+@@ -372,6 +387,47 @@
+  spin_unlock_irqrestore(&sb_wake_lock, flags);
+ }
+ 
++/* A scheduler tracepoint may hold locks: only set a flag and defer the wake.
++ * No Sandbox pointer is dereferenced here. The worker performs cgroup-scoped
++ * discovery, event creation and mm revalidation in normal thread context.
++ * Notifications are Guest-wide while at least one Sandbox is registered. */
++static void sb_lifecycle_wake(struct irq_work *work)
++{
++ unsigned long flags;
++ spin_lock_irqsave(&sb_wake_lock, flags);
++ if (sb_worker) wake_up_process(sb_worker);
++ spin_unlock_irqrestore(&sb_wake_lock, flags);
++}
++static void sb_note_fork(void *unused, struct task_struct *parent,
++                         struct task_struct *child)
++{
++ if (!READ_ONCE(nr_sandboxes)) return;
++ atomic64_inc(&sb_fork_notifications);
++ atomic_set(&sb_lifecycle_pending, 1);
++ irq_work_queue(&sb_lifecycle_work);
++}
++static void sb_note_exec(void *unused, struct task_struct *task, pid_t old_pid,
++                         struct linux_binprm *bprm)
++{
++ if (!READ_ONCE(nr_sandboxes)) return;
++ atomic64_inc(&sb_exec_notifications);
++ atomic_set(&sb_lifecycle_pending, 1);
++ irq_work_queue(&sb_lifecycle_work);
++}
++static void sb_find_lifecycle_tp(struct tracepoint *tp, void *unused)
++{
++ if (!strcmp(tp->name, "sched_process_fork")) sb_fork_tp = tp;
++ if (!strcmp(tp->name, "sched_process_exec")) sb_exec_tp = tp;
++}
++static void sb_lifecycle_unregister(void)
++{
++ if (sb_exec_registered) tracepoint_probe_unregister(sb_exec_tp, sb_note_exec, NULL);
++ if (sb_fork_registered) tracepoint_probe_unregister(sb_fork_tp, sb_note_fork, NULL);
++ if (sb_exec_registered || sb_fork_registered) tracepoint_synchronize_unregister();
++ sb_exec_registered = sb_fork_registered = false;
++ irq_work_sync(&sb_lifecycle_work);
++}
++
+ static void sb_overflow(struct perf_event *event, struct perf_sample_data *data,
+ 			struct pt_regs *regs)
+ {
+@@ -409,8 +465,15 @@
+ 	 * thread, so each mm has a single shared heat table without duplicates.
+ 	 */
+ 	if (mpsc_send(target->sandbox->samples, &sample, sb_sample_bytes()) > 0 &&
+-	    sandbox_sample_batch && sandbox_sample_wakeup && !(capture_index % 128))
+-		irq_work_queue(&target->sandbox->sample_wake);
++	    sandbox_sample_batch && sandbox_sample_wakeup) {
++		u64 previous = atomic64_read(&target->sandbox->sample_last_wake_ns);
++		if (!(capture_index % 128) || (sandbox_sample_wake_us &&
++		    started >= previous && started - previous >= (u64)sandbox_sample_wake_us * 1000)) {
++			atomic64_cmpxchg(&target->sandbox->sample_last_wake_ns, previous, started);
++			atomic_set(&sb_consumer_pending, 1);
++			irq_work_queue(&target->sandbox->sample_wake);
++		}
++	}
+ 	atomic64_add(ktime_get_mono_fast_ns() - started, &target->sandbox->sampling_ns);
+ }
+ 
+@@ -1410,7 +1473,11 @@
+ 	while (!kthread_should_stop()) {
+ 		unsigned int i;
+ 		bool backlog = false;
++		bool lifecycle;
+ 		mutex_lock(&sb_lock);
++		atomic_set(&sb_consumer_pending, 0);
++		lifecycle = atomic_xchg(&sb_lifecycle_pending, 0);
++		if (lifecycle) atomic64_inc(&sb_lifecycle_discoveries);
+ 		for (i = 0; i < nr_sandboxes; i++) {
+ 			struct sandbox *sb = sandboxes[i];
+ 			struct sb_task *target;
+@@ -1419,7 +1486,7 @@
+ 			if (!sb->cgroup)
+ 				continue;
+ 			task_cputime_adjusted(current, &user_before, &system_before);
+-			if (!sandbox_sample_batch || started - sb->maintenance_ns >= sandbox_period_ms * SB_NS_MS ||
++			if (lifecycle || !sandbox_sample_batch || started - sb->maintenance_ns >= sandbox_period_ms * SB_NS_MS ||
+ 			    sb->maintenance_phase_seq != sb->phase_seq) {
+ 			sb_discover(sb);
+ 			list_for_each_entry(target, &sb->tasks, link) {
+@@ -1448,8 +1515,14 @@
+ 			sb->worker_cpu_ns += user_after + system_after - user_before - system_before;
+ 		}
+ 		mutex_unlock(&sb_lock);
+-		schedule_timeout_interruptible(backlog && sandbox_sample_batch ? 1 :
+-			msecs_to_jiffies(sandbox_period_ms));
++		/* Set the sleep state before checking persistent notifications. This
++		 * closes the running-worker wakeup race for both IRQ sources. */
++		set_current_state(TASK_INTERRUPTIBLE);
++		if (!atomic_read(&sb_lifecycle_pending) &&
++		    !atomic_read(&sb_consumer_pending) && !kthread_should_stop())
++			schedule_timeout(backlog && sandbox_sample_batch ? 1 :
++				msecs_to_jiffies(sandbox_period_ms));
++		__set_current_state(TASK_RUNNING);
+ 	}
+ 	return 0;
+ }
+@@ -1674,6 +1747,10 @@
+ 	ret += sysfs_emit_at(buf, ret, "sample_batch_enabled %u\nsamples_received %llu\nsample_cache_hits %llu\nsample_drain_ns %llu\nsample_budget_hits %llu\nsample_max_age_ns %llu\n",
+ 		sandbox_sample_batch, s->samples_received, s->sample_cache_hits, s->sample_drain_ns, s->sample_budget_hits, s->sample_max_age_ns);
+ 	ret += sysfs_emit_at(buf, ret, "sample_wakeup_enabled %u\nsample_wakeups %lld\n", sandbox_sample_wakeup, atomic64_read(&s->sample_wakeups));
++	ret += sysfs_emit_at(buf, ret, "sample_wake_us %u\nlifecycle_wakeup_enabled %u\nlifecycle_fork_notifications %lld\nlifecycle_exec_notifications %lld\nlifecycle_discoveries %lld\n",
++		sandbox_sample_wake_us, sandbox_lifecycle_wakeup,
++		atomic64_read(&sb_fork_notifications), atomic64_read(&sb_exec_notifications),
++		atomic64_read(&sb_lifecycle_discoveries));
+ 	ret += sysfs_emit_at(buf, ret, "phase_seq %llu\nphase_start_ns %llu\ndeadline_ns %llu\n",
+ 		s->phase_seq, s->phase_start_ns, s->deadline_ns);
+ 	ret += sysfs_emit_at(buf, ret, "load_sample_period %lu\nbackoff_entries %u\nbackoff_limited %llu\n",
+@@ -1857,7 +1934,25 @@
+ 		sb_worker = NULL;
+ 		goto fail;
+ 	}
++	init_irq_work(&sb_lifecycle_work, sb_lifecycle_wake);
++	if (sandbox_lifecycle_wakeup) {
++		for_each_kernel_tracepoint(sb_find_lifecycle_tp, NULL);
++		if (!sb_fork_tp || !sb_exec_tp) { err = -ENOENT; goto fail_worker; }
++		err = tracepoint_probe_register(sb_fork_tp, sb_note_fork, NULL);
++		if (err) goto fail_worker;
++		sb_fork_registered = true;
++		err = tracepoint_probe_register(sb_exec_tp, sb_note_exec, NULL);
++		if (err) goto fail_worker;
++		sb_exec_registered = true;
++	}
+ 	return 0;
++fail_worker:
++	sb_lifecycle_unregister();
++	{
++		struct task_struct *worker = sb_worker;
++		sb_worker = NULL;
++		kthread_stop(worker);
++	}
+ fail:
+ 	kobject_put(sb_root);
+ 	sb_root = NULL;
+@@ -1868,6 +1963,7 @@
+ 	struct sandbox *retired[SB_MAX];
+ 	unsigned int count = 0;
+ 	struct task_struct *worker;
++	sb_lifecycle_unregister();
+ 	if (sb_root)
+ 		sysfs_remove_file(sb_root, &sb_nr.attr);
+ 	mutex_lock(&sb_lock);

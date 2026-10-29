@@ -1,0 +1,151 @@
+diff --git a/mm/PhaseTieing/module.h b/mm/PhaseTieing/module.h
+--- a/mm/PhaseTieing/module.h
++++ b/mm/PhaseTieing/module.h
+@@ -52,6 +52,8 @@
+ extern ulong split_period_ms;
+ extern ulong rtree_split_thresh;
+ extern ulong rtree_exch_thresh;
++extern ulong initial_range_size_mb;
++extern bool adaptive_range;
+ 
+ extern struct kmem_cache *list_head_cache;
+ 
+diff --git a/mm/PhaseTieing/module.c b/mm/PhaseTieing/module.c
+--- a/mm/PhaseTieing/module.c
++++ b/mm/PhaseTieing/module.c
+@@ -52,6 +52,17 @@
+ MODULE_PARM_DESC(rtree_exch_thresh,
+ 		 "Exchange threshold in bytes, defaults to 2^20");
+ 
++/* Optional range initialization for short-lived, phase-oriented workloads. */
++ulong initial_range_size_mb;
++module_param_named(initial_range_size_mb, initial_range_size_mb, ulong, 0644);
++MODULE_PARM_DESC(initial_range_size_mb,
++		 "Initial heap/mmap range coverage in MiB; 0 uses total RAM");
++
++bool adaptive_range;
++module_param_named(adaptive_range, adaptive_range, bool, 0644);
++MODULE_PARM_DESC(adaptive_range,
++		 "Size initial ranges from the target address-space footprint");
++
+ DEFINE_STATIC_KEY_TRUE(should_decay_sketch);
+ struct kmem_cache *list_head_cache;
+ 
+@@ -74,11 +85,12 @@
+ 			       PERF_SAMPLE_WEIGHT | PERF_SAMPLE_PHYS_ADDR,
+ 		.sample_period = LOAD_LATENCY_SAMPLE_PERIOD ,
+ 		.inherit = 1,
+-		.precise_ip = 3,
++		/* A target is one process (all threads), not its child processes. */
++		.inherit_thread = 1,
++		/* Xeon 6530P rejects per-task load-latency events at precise_ip=3. */
++		.precise_ip = 2,
+ 		// .disabled = 1,
+ 		.exclude_kernel = 1,
+ 		.exclude_hv = 1,
+-		/* A target is one process (all threads), not its child processes. */
+-		.inherit_thread = 1,
+ 		.exclude_callchain_kernel = 1,
+ 	},
+@@ -102,11 +114,11 @@
+ 			       PERF_SAMPLE_WEIGHT | PERF_SAMPLE_PHYS_ADDR,
+ 		.sample_period = RETIRED_STORES_SAMPLE_PERIOD ,
+ 		.inherit = 1,
++		.inherit_thread = 1,
+ 		.precise_ip = 3,
+ 		// .disabled = 1,
+ 		.exclude_kernel = 1,
+ 		.exclude_hv = 1,
+ 		.exclude_callchain_kernel = 1,
+ 	},
+-		.inherit_thread = 1,
+ };
+diff --git a/mm/PhaseTieing/range_tree.h b/mm/PhaseTieing/range_tree.h
+--- a/mm/PhaseTieing/range_tree.h
++++ b/mm/PhaseTieing/range_tree.h
+@@ -277,4 +277,7 @@
+ 	struct mrange *r;
+ 	mt_for_each(&self->tree, r, start, ULONG_MAX) {
+ 		out[i++] = r;
++		/* Placement counts describe this walk, not historical totals. */
++		r->in_fmem = 0;
++		r->in_smem = 0;
+ 		struct vm_area_struct *vma;
+diff --git a/mm/PhaseTieing/core.c b/mm/PhaseTieing/core.c
+--- a/mm/PhaseTieing/core.c
++++ b/mm/PhaseTieing/core.c
+@@ -53,4 +53,5 @@
+ 	POLICY_TSET_BUCKET = 32,
+ 	POLICY_BSET_BUCKET = 32,
+ 	MPSC_RETRY = 2,
++	/* Total capacity of each channel, divided across online CPUs. */
+ 	MPSC_MAX_SIZE_BYTE = 1 << 20,
+@@ -195,15 +196,12 @@
+ static void target_events_enable(struct target *self, bool enable)
+ {
+ 	pr_info("%s: enable=%d\n", __func__, enable);
+-	void intel_pmu_drain_pebs_buffer(void);
+ 	for (int i = 0; i < MAX_EVENTS; i++) {
+ 		if (self->events[i]) {
+ 			if (enable)
+ 				perf_event_enable(self->events[i]);
+-			else {
+-				intel_pmu_drain_pebs_buffer();
++			else
+ 				perf_event_disable(self->events[i]);
+-			}
+ 		}
+ 	}
+ }
+@@ -366,8 +364,8 @@
+ 	      smem_cap = fn(SMEM_NID);
+ 	for (ulong i = 0, len = rlen; i < len; i++) {
+ 		struct mrange *p = mrs[i], *q = mrs[len - 1 - i];
+-		if (smem_cap > (smem += p->in_smem + p->in_smem))
++		if (smem_cap > (smem += p->in_smem + p->in_fmem))
+ 			s += 1;
+-		if (fmem_cap > (fmem += q->in_smem + q->in_smem) &&
++		if (fmem_cap > (fmem += q->in_smem + q->in_fmem) &&
+ 		    q->nr_access > 0)
+ 			f -= 1;
+@@ -391,6 +389,5 @@
+ 	// isolate all promotion candidates first
+ 	ulong candidates = 0;
+-	for (ulong i = rlen - 1; i >= f; --i) {
++	for (ulong i = rlen; i-- > f;) {
+ 		struct mrange *r = mrs[i];
+-		ulong total = r->in_smem;
+ 		ulong got = rt_isolate(mm, r, SMEM_NID, ULONG_MAX, manage_folio,
+@@ -402,5 +399,4 @@
+ 	ulong matched = 0;
+ 	for (ulong i = 0; matched < candidates && i < f; i++) {
+ 		struct mrange *r = mrs[i];
+-		ulong total = r->in_fmem;
+ 		ulong got = rt_isolate(mm, r, FMEM_NID, candidates - matched,
+@@ -525,4 +521,14 @@
+ 		ulong coverage =
+ 			RMT_INITIAL_SIZE_FACTOR *
+ 			ALIGN(meminfo.totalram * meminfo.mem_unit, 1 << 30);
++		if (initial_range_size_mb)
++			coverage = (ulong)initial_range_size_mb << 20;
++		else if (adaptive_range) {
++			u64 footprint = (u64)READ_ONCE(mm->total_vm) << PAGE_SHIFT;
++			u64 wanted = min_t(u64, footprint, coverage / 2) * 2;
++			coverage = clamp_t(u64, ALIGN(wanted, 1ull << 30),
++					   1ull << 30, coverage);
++		}
++		pr_info("%s: initial coverage=%luM adaptive=%d total_vm=%lu pages\n",
++			__func__, coverage >> 20, adaptive_range, mm->total_vm);
+ 		// heap region
+@@ -833,4 +839,11 @@
+ 		// The worker must not exit before we stop it
+ 		kthread_stop(t);
+ 	}
++	for (int i = 0; i < MAX_EVENTS; i++) {
++		struct perf_event *e = self->events[i];
++		if (IS_ERR_OR_NULL(e))
++			continue;
++		perf_event_release_kernel(e);
++		self->events[i] = NULL;
++	}
+ 	for (int i = 0; i < MAX_CHANS; i++) {

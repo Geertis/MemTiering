@@ -1,0 +1,124 @@
+diff --git a/mm/PhaseTieing/core.c b/mm/PhaseTieing/core.c
+--- a/mm/PhaseTieing/core.c
++++ b/mm/PhaseTieing/core.c
+@@ -84,5 +84,7 @@ struct target {
+ 	// Currently managed task
+ 	struct task_struct *victim;
++	// Keep the address space alive until all target workers have stopped.
++	struct mm_struct *mm;
+ 	// These channels are the only sharing states between the workers
+ 	mpsc_t chans[MAX_CHANS];
+ 	struct task_struct *workers[MAX_WORKERS];
+@@ -516,8 +518,7 @@ noinline static int worker_policy(struct target *self)
+ 	// rmt: the "range_tree" to record the managed ranges
+ 	struct range_tree __cleanup(rt_drop) rt = {};
+ 	{
+-		CLASS(task_mm, mm)(self->victim);
+-		BUG_ON(IS_ERR_OR_NULL(mm));
++		struct mm_struct *mm = self->mm;
+ 		mm_show_layout(mm);
+ 		struct sysinfo meminfo = {};
+ 		si_meminfo(&meminfo);
+@@ -564,8 +565,7 @@ noinline static int worker_policy(struct target *self)
+ 	DEFINE_RATELIMIT_STATE(report_rs, msecs_to_jiffies(500), 1);
+ 
+ 	u64 sample_count = 0, excg_req_count = 0, excg_rsp_count = 0,
+-	    report_period = 1 << 20, next_report = report_period,
+-	    initial_backoff = 500, backoff = initial_backoff;
++	    report_period = 1 << 20, next_report = report_period;
+ 	while (!kthread_should_stop()) {
+ 		int which = mpsc_select3(excg_rsp, splt_req, samplech);
+ 		guard(stat)(self, task_clock, STAT_POLICY);
+@@ -578,14 +578,5 @@ noinline static int worker_policy(struct target *self)
+ 		case 1: {
+-			CLASS(task_mm, mm)(self->victim);
+-			if (unlikely(IS_ERR_OR_NULL(mm))) {
+-				pr_err("%s: victim mm=%pe\n", __func__, mm);
+-				// exit early will cause kthread_stop to panic
+-				schedule_timeout_interruptible(
+-					msecs_to_jiffies(backoff *= 2));
+-				continue;
+-			} else {
+-				backoff = initial_backoff;
+-			}
++			struct mm_struct *mm = self->mm;
+ 			guard(stat)(self, task_clock, STAT_SPLIT);
+ 			excg_rsp_count += policy_handle_splt_reqs(&data, mm);
+ 			break;
+@@ -593,14 +584,5 @@ noinline static int worker_policy(struct target *self)
+ 		case 2: {
+-			CLASS(task_mm, mm)(self->victim);
+-			if (unlikely(IS_ERR_OR_NULL(mm))) {
+-				pr_err("%s: victim mm=%pe\n", __func__, mm);
+-				// exit early will cause kthread_stop to panic
+-				schedule_timeout_interruptible(
+-					msecs_to_jiffies(backoff *= 2));
+-				continue;
+-			} else {
+-				backoff = initial_backoff;
+-			}
++			struct mm_struct *mm = self->mm;
+ 			sample_count += policy_handle_samples(&data, mm);
+ 			break;
+ 		}
+@@ -857,6 +839,8 @@ void target_drop(struct target *self)
+ 	}
+ 	struct task_struct *victim = self->victim;
+ 	!victim ?: put_task_struct(victim);
++	if (self->mm)
++		mmput(self->mm);
+ 	kfree(self);
+ }
+ struct target *target_new(pid_t pid)
+@@ -870,6 +854,11 @@ struct target *target_new(pid_t pid)
+ 		target_drop(self);
+ 		return ERR_PTR(-ESRCH);
+ 	}
++	self->mm = get_task_mm(self->victim);
++	if (!self->mm) {
++		target_drop(self);
++		return ERR_PTR(-ESRCH);
++	}
+ 	for (int i = 0; i < MAX_CHANS; i++) {
+ 		mpsc_t ch = mpsc_new(MPSC_MAX_SIZE_BYTE);
+ 		if (IS_ERR_OR_NULL(ch)) {
+diff --git a/mm/PhaseTieing/module.c b/mm/PhaseTieing/module.c
+--- a/mm/PhaseTieing/module.c
++++ b/mm/PhaseTieing/module.c
+@@ -80,1 +80,3 @@ struct perf_event_attr event_attrs[MAX_EVENTS] = {
+	 	.inherit = 1,
++		/* A target is one process (all threads), not its child processes. */
++		.inherit_thread = 1,
+@@ -108,1 +110,2 @@ struct perf_event_attr event_attrs[MAX_EVENTS] = {
+	 	.inherit = 1,
++		.inherit_thread = 1,
+diff --git a/mm/PhaseTieing/sysfs.c b/mm/PhaseTieing/sysfs.c
+--- a/mm/PhaseTieing/sysfs.c
++++ b/mm/PhaseTieing/sysfs.c
+	@@ -73,8 +73,6 @@ static ssize_t pid_store(struct kobject *kobj, struct kobj_attribute *attr,
+	 	 	mutex_unlock(&demeter_sysfs_lock);
+	 	 	return count;
+	 	}
+-	// Wait a while to avoid conflict with userspace initialization
+-	schedule_timeout_interruptible(msecs_to_jiffies(2000));
+	 	struct target *target = target_new(pid);
+	 	if (IS_ERR(target)) {
+	 	 	mutex_unlock(&demeter_sysfs_lock);
+diff --git a/mm/PhaseTieing/mpsc.h b/mm/PhaseTieing/mpsc.h
+--- a/mm/PhaseTieing/mpsc.h
++++ b/mm/PhaseTieing/mpsc.h
+@@ -3,8 +3,15 @@
+ 
+ typedef struct trace_buffer *mpsc_t;
+-noinline static inline mpsc_t mpsc_new(size_t bytes_per_cpu)
++noinline static inline mpsc_t mpsc_new(size_t total_bytes)
+ {
++	/* ring_buffer_alloc() takes a per-CPU size.  Demeter's limit is a
++	 * per-channel budget; passing it through directly multiplies every
++	 * target by nr_cpu_ids and makes multi-sandbox guests run out of memory.
++	 */
++	size_t bytes_per_cpu = max_t(size_t, PAGE_SIZE,
++				       DIV_ROUND_UP(total_bytes,
++						    num_online_cpus()));
+	return ring_buffer_alloc(bytes_per_cpu, RB_FL_OVERWRITE);
+ }

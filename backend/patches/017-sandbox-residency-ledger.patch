@@ -1,0 +1,464 @@
+--- a/include/linux/PhaseTieing_alloc.h
++++ b/include/linux/PhaseTieing_alloc.h
+@@ -8,13 +8,28 @@
+ struct demeter_alloc_rule;
+ struct demeter_alloc_stats {
+ 	u64 fast, slow, failed, fallback, native_fallback;
+-	unsigned long remaining;
++	u64 committed, released, recycled, refunded, tracking_failed;
++	unsigned long remaining, balance, live, inflight, live_peak, ceiling;
++	bool recycle;
+ };
+-struct demeter_alloc_rule *demeter_alloc_register(struct cgroup *, int, int);
++struct demeter_alloc_rule *demeter_alloc_register(struct cgroup *, int, int, bool);
+ void demeter_alloc_unregister(struct demeter_alloc_rule *);
+ void demeter_alloc_update(struct demeter_alloc_rule *, unsigned long,
+ 		unsigned long, bool, bool);
+ bool demeter_alloc_take(struct demeter_alloc_rule *);
++void demeter_alloc_finish(struct demeter_alloc_rule *, struct page *, bool);
++void demeter_alloc_feedback(struct demeter_alloc_rule *, unsigned long, u64);
+ void demeter_alloc_stats(struct demeter_alloc_rule *, struct demeter_alloc_stats *);
+ bool demeter_alloc_vma(gfp_t, unsigned int, struct vm_area_struct *, struct page **);
++#ifdef CONFIG_NUMA
++void demeter_alloc_free(struct page *, unsigned int);
++void demeter_alloc_migrate(struct page *, struct page *);
++#ifdef CONFIG_PAGE_EXTENSION
++struct page_ext_operations;
++extern struct page_ext_operations demeter_alloc_page_ext_ops;
+ #endif
++#else
++static inline void demeter_alloc_free(struct page *p, unsigned int o) {}
++static inline void demeter_alloc_migrate(struct page *old, struct page *new) {}
++#endif
++#endif
+--- a/mm/PhaseTieing_alloc.c
++++ b/mm/PhaseTieing_alloc.c
+@@ -1,9 +1,10 @@
+ // SPDX-License-Identifier: GPL-2.0
+-/* A finite anonymous-allocation allowance shared by a Sandbox subtree.
+- * Residency feedback can clamp but never refill a live phase's allowance.
+- * This deliberately trades unused capacity for avoiding repeated credit.
+- * Private file COW also creates anonymous pages here. File cache, explicit
+- * VMA policy and non-order-0 allocations are excluded.
++/* Recyclable order-0 anonymous-allocation reservations for a Sandbox subtree.
++ * Credits return only after a tagged physical page is freed, or an in-flight
++ * reservation fails. Residency feedback supplies a conservative admission
++ * ceiling; it never creates credits. File cache, explicit VMA policy and
++ * non-order-0 allocations remain outside this soft placement target.
++ * Local Guest page reuse is not evidence of released Host/VMM backing.
+  */
+ #include <linux/cgroup.h>
+ #include <linux/cpuset.h>
+@@ -15,6 +16,8 @@
+ #include <linux/rculist.h>
+ #include <linux/slab.h>
+ #include <linux/spinlock.h>
++#include <linux/jump_label.h>
++#include <linux/page_ext.h>
+ #include "internal.h"
+ 
+ struct demeter_alloc_rule {
+@@ -23,12 +26,40 @@
+ 	struct cgroup *group;
+ 	spinlock_t lock;
+ 	int fast_node, slow_node;
+-	unsigned long quota, remaining;
+-	bool active;
++	unsigned long quota, remaining, resident_bound, live, inflight, live_peak;
++	bool active, recycle;
+ 	u64 fast, slow, failed, fallback, native_fallback;
++	u64 committed, released, recycled, refunded, tracking_failed, feedback_commits;
+ };
+ static LIST_HEAD(alloc_rules);
+ static DEFINE_MUTEX(alloc_rules_lock);
++static DEFINE_STATIC_KEY_FALSE(demeter_alloc_tracking);
++
++#ifdef CONFIG_PAGE_EXTENSION
++/* Eight bytes/page (32 MiB for 16 GiB raw RAM), shared by every mode of
++ * the matched experiment. The page owns a kref until free or tag transfer. */
++struct demeter_alloc_tag { struct demeter_alloc_rule *owner; };
++static bool __init need_demeter_alloc_ext(void) { return true; }
++struct page_ext_operations demeter_alloc_page_ext_ops = {
++	.size = sizeof(struct demeter_alloc_tag), .need = need_demeter_alloc_ext,
++};
++static struct demeter_alloc_tag *alloc_tag(struct page_ext *ext)
++{
++	return page_ext_data(ext, &demeter_alloc_page_ext_ops);
++}
++#endif
++
++/* Called with the rule lock. In-flight pages are charged even across a phase
++ * or quota change. A stale resident bound blocks rather than refills. */
++static unsigned long alloc_ceiling(struct demeter_alloc_rule *r)
++{
++	unsigned long occupied = max(r->live, r->resident_bound);
++	if (!r->active || occupied >= r->quota ||
++	    r->inflight >= r->quota - occupied ||
++	    r->quota - occupied - r->inflight <= 128)
++		return 0;
++	return r->quota - occupied - r->inflight - 128;
++}
+ 
+ static void rule_release(struct kref *refs)
+ {
+@@ -37,7 +68,8 @@
+ 	kfree(r);
+ }
+ 
+-struct demeter_alloc_rule *demeter_alloc_register(struct cgroup *group, int fast, int slow)
++struct demeter_alloc_rule *demeter_alloc_register(struct cgroup *group, int fast, int slow,
++		bool recycle)
+ {
+ 	struct demeter_alloc_rule *r = kzalloc(sizeof(*r), GFP_KERNEL);
+ 	if (!r) return NULL;
+@@ -47,7 +79,9 @@
+ 	r->group = group;
+ 	r->fast_node = fast;
+ 	r->slow_node = slow;
++	r->recycle = recycle;
+ 	mutex_lock(&alloc_rules_lock);
++	static_branch_enable(&demeter_alloc_tracking);
+ 	list_add_tail_rcu(&r->link, &alloc_rules);
+ 	mutex_unlock(&alloc_rules_lock);
+ 	return r;
+@@ -74,29 +108,150 @@
+ 	 * is a placement target, not a hard cap on all memcg/Guest allocations. */
+ 	spare = quota > resident + 128 ? quota - resident - 128 : 0;
+ 	spin_lock_irqsave(&r->lock, flags);
+-	if (!active) r->remaining = 0;
+-	else if (new_phase) r->remaining = spare;
+-	else if (quota > r->quota)
+-		r->remaining = min(spare, r->remaining + quota - r->quota);
+-	else r->remaining = min(spare, r->remaining - min(r->remaining, r->quota - quota));
++	if (r->recycle) {
++		unsigned long old_quota = r->quota;
++		r->quota = quota;
++		r->active = active;
++		r->resident_bound = max(r->resident_bound, resident);
++		if (!active) r->remaining = 0;
++		else if (new_phase) r->remaining = alloc_ceiling(r);
++		else if (quota > old_quota)
++			r->remaining = min(quota, r->remaining + quota - old_quota);
++		else r->remaining -= min(r->remaining, old_quota - quota);
++		/* Periodic feedback may unblock refunded credit; never grant it. */
++	} else {
++		/* Same-kernel finite-credit ablation preserves the old allowance. */
++		if (!active) r->remaining = 0;
++		else if (new_phase) r->remaining = spare;
++		else if (quota > r->quota)
++			r->remaining = min(spare, r->remaining + quota - r->quota);
++		else r->remaining = min(spare, r->remaining - min(r->remaining, r->quota - quota));
++	}
+ 	r->quota = quota;
+ 	r->active = active;
+ 	spin_unlock_irqrestore(&r->lock, flags);
+ }
+ EXPORT_SYMBOL_NS_GPL(demeter_alloc_update, DEMETER);
+ 
++void demeter_alloc_feedback(struct demeter_alloc_rule *r, unsigned long resident,
++		u64 before_snapshot)
++{
++	unsigned long flags;
++	u64 delta;
++	if (!r) return;
++	spin_lock_irqsave(&r->lock, flags);
++	/* Read the commit watermark before reading memcg. Include all fast
++	 * commits during/after that read. Frees during the read are not
++	 * subtracted: doing so could count a release twice. */
++	if (before_snapshot == U64_MAX) before_snapshot = r->feedback_commits;
++	delta = r->committed - min(r->committed, before_snapshot);
++	r->resident_bound = max(r->live, resident + min_t(u64, delta, ULONG_MAX - resident));
++	r->feedback_commits = r->committed;
++	spin_unlock_irqrestore(&r->lock, flags);
++}
++EXPORT_SYMBOL_NS_GPL(demeter_alloc_feedback, DEMETER);
++
+ bool demeter_alloc_take(struct demeter_alloc_rule *r)
+ {
+ 	unsigned long flags;
+ 	bool take;
+ 	if (!r) return true; /* allocation ablation keeps existing promotion */
+ 	spin_lock_irqsave(&r->lock, flags);
+-	take = r->active && r->remaining;
+-	if (take) r->remaining--;
++	take = r->active && r->remaining && (!r->recycle || alloc_ceiling(r));
++	if (take) { r->remaining--; r->inflight++; }
+ 	spin_unlock_irqrestore(&r->lock, flags);
+ 	return take;
+ }
+ EXPORT_SYMBOL_NS_GPL(demeter_alloc_take, DEMETER);
++
++void demeter_alloc_finish(struct demeter_alloc_rule *r, struct page *page, bool promoted)
++{
++	unsigned long flags;
++	bool fast, tagged = false;
++	if (!r) return;
++	fast = page ? page_to_nid(page) == r->fast_node : promoted;
++#ifdef CONFIG_PAGE_EXTENSION
++	if (fast && page) {
++		struct page_ext *ext = page_ext_get(page);
++		if (ext) {
++			kref_get(&r->refs);
++			tagged = cmpxchg(&alloc_tag(ext)->owner, NULL, r) == NULL;
++			if (!tagged) kref_put(&r->refs, rule_release);
++			page_ext_put(ext);
++		}
++	}
++#endif
++	spin_lock_irqsave(&r->lock, flags);
++	WARN_ON_ONCE(!r->inflight);
++	r->inflight -= min(r->inflight, 1UL);
++	if (fast) {
++		r->committed++;
++		r->resident_bound++;
++		if (tagged) {
++			r->live++;
++			r->live_peak = max(r->live_peak, r->live);
++		} else r->tracking_failed++;
++	} else if (r->recycle && r->active) {
++		/* The reservation is globally in-flight, not attached to an epoch.
++		 * A new phase excluded it too; completion may safely refund it. */
++		r->remaining = min(r->quota, r->remaining + 1);
++		r->refunded++;
++	}
++	spin_unlock_irqrestore(&r->lock, flags);
++}
++EXPORT_SYMBOL_NS_GPL(demeter_alloc_finish, DEMETER);
++
++void demeter_alloc_free(struct page *page, unsigned int order)
++{
++#ifdef CONFIG_PAGE_EXTENSION
++	unsigned int i;
++	if (!static_branch_unlikely(&demeter_alloc_tracking)) return;
++	for (i = 0; i < (1U << order); i++) {
++		struct page_ext *ext = page_ext_get(page + i);
++		struct demeter_alloc_rule *r;
++		unsigned long flags;
++		if (!ext) continue;
++		r = xchg(&alloc_tag(ext)->owner, NULL);
++		page_ext_put(ext);
++		if (!r) continue;
++		spin_lock_irqsave(&r->lock, flags);
++		WARN_ON_ONCE(!r->live);
++		r->live -= min(r->live, 1UL);
++		r->released++;
++		if (r->recycle && r->active) {
++			r->remaining = min(r->quota, r->remaining + 1);
++			r->recycled++;
++		}
++		/* Do not lower the bound here: memcg may already have excluded
++		 * this page. A subsequent feedback snapshot unblocks the credit. */
++		spin_unlock_irqrestore(&r->lock, flags);
++		kref_put(&r->refs, rule_release);
++	}
++#endif
++}
++
++void demeter_alloc_migrate(struct page *old, struct page *new)
++{
++#ifdef CONFIG_PAGE_EXTENSION
++	struct page_ext *src, *dst;
++	struct demeter_alloc_rule *r;
++	if (!static_branch_unlikely(&demeter_alloc_tracking)) return;
++	/* A move to a different tier leaves ownership on the source until it
++	 * really reaches free_pages_prepare. A same-tier copy transfers the
++	 * tag, so freeing the obsolete source cannot fabricate a credit. */
++	if (page_to_nid(old) != page_to_nid(new)) return;
++	src = page_ext_get(old); dst = page_ext_get(new);
++	if (src && dst) {
++		r = xchg(&alloc_tag(src)->owner, NULL);
++		if (r) {
++			if (WARN_ON_ONCE(cmpxchg(&alloc_tag(dst)->owner, NULL, r) != NULL))
++				WRITE_ONCE(alloc_tag(src)->owner, r);
++		}
++	}
++	if (src) page_ext_put(src);
++	if (dst) page_ext_put(dst);
++#endif
++}
+ 
+ void demeter_alloc_stats(struct demeter_alloc_rule *r, struct demeter_alloc_stats *s)
+ {
+@@ -107,7 +262,12 @@
+ 	s->fast = r->fast; s->slow = r->slow;
+ 	s->failed = r->failed; s->fallback = r->fallback;
+ 	s->native_fallback = r->native_fallback;
+-	s->remaining = r->remaining;
++	s->remaining = r->recycle ? min(r->remaining, alloc_ceiling(r)) : r->remaining;
++	s->balance = r->remaining; s->live = r->live; s->inflight = r->inflight;
++	s->live_peak = r->live_peak; s->ceiling = alloc_ceiling(r);
++	s->committed = r->committed; s->released = r->released;
++	s->recycled = r->recycled; s->refunded = r->refunded;
++	s->tracking_failed = r->tracking_failed; s->recycle = r->recycle;
+ 	spin_unlock_irqrestore(&r->lock, flags);
+ }
+ EXPORT_SYMBOL_NS_GPL(demeter_alloc_stats, DEMETER);
+@@ -153,6 +313,7 @@
+ 		nodes_clear(mask); node_set(nid, mask);
+ 		*page = __alloc_pages_noprof(tier_gfp, 0, nid, &mask);
+ 	}
++	if (fast) demeter_alloc_finish(r, *page, false);
+ 	spin_lock_irqsave(&r->lock, flags);
+ 	if (!*page) {
+ 		r->failed++;
+@@ -160,7 +321,7 @@
+ 	}
+ 	else if (page_to_nid(*page) == r->fast_node) r->fast++;
+ 	else { r->slow++; if (fast) r->fallback++; }
+-	/* Failed reservations are not refunded into a possibly new phase. */
++	/* Lifetime ownership survives unregister and process exit until free. */
+ 	spin_unlock_irqrestore(&r->lock, flags);
+ 	kref_put(&r->refs, rule_release);
+ 	/* A tier target is a soft placement quota, not a nodemask hard cap.
+--- a/mm/page_ext.c
++++ b/mm/page_ext.c
+@@ -65,6 +65,8 @@
+ #define PAGE_EXT_INVALID       (0x1)
+ #endif
+ 
++#include <linux/PhaseTieing_alloc.h>
++
+ #if defined(CONFIG_PAGE_IDLE_FLAG) && !defined(CONFIG_64BIT)
+ static bool need_page_idle(void)
+ {
+@@ -77,6 +79,9 @@
+ #endif
+ 
+ static struct page_ext_operations *page_ext_ops[] __initdata = {
++#ifdef CONFIG_NUMA
++	&demeter_alloc_page_ext_ops,
++#endif
+ #ifdef CONFIG_PAGE_OWNER
+ 	&page_owner_ops,
+ #endif
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -55,6 +55,7 @@
+ #include <linux/delayacct.h>
+ #include <linux/cacheinfo.h>
+ #include <linux/pgalloc_tag.h>
++#include <linux/PhaseTieing_alloc.h>
+ #include <asm/div64.h>
+ #include "internal.h"
+ #include "shuffle.h"
+@@ -1089,6 +1090,9 @@
+ 	}
+ 
+ 	page_cpupid_reset_last(page);
++	/* Only a validated return to the Guest allocator retires ownership.
++	 * This is not a Host free-page-reporting acknowledgement. */
++	demeter_alloc_free(page, order);
+ 	page->flags &= ~PAGE_FLAGS_CHECK_AT_PREP;
+ 	reset_page_owner(page, order);
+ 	page_table_check_free(page, order);
+--- a/mm/migrate.c
++++ b/mm/migrate.c
+@@ -43,6 +43,7 @@
+ #include <linux/balloon_compaction.h>
+ #include <linux/page_idle.h>
+ #include <linux/page_owner.h>
++#include <linux/PhaseTieing_alloc.h>
+ #include <linux/sched/mm.h>
+ #include <linux/ptrace.h>
+ #include <linux/oom.h>
+@@ -657,6 +658,7 @@
+ 	folio_copy_owner(newfolio, folio);
+ 
+ 	mem_cgroup_migrate(folio, newfolio);
++	demeter_alloc_migrate(&folio->page, &newfolio->page);
+ }
+ EXPORT_SYMBOL(folio_migrate_flags);
+ 
+--- a/mm/PhaseTieing/sandbox.c
++++ b/mm/PhaseTieing/sandbox.c
+@@ -31,6 +31,8 @@
+ 
+ static bool sandbox_allocation_enabled = true;
+ module_param(sandbox_allocation_enabled, bool, 0444);
++static bool sandbox_recycle_credit = true;
++module_param(sandbox_recycle_credit, bool, 0444);
+ /* Allocation-only policy need not create PEBS events or scan address spaces. */
+ static bool sandbox_sampling_enabled = true;
+ module_param(sandbox_sampling_enabled, bool, 0444);
+@@ -1458,7 +1460,18 @@
+ 		 */
+ 		if (sb->fast_pages < sb->quota_pages && hot->benefit_ns > sb_copy_gate(sb) &&
+ 		    demeter_alloc_take(sb->alloc_rule)) {
+-			info[6]++; sb_move(sb, hot, true, now); budget--;
++			struct folio *placed = NULL;
++			int moved;
++			info[6]++; moved = sb_move(sb, hot, true, now); budget--;
++			if (!moved) {
++				mmap_read_lock(hot->space->mm);
++				placed = sb_resolve(hot->space, hot->addr, SB_R_VALIDATE);
++				mmap_read_unlock(hot->space->mm);
++			}
++			/* A successful move with a concurrently disappearing mapping
++			 * stays charged conservatively if its destination cannot be tagged. */
++			demeter_alloc_finish(sb->alloc_rule, placed ? &placed->page : NULL, !moved);
++			if (placed) folio_put(placed);
+ 			continue;
+ 		}
+ 		if (budget < 2) break;
+@@ -1629,7 +1642,8 @@
+ 	}
+ 	sb_reset(sb);
+ 	if (group && sandbox_allocation_enabled) {
+-		sb->alloc_rule = demeter_alloc_register(group, sandbox_fast_node, sandbox_slow_node);
++		sb->alloc_rule = demeter_alloc_register(group, sandbox_fast_node, sandbox_slow_node,
++			sandbox_recycle_credit);
+ 		if (!sb->alloc_rule) { err = -ENOMEM; goto out; }
+ 	}
+ 	sb->cgroup = group;
+@@ -1717,15 +1731,26 @@
+ {
+ 	struct sandbox *sb = SB_FROM_KOBJ(kobj);
+ 	unsigned long fast, slow;
+-	if (sscanf(buf, "%lu %lu", &fast, &slow) != 2)
++	u64 before = U64_MAX;
++	if (sscanf(buf, "%lu %lu %llu", &fast, &slow, &before) < 2)
+ 		return -EINVAL;
+ 	mutex_lock(&sb_lock);
+ 	sb->fast_pages = fast;
+ 	sb->slow_pages = slow;
++	demeter_alloc_feedback(sb->alloc_rule, fast, before);
+ 	demeter_alloc_update(sb->alloc_rule, sb->quota_pages, fast, sb->phase, false);
+ 	sb->feedback_ns = ktime_get_ns();
+ 	mutex_unlock(&sb_lock);
+ 	return count;
++}
++static ssize_t allocation_snapshot_show(struct kobject *kobj, struct kobj_attribute *attr,
++		char *buf)
++{
++	struct demeter_alloc_stats a;
++	mutex_lock(&sb_lock);
++	demeter_alloc_stats(SB_FROM_KOBJ(kobj)->alloc_rule, &a);
++	mutex_unlock(&sb_lock);
++	return sysfs_emit(buf, "%llu\n", a.committed);
+ }
+ static ssize_t stats_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+ {
+@@ -1789,6 +1814,10 @@
+ 		demeter_alloc_stats(s->alloc_rule, &a);
+ 		ret += sysfs_emit_at(buf, ret, "allocation_enabled %u\nallocation_fast %llu\nallocation_slow %llu\nallocation_failed %llu\nallocation_fallback %llu\nallocation_native_fallback %llu\nallocation_remaining %lu\n",
+ 			sandbox_allocation_enabled, a.fast, a.slow, a.failed, a.fallback, a.native_fallback, a.remaining);
++		ret += sysfs_emit_at(buf, ret,
++			"allocation_recycle_enabled %u\nallocation_committed %llu\nallocation_released %llu\nallocation_recycled %llu\nallocation_refunded %llu\nallocation_tracking_failed %llu\nallocation_balance %lu\nallocation_live_fast %lu\nallocation_inflight %lu\nallocation_live_peak %lu\nallocation_ceiling %lu\n",
++			sandbox_recycle_credit, a.committed, a.released, a.recycled, a.refunded,
++			a.tracking_failed, a.balance, a.live, a.inflight, a.live_peak, a.ceiling);
+ 	}
+ 	mutex_unlock(&sb_lock);
+ 	return ret;
+@@ -1831,10 +1860,11 @@
+ static struct kobj_attribute sb_phase = __ATTR_RW_MODE(phase, 0600);
+ static struct kobj_attribute sb_horizon = __ATTR(horizon_ms, 0200, NULL, horizon_ms_store);
+ static struct kobj_attribute sb_quota = __ATTR_RW_MODE(quota_pages, 0600);
++static struct kobj_attribute sb_alloc_snapshot = __ATTR_RO_MODE(allocation_snapshot, 0400);
+ static struct kobj_attribute sb_residency = __ATTR(residency, 0200, NULL, residency_store);
+ static struct kobj_attribute sb_stats = __ATTR_RO(stats);
+ static struct attribute *sb_attrs[] = {
+-	&sb_cgroup.attr, &sb_phase.attr, &sb_horizon.attr, &sb_quota.attr, &sb_residency.attr, &sb_stats.attr, &sb_events.attr, &sb_diagnostics.attr, NULL,
++	&sb_cgroup.attr, &sb_phase.attr, &sb_horizon.attr, &sb_quota.attr, &sb_residency.attr, &sb_alloc_snapshot.attr, &sb_stats.attr, &sb_events.attr, &sb_diagnostics.attr, NULL,
+ };
+ ATTRIBUTE_GROUPS(sb);
+ static const struct kobj_type sb_ktype = {

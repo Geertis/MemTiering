@@ -1,0 +1,81 @@
+--- a/mm/page_reporting.c
++++ b/mm/page_reporting.c
+@@ -16,11 +16,19 @@
+ 
+ static int page_order_update_notify(const char *val, const struct kernel_param *kp)
+ {
++	unsigned int previous = READ_ONCE(page_reporting_order);
++	int err;
++
+ 	/*
+ 	 * If param is set beyond this limit, order is set to default
+ 	 * pageblock_order value
+ 	 */
+-	return  param_set_uint_minmax(val, kp, 0, MAX_PAGE_ORDER);
++	err = param_set_uint_minmax(val, kp, 0, MAX_PAGE_ORDER);
++	/* Existing small free blocks need a pass even without a new free. */
++	if (!err && previous <= MAX_PAGE_ORDER &&
++	    READ_ONCE(page_reporting_order) < previous)
++		__page_reporting_notify();
++	return err;
+ }
+ 
+ static const struct kernel_param_ops page_reporting_param_ops = {
+@@ -181,6 +189,12 @@
+ 
+ 	/* loop through free list adding unreported pages to sg list */
+ 	list_for_each_entry_safe(page, next, list, lru) {
++		/* A resumed tool can raise the floor during a low-order pass.
++		 * Finish already isolated pages, but stop taking small blocks.
++		 */
++		if (order < READ_ONCE(page_reporting_order))
++			break;
++
+ 		/* We are going to skip over the reported pages. */
+ 		if (PageReported(page))
+ 			continue;
+@@ -258,7 +272,8 @@
+ 
+ static int
+ page_reporting_process_zone(struct page_reporting_dev_info *prdev,
+-			    struct scatterlist *sgl, struct zone *zone)
++			    struct scatterlist *sgl, struct zone *zone,
++			    unsigned int min_order)
+ {
+ 	unsigned int order, mt, leftover, offset = PAGE_REPORTING_CAPACITY;
+ 	unsigned long watermark;
+@@ -266,7 +281,7 @@
+ 
+ 	/* Generate minimum watermark to be able to guarantee progress */
+ 	watermark = low_wmark_pages(zone) +
+-		    (PAGE_REPORTING_CAPACITY << page_reporting_order);
++		    (PAGE_REPORTING_CAPACITY << min_order);
+ 
+ 	/*
+ 	 * Cancel request if insufficient free memory or if we failed
+@@ -276,7 +291,7 @@
+ 		return err;
+ 
+ 	/* Process each free list starting from lowest order/mt */
+-	for (order = page_reporting_order; order < NR_PAGE_ORDERS; order++) {
++	for (order = min_order; order < NR_PAGE_ORDERS; order++) {
+ 		for (mt = 0; mt < MIGRATE_TYPES; mt++) {
+ 			/* We do not pull pages from the isolate free list */
+ 			if (is_migrate_isolate(mt))
+@@ -312,6 +327,7 @@
+ 	int err = 0, state = PAGE_REPORTING_ACTIVE;
+ 	struct scatterlist *sgl;
+ 	struct zone *zone;
++	unsigned int min_order = READ_ONCE(page_reporting_order);
+ 
+ 	/*
+ 	 * Change the state to "Active" so that we can track if there is
+@@ -329,7 +345,7 @@
+ 	sg_init_table(sgl, PAGE_REPORTING_CAPACITY);
+ 
+ 	for_each_zone(zone) {
+-		err = page_reporting_process_zone(prdev, sgl, zone);
++		err = page_reporting_process_zone(prdev, sgl, zone, min_order);
+ 		if (err)
+ 			break;
+ 	}

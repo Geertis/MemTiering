@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+if (( $# < 1 )); then
+  echo 'usage: PhaseTieing-controller {coordinator|ssd|cxl} [controller options]' >&2
+  exit 2
+fi
+medium=$1
+shift
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+case "$medium" in
+  coordinator) exec python3 "$root/runtime/cxl/cxl_controller.py" "$@" ;;
+  ssd|cxl) exec python3 "$root/runtime/$medium/adaptive_controller.py" --cold-media "$medium" "$@" ;;
+  *) echo 'expected coordinator, ssd or cxl' >&2; exit 2 ;;
+esac

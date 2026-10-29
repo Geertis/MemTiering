@@ -1,0 +1,68 @@
+--- a/include/linux/PhaseTieing_alloc.h
++++ b/include/linux/PhaseTieing_alloc.h
+@@ -7,7 +7,7 @@
+ struct vm_area_struct;
+ struct demeter_alloc_rule;
+ struct demeter_alloc_stats {
+-	u64 fast, slow, failed, fallback;
++	u64 fast, slow, failed, fallback, native_fallback;
+ 	unsigned long remaining;
+ };
+ struct demeter_alloc_rule *demeter_alloc_register(struct cgroup *, int, int);
+--- a/mm/PhaseTieing_alloc.c
++++ b/mm/PhaseTieing_alloc.c
+@@ -25,7 +25,7 @@
+ 	int fast_node, slow_node;
+ 	unsigned long quota, remaining;
+ 	bool active;
+-	u64 fast, slow, failed, fallback;
++	u64 fast, slow, failed, fallback, native_fallback;
+ };
+ static LIST_HEAD(alloc_rules);
+ static DEFINE_MUTEX(alloc_rules_lock);
+@@ -106,6 +106,7 @@
+ 	spin_lock_irqsave(&r->lock, flags);
+ 	s->fast = r->fast; s->slow = r->slow;
+ 	s->failed = r->failed; s->fallback = r->fallback;
++	s->native_fallback = r->native_fallback;
+ 	s->remaining = r->remaining;
+ 	spin_unlock_irqrestore(&r->lock, flags);
+ }
+@@ -147,11 +148,22 @@
+ 		*page = __alloc_pages_noprof(gfp, 0, nid, &mask);
+ 	}
+ 	spin_lock_irqsave(&r->lock, flags);
+-	if (!*page) r->failed++;
++	if (!*page) {
++		r->failed++;
++		r->native_fallback++;
++	}
+ 	else if (page_to_nid(*page) == r->fast_node) r->fast++;
+ 	else { r->slow++; if (fast) r->fallback++; }
+ 	/* Failed reservations are not refunded into a possibly new phase. */
+ 	spin_unlock_irqrestore(&r->lock, flags);
+ 	kref_put(&r->refs, rule_release);
+-	return true;
++	/* A tier target is a soft placement quota, not a nodemask hard cap.
++	 * Returning a handled NULL here can cause fault/OOM retries forever:
++	 * the selected node is exhausted while the normal policy still has
++	 * available memory. Let vma_alloc_folio apply its original policy and
++	 * cpuset constraints. This can exceed the DRAM target; residency must
++	 * remain charged until the allocator/controller observes release.
++	 * native_fallback counts handoffs, not successful native allocations.
++	 */
++	return *page != NULL;
+ }
+--- a/mm/PhaseTieing/sandbox.c
++++ b/mm/PhaseTieing/sandbox.c
+@@ -1758,8 +1758,8 @@
+ 	{
+ 		struct demeter_alloc_stats a;
+ 		demeter_alloc_stats(s->alloc_rule, &a);
+-		ret += sysfs_emit_at(buf, ret, "allocation_enabled %u\nallocation_fast %llu\nallocation_slow %llu\nallocation_failed %llu\nallocation_fallback %llu\nallocation_remaining %lu\n",
+-			sandbox_allocation_enabled, a.fast, a.slow, a.failed, a.fallback, a.remaining);
++		ret += sysfs_emit_at(buf, ret, "allocation_enabled %u\nallocation_fast %llu\nallocation_slow %llu\nallocation_failed %llu\nallocation_fallback %llu\nallocation_native_fallback %llu\nallocation_remaining %lu\n",
++			sandbox_allocation_enabled, a.fast, a.slow, a.failed, a.fallback, a.native_fallback, a.remaining);
+ 	}
+ 	mutex_unlock(&sb_lock);
+ 	return ret;

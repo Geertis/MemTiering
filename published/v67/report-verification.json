@@ -1,0 +1,14 @@
+{
+  "snapshot": "2026-10-29T13:33:49+08:00",
+  "experiment_cutoff": "2026-10-29T13:14:11+08:00",
+  "completed": 41,
+  "strict_groups": 82,
+  "paired_dynamic_runs": 246,
+  "raw_metric_checks": 738,
+  "new_metric_checks": 180,
+  "case_coverage": 228,
+  "all_links_exist": true,
+  "paused_preserved": true,
+  "report_sha256": "aa0c19ccf25d06b12bd733ddccefd46d72012a91466fbc7299856a1d243f09d4",
+  "checked_time": "2026-10-29T13:42:40+08:00"
+}

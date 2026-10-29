@@ -1,0 +1,14 @@
+[
+  {
+    "id": "sandbox-a",
+    "cgroup": "/sys/fs/cgroup/agent-a",
+    "weight": 1.0,
+    "sensitivity": 1.0
+  },
+  {
+    "id": "sandbox-b",
+    "cgroup": "/sys/fs/cgroup/agent-b",
+    "weight": 1.0,
+    "sensitivity": 1.0
+  }
+]

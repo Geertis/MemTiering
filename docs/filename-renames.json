@@ -1,0 +1,377 @@
+{
+  "project": "PhaseTieing",
+  "renames": [
+    {
+      "before": "bin/memtiering-controller",
+      "after": "bin/PhaseTieing-controller"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter-sandbox-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-sandbox-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter-reporting-barrier.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-reporting-barrier.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter_alloc.h",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing_alloc.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter-reporting-quiesce.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-reporting-quiesce.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter_alloc.c",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing_alloc.c"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter-pebs-registration-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-pebs-registration-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter-wait-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-wait-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter-sandbox-alloc-noreclaim.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-sandbox-alloc-noreclaim.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter-reporting-fine-counters.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-reporting-fine-counters.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter-balloon-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-balloon-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/demeter-sandbox-alloc-recovery.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-sandbox-alloc-recovery.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter-sandbox-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-sandbox-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter-reporting-barrier.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-reporting-barrier.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter_alloc.h",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing_alloc.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter-reporting-quiesce.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-reporting-quiesce.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter_alloc.c",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing_alloc.c"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter-pebs-registration-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-pebs-registration-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter-wait-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-wait-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter-sandbox-alloc-noreclaim.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-sandbox-alloc-noreclaim.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter-reporting-fine-counters.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-reporting-fine-counters.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter-balloon-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-balloon-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/demeter-sandbox-alloc-recovery.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-sandbox-alloc-recovery.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter-sandbox-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-sandbox-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter-reporting-barrier.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-reporting-barrier.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter_alloc.h",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing_alloc.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter-reporting-quiesce.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-reporting-quiesce.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter_alloc.c",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing_alloc.c"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter-pebs-registration-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-pebs-registration-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter-wait-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-wait-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter-sandbox-alloc-noreclaim.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-sandbox-alloc-noreclaim.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter-reporting-fine-counters.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-reporting-fine-counters.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter-balloon-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-balloon-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/demeter-sandbox-alloc-recovery.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-sandbox-alloc-recovery.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter-sandbox-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-sandbox-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter-reporting-barrier.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-reporting-barrier.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter_alloc.h",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing_alloc.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter-reporting-quiesce.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-reporting-quiesce.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter_alloc.c",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing_alloc.c"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter-pebs-registration-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-pebs-registration-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter-wait-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-wait-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter-sandbox-alloc-noreclaim.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-sandbox-alloc-noreclaim.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter-reporting-fine-counters.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-reporting-fine-counters.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter-balloon-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-balloon-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/demeter-sandbox-alloc-recovery.patch",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-sandbox-alloc-recovery.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter-sandbox-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-sandbox-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter-reporting-barrier.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-reporting-barrier.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter_alloc.h",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing_alloc.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter-reporting-quiesce.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-reporting-quiesce.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter_alloc.c",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing_alloc.c"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter-pebs-registration-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-pebs-registration-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter-wait-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-wait-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter-sandbox-alloc-noreclaim.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-sandbox-alloc-noreclaim.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter-reporting-fine-counters.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-reporting-fine-counters.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter-balloon-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-balloon-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/demeter-sandbox-alloc-recovery.patch",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-sandbox-alloc-recovery.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter-sandbox-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-sandbox-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter-reporting-barrier.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-reporting-barrier.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter_alloc.h",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing_alloc.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter-reporting-quiesce.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-reporting-quiesce.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter_alloc.c",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing_alloc.c"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter-pebs-registration-lifecycle.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-pebs-registration-lifecycle.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter-wait-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-wait-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter-sandbox-alloc-noreclaim.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-sandbox-alloc-noreclaim.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter-reporting-fine-counters.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-reporting-fine-counters.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter-balloon-reporting.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-balloon-reporting.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/demeter-sandbox-alloc-recovery.patch",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-sandbox-alloc-recovery.patch"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/demeter.h",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/PhaseTieing.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/demeter.h",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/PhaseTieing.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/demeter.h",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/PhaseTieing.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/demeter.h",
+      "after": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/PhaseTieing.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/demeter.h",
+      "after": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/PhaseTieing.h"
+    },
+    {
+      "before": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/demeter.h",
+      "after": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/PhaseTieing.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter",
+      "after": "backend/kernel-overrides/mm/PhaseTieing"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter_alloc.c",
+      "after": "backend/kernel-overrides/mm/PhaseTieing_alloc.c"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/demeter.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/PhaseTieing.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/cwisstable.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/cwisstable.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/module.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/module.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/sysfs.c",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/sysfs.c"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/Makefile",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/Makefile"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/vector.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/vector.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/balloon.c",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/balloon.c"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/sandbox.c",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/sandbox.c"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/sandbox.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/sandbox.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/range_tree.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/range_tree.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/module.c",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/module.c"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/mpsc.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/mpsc.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/core.c",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/core.c"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/error.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/error.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/vector.c",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/vector.c"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/pebs.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/pebs.h"
+    },
+    {
+      "before": "backend/kernel-overrides/mm/demeter/hashmap.h",
+      "after": "backend/kernel-overrides/mm/PhaseTieing/hashmap.h"
+    },
+    {
+      "before": "backend/kernel-overrides/include/linux/demeter_alloc.h",
+      "after": "backend/kernel-overrides/include/linux/PhaseTieing_alloc.h"
+    }
+  ]
+}

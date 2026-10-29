@@ -1,0 +1,813 @@
+--- a/mm/PhaseTieing/sandbox.c
++++ b/mm/PhaseTieing/sandbox.c
+@@ -27,13 +27,16 @@
+ 
+ #define SB_MAX 8
+ #define SB_TASK_MAX 64
+-#define SB_REGION_MAX 4096
++#define SB_REGION_MAX 8192
+ #define SB_POOL_MAX 256
++#define SB_FILE_POOL_MAX 1024
++#define SB_BACKOFF_MAX 8192
+ #define SB_REGION_SHIFT 16
+ #define SB_REGION_PAGES (1U << (SB_REGION_SHIFT - PAGE_SHIFT))
+ #define SB_RING_BYTES (1 << 20)
+ #define SB_PROFILE_MAX 64
+ #define SB_NS_MS 1000000ULL
++#define SB_RATE_SCALE 1024ULL
+ 
+ static unsigned int sandbox_period_ms = 50;
+ module_param(sandbox_period_ms, uint, 0444);
+@@ -48,6 +51,37 @@
+ /* Explicit calibration inputs, in nanoseconds; neither is a PEBS weight. */
+ static unsigned int sandbox_latency_delta_ns = 80;
+ module_param(sandbox_latency_delta_ns, uint, 0644);
++/* ALL_LOADS and ALL_STORES have comparable retired-instruction units.
++ * The legacy latency event remains selectable for a controlled ablation.
++ */
++static unsigned int sandbox_load_event = 0x81d0;
++module_param(sandbox_load_event, uint, 0444);
++static bool sandbox_page_heat = true;
++module_param(sandbox_page_heat, bool, 0444);
++static unsigned int sandbox_confidence_prior = 4;
++module_param(sandbox_confidence_prior, uint, 0444);
++static unsigned long sandbox_load_sample_period = 65535;
++module_param(sandbox_load_sample_period, ulong, 0444);
++static unsigned int sandbox_load_weight_permille = 1000;
++module_param(sandbox_load_weight_permille, uint, 0444);
++static unsigned int sandbox_store_weight_permille = 1000;
++module_param(sandbox_store_weight_permille, uint, 0444);
++static bool sandbox_sample_diagnostics;
++module_param(sandbox_sample_diagnostics, bool, 0444);
++static unsigned int sandbox_wait_batch_pages = 1024;
++module_param(sandbox_wait_batch_pages, uint, 0444);
++/* Bound WAIT reclamation without truncating a normal 256-page batch. */
++static bool sandbox_active_kind_learning = true;
++module_param(sandbox_active_kind_learning, bool, 0444);
++static bool sandbox_skip_unprofitable_scan = true;
++module_param(sandbox_skip_unprofitable_scan, bool, 0444);
++static unsigned int sandbox_reclaim_time_ms = 20;
++module_param(sandbox_reclaim_time_ms, uint, 0444);
++
++static unsigned int sb_heat_shift(void)
++{
++	return sandbox_page_heat ? PAGE_SHIFT : SB_REGION_SHIFT;
++}
+ static unsigned int sandbox_criticality_permille = 250;
+ module_param(sandbox_criticality_permille, uint, 0644);
+ /* Bounded one-second access window, with a half-second startup prior.
+@@ -79,17 +113,19 @@
+  u64 values[SB_DIAG_FIELDS];
+ };
+ enum { SB_D_CREATE=1, SB_D_DROP, SB_D_CANDIDATES, SB_D_DECISION,
+-       SB_D_MOVE, SB_D_EXCHANGE, SB_D_CLEAR, SB_D_RELATIVE, SB_D_FILE };
++       SB_D_MOVE, SB_D_EXCHANGE, SB_D_CLEAR, SB_D_RELATIVE, SB_D_FILE,
++       SB_D_SAMPLE };
+ enum { SB_R_SAMPLE, SB_R_HOT, SB_R_COLD, SB_R_VALIDATE };
+ enum { SB_R_VMA, SB_R_ABSENT, SB_R_FILE, SB_R_LARGE, SB_R_SHARED,
+        SB_R_KSM, SB_R_FOREIGN, SB_R_OK };
+ 
+ struct sb_region {
+ 	unsigned long base, last_addr, last_pfn, pfn_addr;
+-	/* rate/history are accesses per millisecond, independent of wake cadence. */
++	/* Page mode keeps fractional rates in units of 1/1024 access per ms. */
+ 	u64 accesses, rate, history[4], last_sample_ns, moved_ns;
+ 	u64 phase_seq;
+ 	u64 heat[8], heat_stamp[8];
++	u32 hits[8];
+ 	unsigned int kind;
+ };
+ struct sb_mm {
+@@ -100,9 +136,15 @@
+ 	atomic64_t mapping_epoch;
+ 	u64 epoch_seen, generation, born_ns, diag_samples;
+ 	struct xarray regions;
++	struct xarray backoff;
++	unsigned int nr_backoff;
+ 	unsigned int nr_regions, refs, kind;
++	bool kind_valid;
+ 	unsigned long cursor, hot_cursor;
+ 	u64 diag_info[14];
++	u64 heat[8], heat_stamp[8], heat_hits[8], sample_phase_seq;
++	u64 mean_rate, mean_history[4], window_hits;
++	unsigned long anonymous_pages;
+ 	char comm[TASK_COMM_LEN];
+ };
+ struct sb_task {
+@@ -114,12 +156,25 @@
+ 	bool seen, enabled;
+ };
+ struct sb_sample {
+-	u64 generation, epoch, phase_seq, time_ns, addr, accesses;
++	u64 generation, epoch, phase_seq, time_ns, addr;
++	u32 accesses, source;
++	/* Only diagnostics carry this tail; the normal queue record is 48 B. */
++	u64 period, latency, data_src;
+ };
++static size_t sb_sample_bytes(void)
++{
++	return sandbox_sample_diagnostics ? sizeof(struct sb_sample) :
++		offsetof(struct sb_sample, period);
++}
++static bool sb_sample_valid(const struct sb_sample *sample, ssize_t received)
++{
++	return received == (ssize_t)sb_sample_bytes() && sample->source < MAX_EVENTS;
++}
+ struct sb_candidate {
+ 	struct sb_mm *space;
+ 	unsigned long addr, pfn;
+ 	u64 epoch, benefit_ns;
++	unsigned int evidence;
+ };
+ struct sb_lifetime {
+ 	char comm[TASK_COMM_LEN];
+@@ -146,7 +201,11 @@
+ 	u64 old_gate_profitable_pairs, old_gate_cross_pairs, relative_exchanges;
+ 	atomic64_t captured_load, captured_store, rejected_tid;
+ 	u64 file_demotions, file_failed, file_scanned, file_eligible, file_skipped;
+-	struct folio *file_pool[SB_POOL_MAX];
++	u64 load_weighted, store_weighted, reclaim_timeouts, unprofitable_scan_skips, lifetime_kind_assignments;
++	unsigned int nr_backoff;
++	u64 backoff_limited;
++	u64 sample_format_errors;
++	struct folio *file_pool[SB_FILE_POOL_MAX];
+ 	struct sb_mm *mm_order[SB_TASK_MAX];
+ 	bool cold_used[SB_POOL_MAX];
+ 	atomic64_t sampling_ns;
+@@ -167,6 +226,7 @@
+ extern int folio_exchange_isolated(struct folio *, struct folio *, enum migrate_mode);
+ extern bool folio_isolate_lru(struct folio *);
+ extern void folio_putback_lru(struct folio *);
++static struct folio *sb_resolve(struct sb_mm *, unsigned long, unsigned int);
+ 
+ static void sb_diag_emit(struct sandbox *sb, struct sb_mm *space,
+  struct sb_mm *peer, unsigned int event, const u64 *values, unsigned int n)
+@@ -227,6 +287,14 @@
+ 		kfree(region);
+ 	xa_destroy(&space->regions);
+ 	xa_init(&space->regions);
++	xa_destroy(&space->backoff);
++	xa_init(&space->backoff);
++	sb->nr_backoff -= space->nr_backoff; space->nr_backoff = 0;
++	memset(space->heat, 0, sizeof(space->heat));
++	memset(space->heat_stamp, 0, sizeof(space->heat_stamp));
++	memset(space->heat_hits, 0, sizeof(space->heat_hits));
++	memset(space->mean_history, 0, sizeof(space->mean_history));
++	space->mean_rate = space->window_hits = 0;
+ 	sb->nr_regions -= space->nr_regions;
+ 	space->nr_regions = 0;
+ 	space->epoch_seen = atomic64_read(&space->mapping_epoch);
+@@ -255,9 +323,9 @@
+ 
+ static void sb_space_drop(struct sandbox *sb, struct sb_mm *space)
+ {
+-	struct sb_lifetime *p = sb_profile(sb, space, space->kind, true);
++	struct sb_lifetime *p = space->kind_valid ? sb_profile(sb, space, space->kind, true) : NULL;
+  SB_DIAG(sb, space, NULL, SB_D_DROP, ktime_get_ns() - space->born_ns,
+-         space->nr_regions, space->refs, space->diag_samples);
++         space->nr_regions, space->refs, space->diag_samples, space->kind, space->kind_valid);
+ 	/* Only complete mm lifetimes are observations. Controller teardown must
+ 	 * not train the duration predictor with censored observations.
+ 	 */
+@@ -278,9 +346,9 @@
+ {
+ 	struct sb_task *target = event->overflow_handler_context;
+ 	struct sb_sample sample;
+-	u64 started = ktime_get_mono_fast_ns();
++	u64 started = ktime_get_mono_fast_ns(), period;
+ 	perf_prepare_sample(data, event, regs);
+-	atomic64_inc(event->attr.config == event_attrs[EVENT_LOAD].config ?
++	atomic64_inc(event->attr.config == sandbox_load_event ?
+ 		&target->sandbox->captured_load : &target->sandbox->captured_store);
+ 	/* exec may change this task's mm before the discovery tick. An old mm
+ 	 * can remain live in a CLONE_VM sibling: generation lookup alone would
+@@ -296,11 +364,20 @@
+ 	sample.phase_seq = READ_ONCE(target->sandbox->phase_seq);
+ 	sample.time_ns = ktime_get_mono_fast_ns();
+ 	sample.addr = data->addr;
+-	sample.accesses = event->attr.sample_period;
++	sample.source = event->attr.config == sandbox_load_event ? EVENT_LOAD : EVENT_STORE;
++	period = event->attr.sample_period;
++	if (sandbox_sample_diagnostics) {
++		sample.period = period;
++		sample.latency = data->weight.full;
++		sample.data_src = data->data_src.val;
++	}
++	sample.accesses = min(div64_u64(min(period, 1000000000ULL) *
++		(sample.source == EVENT_LOAD ? sandbox_load_weight_permille :
++		 sandbox_store_weight_permille), 1000), 1000000000ULL);
+ 	/* Non-inheriting events are explicitly installed on each discovered
+ 	 * thread, so each mm has a single shared heat table without duplicates.
+ 	 */
+-	mpsc_send(target->sandbox->samples, &sample, sizeof(sample));
++	mpsc_send(target->sandbox->samples, &sample, sb_sample_bytes());
+ 	atomic64_add(ktime_get_mono_fast_ns() - started, &target->sandbox->sampling_ns);
+ }
+ 
+@@ -317,6 +394,19 @@
+ 	sb->nr_tasks--;
+ }
+ 
++/* Birth in WAIT gives no execution-kind information. Assign the first
++ * observed ACTIVE kind, once; later WAIT or tool transitions must not rewrite
++ * the completed-process lifetime class. This also covers processes discovered
++ * before the runtime's start event, without sharing their page addresses. */
++static void sb_note_kind(struct sb_mm *space, unsigned int phase, unsigned int kind)
++{
++	if (sandbox_active_kind_learning && phase && !space->kind_valid) {
++		space->kind = kind;
++		space->kind_valid = true;
++		space->sandbox->lifetime_kind_assignments++;
++	}
++}
++
+ static struct sb_mm *sb_space_get(struct sandbox *sb, struct mm_struct *mm,
+ 				  struct task_struct *task)
+ {
+@@ -336,8 +426,11 @@
+ 	space->generation = atomic64_inc_return(&mm_sequence);
+ 	space->born_ns = ktime_get_ns();
+ 	space->kind = sb->kind;
++	space->kind_valid = !sandbox_active_kind_learning;
++	sb_note_kind(space, sb->phase, sb->kind);
+ 	get_task_comm(space->comm, task);
+ 	xa_init(&space->regions);
++	xa_init(&space->backoff);
+ 	atomic64_set(&space->mapping_epoch, 0);
+ 	space->notifier.ops = &sb_notifier_ops;
+ 	if (mmu_notifier_register(&space->notifier, mm)) {
+@@ -350,7 +443,7 @@
+  return space;
+ }
+ 
+-static void sb_discover(struct sandbox *sb)
++static noinline void sb_discover(struct sandbox *sb)
+ {
+ 	struct task_struct *leader, *task, *found[SB_TASK_MAX];
+ 	struct sb_task *target, *tmp;
+@@ -408,6 +501,14 @@
+ 		for (unsigned int e = 0; e < MAX_EVENTS; e++) {
+ 			struct perf_event_attr attr = event_attrs[e];
+ 			struct perf_event *event;
++			if (e == EVENT_LOAD) {
++				attr.config = sandbox_load_event;
++				attr.sample_period = sandbox_load_sample_period;
++				if (sandbox_load_event == 0x81d0)
++					attr.config1 = 0;
++			}
++			if (sandbox_sample_diagnostics)
++				attr.sample_type |= PERF_SAMPLE_DATA_SRC;
+ 			attr.inherit = 0;
+ 			attr.inherit_thread = 0;
+ 			attr.disabled = 1;
+@@ -435,14 +536,21 @@
+ 			sb_space_drop(sb, space);
+ }
+ 
+-static void sb_samples(struct sandbox *sb)
++static noinline void sb_samples(struct sandbox *sb)
+ {
+ 	struct sb_sample sample;
+ 	unsigned int batch = 0;
+-	while (batch++ < 32768 && mpsc_recv(sb->samples, &sample, sizeof(sample)) > 0) {
++	ssize_t received;
++	while (batch++ < 32768 &&
++	       (received = mpsc_recv(sb->samples, &sample, sizeof(sample))) > 0) {
+ 		struct sb_mm *space, *match = NULL;
+ 		struct sb_region *r;
+-		unsigned long index = sample.addr >> SB_REGION_SHIFT;
++		unsigned long index;
++		if (!sb_sample_valid(&sample, received)) {
++			sb->sample_format_errors++;
++			continue;
++		}
++		index = sample.addr >> sb_heat_shift();
+ 		list_for_each_entry(space, &sb->spaces, link)
+ 			if (space->generation == sample.generation) {
+ 				match = space;
+@@ -455,6 +563,35 @@
+ 		}
+ 		if (match->epoch_seen != sample.epoch)
+ 			sb_clear_regions(sb, match);
++		if (sample.source == EVENT_LOAD) sb->load_weighted += sample.accesses;
++		else sb->store_weighted += sample.accesses;
++		if (sandbox_sample_diagnostics)
++			SB_DIAG(sb, match, NULL, SB_D_SAMPLE, sample.source,
++				sample.addr, sample.period, sample.accesses, sample.latency,
++				sb_heat_shift(), sample.data_src, sample.time_ns);
++		if (sandbox_page_heat) {
++			struct folio *f;
++			u64 bucket = div64_u64(sample.time_ns, 125 * SB_NS_MS);
++			unsigned int slot = bucket % ARRAY_SIZE(match->heat);
++			if (!sample.accesses) continue;
++			mmap_read_lock(match->mm);
++			f = sb_resolve(match, sample.addr, SB_R_SAMPLE);
++			mmap_read_unlock(match->mm);
++			if (!f) continue;
++			folio_put(f);
++			if (match->sample_phase_seq != sb->phase_seq) {
++				memset(match->heat, 0, sizeof(match->heat));
++				memset(match->heat_stamp, 0, sizeof(match->heat_stamp));
++				memset(match->heat_hits, 0, sizeof(match->heat_hits));
++				match->sample_phase_seq = sb->phase_seq;
++			}
++			if (match->heat_stamp[slot] != bucket) {
++				match->heat_stamp[slot] = bucket;
++				match->heat[slot] = match->heat_hits[slot] = 0;
++			}
++			match->heat[slot] = min(match->heat[slot] + sample.accesses, 1000000000ULL);
++			match->heat_hits[slot]++;
++		}
+ 		r = xa_load(&match->regions, index);
+ 		if (!r) {
+ 			if (sb->nr_regions == SB_REGION_MAX) {
+@@ -466,7 +603,7 @@
+ 				sb->overflow++;
+ 				continue;
+ 			}
+-			r->base = index << SB_REGION_SHIFT;
++			r->base = index << sb_heat_shift();
+ 			if (xa_err(xa_store(&match->regions, index, r, GFP_KERNEL))) {
+ 				kfree(r);
+ 				sb->overflow++;
+@@ -483,6 +620,7 @@
+ 			r->rate = 0;
+ 			memset(r->heat, 0, sizeof(r->heat));
+ 			memset(r->heat_stamp, 0, sizeof(r->heat_stamp));
++			memset(r->hits, 0, sizeof(r->hits));
+ 			r->phase_seq = sb->phase_seq;
+ 		}
+ 		{
+@@ -491,8 +629,10 @@
+ 			if (r->heat_stamp[slot] != bucket) {
+ 				r->heat_stamp[slot] = bucket;
+ 				r->heat[slot] = 0;
++				r->hits[slot] = 0;
+ 			}
+ 			r->heat[slot] = min(r->heat[slot] + sample.accesses, 1000000000ULL);
++			r->hits[slot] = min(r->hits[slot] + 1, 1000000U);
+ 		}
+ 		r->accesses = min(r->accesses + sample.accesses, 1000000000ULL);
+ 		r->last_addr = sample.addr & PAGE_MASK;
+@@ -537,12 +677,42 @@
+  return NULL;
+ }
+ 
++static bool sb_on_cooldown(struct sb_mm *space, unsigned long addr, u64 now)
++{
++	void *entry = xa_load(&space->backoff, addr >> PAGE_SHIFT);
++	return entry && div64_u64(now, SB_NS_MS) - (xa_to_value(entry) - 1) < sandbox_cooldown_ms;
++}
++
++static void sb_prune_backoff(struct sb_mm *space, u64 now)
++{
++	unsigned long index; void *entry;
++	xa_for_each(&space->backoff, index, entry)
++		if (div64_u64(now, SB_NS_MS) - (xa_to_value(entry) - 1) >= sandbox_cooldown_ms) {
++			xa_erase(&space->backoff, index);
++			space->nr_backoff--; space->sandbox->nr_backoff--;
++		}
++}
++
++static bool sb_begin_move(struct sb_candidate *c, u64 now)
++{
++	struct sb_mm *space = c->space;
++	unsigned long index = c->addr >> PAGE_SHIFT;
++	bool existing = xa_load(&space->backoff, index) != NULL;
++	if ((!existing && space->sandbox->nr_backoff == SB_BACKOFF_MAX) ||
++	    xa_err(xa_store(&space->backoff, index,
++		 xa_mk_value(div64_u64(now, SB_NS_MS) + 1), GFP_NOWAIT))) {
++		space->sandbox->backoff_limited++; return false;
++	}
++	if (!existing) { space->nr_backoff++; space->sandbox->nr_backoff++; }
++	return true;
++}
++
+ static u64 sb_benefit(struct sandbox *sb, struct sb_mm *space,
+ 		      struct sb_region *r, u64 now)
+ {
+ 	u64 horizon, accesses, benefit, rate;
+ 	struct sb_lifetime *p;
+-	if (!sb->phase || now - r->moved_ns < sandbox_cooldown_ms * SB_NS_MS)
++	if (!sb->phase || (r && now - r->moved_ns < sandbox_cooldown_ms * SB_NS_MS))
+ 		return 0;
+ 	horizon = sb->deadline_ns > now ? sb->deadline_ns - now : 100 * SB_NS_MS;
+ 	/* Unknown processes receive a conservative half-second lifetime prior.
+@@ -551,20 +721,62 @@
+ 	p = sb_profile(sb, space, sb->kind, false);
+ 	if (p && p->count >= 2) {
+ 		u64 age = now - space->born_ns;
+-		horizon = min(horizon, p->duration_ns > age ? p->duration_ns - age : 100 * SB_NS_MS);
++		/* Surviving the old mean is evidence, not an imminent-exit signal. */
++		horizon = min(horizon, p->duration_ns > age ? p->duration_ns - age : 500 * SB_NS_MS);
+ 	} else
+ 		horizon = min(horizon, 500 * SB_NS_MS);
+ 	horizon = min(horizon, 5000 * SB_NS_MS);
+-	rate = r->rate;
+-	if (r->phase_seq != sb->phase_seq || now - r->last_sample_ns > (sandbox_smoothed_heat ? 1000 : 200) * SB_NS_MS)
++	if (!r && !sandbox_page_heat) return 0;
++	rate = r ? r->rate : space->mean_rate;
++	if (r && (r->phase_seq != sb->phase_seq || now - r->last_sample_ns > (sandbox_smoothed_heat ? 1000 : 200) * SB_NS_MS))
+ 		rate = r->history[sb->kind] / 4;
+-	accesses = min(div64_u64(rate * horizon, SB_NS_MS) /
+-		       SB_REGION_PAGES, 1000000000ULL);
++	/* Keep fractional page rates until the final ns conversion. */
++	accesses = mul_u64_u64_div_u64(rate, horizon, SB_NS_MS);
++	if (!sandbox_page_heat) accesses /= SB_REGION_PAGES;
++	accesses = min(accesses, 1000000000ULL * (sandbox_page_heat ? SB_RATE_SCALE : 1));
+ 	benefit = div64_u64(accesses * min(sandbox_latency_delta_ns, 5000U) *
+-			   min(sandbox_criticality_permille, 1000U), 1000);
++		min(sandbox_criticality_permille, 1000U),
++		1000 * (sandbox_page_heat ? SB_RATE_SCALE : 1));
+ 	return benefit;
+ }
+ 
++static void sb_space_rate(struct sandbox *sb, struct sb_mm *space, u64 now)
++{
++	u64 total = 0, hits = 0, bucket = div64_u64(now, 125 * SB_NS_MS);
++	u64 observation = clamp_t(u64, now - sb->phase_start_ns, 500 * SB_NS_MS, 1000 * SB_NS_MS);
++	space->anonymous_pages = max(get_mm_counter(space->mm, MM_ANONPAGES), 1UL);
++	if (space->sample_phase_seq != sb->phase_seq) {
++		space->mean_rate = space->mean_history[sb->kind] / 4;
++		space->window_hits = 0;
++		return;
++	}
++	for (unsigned int j = 0; j < ARRAY_SIZE(space->heat); j++)
++		if (bucket >= space->heat_stamp[j] && bucket - space->heat_stamp[j] < 8) {
++			total += space->heat[j]; hits += space->heat_hits[j];
++		}
++	space->window_hits = hits;
++	space->mean_rate = div64_u64(div64_u64(total * SB_NS_MS * SB_RATE_SCALE, observation), space->anonymous_pages);
++	if (space->mean_rate)
++		space->mean_history[sb->kind] = (3 * space->mean_history[sb->kind] + space->mean_rate) / 4;
++}
++
++static u64 sb_page_rate(struct sb_mm *space, u64 total, u64 hits, u64 observation)
++{
++	u64 raw = div64_u64(total * SB_NS_MS * SB_RATE_SCALE, observation);
++	u64 prior, denom;
++	if (!sandbox_confidence_prior) return raw;
++	/* One hit in a sparsely covered address space is weak evidence of a
++	 * hotspot. Pool toward this exact mm's observed mean, never another mm.
++	 * A frequent page can still overcome the prior. No absolute-cold gate. */
++	prior = sandbox_confidence_prior * max_t(u64, 1,
++		div64_u64(space->anonymous_pages, max(space->window_hits, 1ULL)));
++	prior = min(prior, 1000000000ULL);
++	denom = hits + prior;
++	if (raw >= space->mean_rate)
++		return space->mean_rate + mul_u64_u64_div_u64(raw - space->mean_rate, hits, denom);
++	return raw + mul_u64_u64_div_u64(space->mean_rate - raw, prior, denom);
++}
++
+ static int sb_hot_cmp(const void *a, const void *b)
+ {
+ 	const struct sb_candidate *x = a, *y = b;
+@@ -619,6 +831,7 @@
+ 	struct min_heap hot = { .data = sb->hot, .size = SB_POOL_MAX };
+ 	struct min_heap cold = { .data = sb->cold, .size = SB_POOL_MAX };
+ 	unsigned int spaces = 0, per_mm;
++	bool background_hot = false;
+ 	bool wait_settled = !sb->phase &&
+ 		now - sb->phase_start_ns >= sandbox_wait_grace_ms * SB_NS_MS;
+ 
+@@ -632,13 +845,19 @@
+ 	for (unsigned int i = 0; i < spaces; i++) {
+ 		struct sb_region *r;
+ 		unsigned long index;
+-		unsigned int hot_left = per_mm, cold_left = per_mm;
++		unsigned int hot_left = per_mm;
+ 		u64 *info;
+ 		space = order[(i + sb->decisions) % spaces];
+ 		info = space->diag_info;
+ 		memset(info, 0, sizeof(space->diag_info));
+ 		if (space->epoch_seen != atomic64_read(&space->mapping_epoch))
+ 			sb_clear_regions(sb, space);
++		sb_prune_backoff(space, now);
++		if (sandbox_page_heat) {
++			sb_space_rate(sb, space, now);
++			background_hot |= sb_benefit(sb, space, NULL, now) >
++				min(sb->copy_ns, sb->exchange_cost_ns);
++		}
+ 		mmap_read_lock(space->mm);
+ 		/* Update every tracked region, even when the resolution budget is
+ 		 * exhausted. A cursor then rotates the hot-page resolution window.
+@@ -648,15 +867,22 @@
+ 				u64 per_ms = div64_u64(r->accesses * SB_NS_MS,
+ 						     max(elapsed, SB_NS_MS));
+ 				if (sandbox_smoothed_heat) {
+-					u64 bucket = div64_u64(now, 125 * SB_NS_MS), total = 0;
++					u64 bucket = div64_u64(now, 125 * SB_NS_MS), total = 0, hits = 0;
+ 					u64 observation = clamp_t(u64, now - sb->phase_start_ns,
+ 								500 * SB_NS_MS, 1000 * SB_NS_MS);
+ 					for (unsigned int j = 0; j < ARRAY_SIZE(r->heat); j++)
+-						if (bucket >= r->heat_stamp[j] && bucket - r->heat_stamp[j] < 8)
++						if (bucket >= r->heat_stamp[j] && bucket - r->heat_stamp[j] < 8) {
+ 							total += r->heat[j];
++							hits += r->hits[j];
++						}
+ 					r->rate = div64_u64(total * SB_NS_MS, observation);
++					/* Shrink sparse evidence; this is a conservative prior,
++					 * not a statistical guarantee or extra hardware samples. */
++					if (sandbox_page_heat)
++						r->rate = sb_page_rate(space, total, hits, observation);
+ 				} else
+-					r->rate = (r->rate + per_ms) / 2;
++					r->rate = (r->rate + per_ms *
++					(sandbox_page_heat ? SB_RATE_SCALE : 1)) / 2;
+ 				r->accesses = 0;
+ 				if (r->rate)
+ 					r->history[sb->kind] = (3 * r->history[sb->kind] + r->rate) / 4;
+@@ -666,6 +892,7 @@
+ 			struct folio *sampled;
+ 			u64 benefit = sb_benefit(sb, space, r, now);
+ 			space->hot_cursor = index + 1;
++			if (sb_on_cooldown(space, r->base, now)) continue;
+ 			if (!benefit) { info[6]++; continue; }
+ 			info[13] = max(info[13], benefit);
+ 			if (benefit <= min(sb->copy_ns, sb->exchange_cost_ns)) { info[7]++; continue; }
+@@ -677,6 +904,7 @@
+ 			    r->last_pfn != folio_pfn(sampled)) {
+ 				r->rate = r->accesses = 0;
+ 				memset(r->heat, 0, sizeof(r->heat));
++				memset(r->hits, 0, sizeof(r->hits));
+ 				memset(r->history, 0, sizeof(r->history));
+ 				benefit = 0;
+ 			}
+@@ -685,7 +913,7 @@
+ 			folio_put(sampled);
+ 			if (!benefit) continue;
+ 			for (unsigned long addr = r->base;
+-			     addr < r->base + (1UL << SB_REGION_SHIFT) && hot_left;
++			     addr < r->base + (1UL << sb_heat_shift()) && hot_left;
+ 			     addr += PAGE_SIZE) {
+ 				struct folio *folio = sb_resolve(space, addr, SB_R_HOT);
+ 				hot_left--;
+@@ -694,6 +922,7 @@
+ 					struct sb_candidate c = {
+ 						.space = space, .addr = addr, .pfn = folio_pfn(folio),
+ 						.epoch = space->epoch_seen, .benefit_ns = benefit,
++						.evidence = sandbox_page_heat ? 1 : 2,
+ 					};
+ 					sb_offer(&hot, &c, &sb_hot_heap);
+ 				}
+@@ -701,6 +930,27 @@
+ 			}
+ 		}
+ 		if (hot_left) space->hot_cursor = 0;
++		mmap_read_unlock(space->mm);
++		info[9] = space->nr_regions; info[10] = now - space->born_ns;
++		info[11] = space->refs; info[12] = space->diag_samples;
++	}
++	/* Resolve slow candidates first across ALL address spaces. No cold scan
++	 * is needed when no profitable promotion/substitution is possible and
++	 * residency is already within quota. Background (unsampled) hot pages
++	 * and quota reclamation remain reasons to scan. This changes no gate.
++	 */
++	if (sandbox_skip_unprofitable_scan && !hot.nr && !background_hot &&
++	    sb->fast_pages <= sb->quota_pages) {
++		sb->unprofitable_scan_skips++;
++		goto candidates_done;
++	}
++	for (unsigned int i = 0; i < spaces; i++) {
++		struct sb_region *r;
++		unsigned int cold_left = per_mm;
++		u64 *info;
++		space = order[(i + sb->decisions) % spaces];
++		info = space->diag_info;
++		mmap_read_lock(space->mm);
+ 		{
+ 			VMA_ITERATOR(vmi, space->mm, space->cursor);
+ 			struct vm_area_struct *vma;
+@@ -724,16 +974,26 @@
+ 					if (!folio) { info[5]++; continue; }
+ 					if (folio_nid(folio) == FMEM_NID) info[3]++;
+ 					if (folio_nid(folio) == SMEM_NID) info[4]++;
+-					r = xa_load(&space->regions, addr >> SB_REGION_SHIFT);
+-					benefit = r ? sb_benefit(sb, space, r, now) : 0;
++					r = xa_load(&space->regions, addr >> sb_heat_shift());
++					benefit = sb_benefit(sb, space, r, now);
++					if (sb_on_cooldown(space, addr, now)) { folio_put(folio); continue; }
+ 					if (folio_nid(folio) == FMEM_NID &&
+ 					    (!r || now - r->moved_ns >= sandbox_cooldown_ms * SB_NS_MS) &&
+ 					    (wait_settled || sb->phase)) {
+ 						struct sb_candidate c = {
+ 							.space = space, .addr = addr, .pfn = folio_pfn(folio),
+ 							.epoch = space->epoch_seen, .benefit_ns = benefit,
++							.evidence = r ? (sandbox_page_heat ? 1 : 2) : (sandbox_page_heat ? 3 : 0),
+ 						};
+ 						sb_offer(&cold, &c, &sb_cold_heap);
++					} else if (sandbox_page_heat && !r && folio_nid(folio) == SMEM_NID &&
++						   benefit > min(sb->copy_ns, sb->exchange_cost_ns)) {
++						struct sb_candidate c = {
++							.space = space, .addr = addr, .pfn = folio_pfn(folio),
++							.epoch = space->epoch_seen, .benefit_ns = benefit,
++							.evidence = r ? 1 : 3,
++						};
++						sb_offer(&hot, &c, &sb_hot_heap);
+ 					}
+ 					folio_put(folio);
+ 				}
+@@ -746,6 +1006,7 @@
+ 		info[9] = space->nr_regions; info[10] = now - space->born_ns;
+ 		info[11] = space->refs; info[12] = space->diag_samples;
+ 	}
++candidates_done:
+ 	*hot_count = hot.nr; *cold_count = cold.nr;
+ 	sort(sb->hot, hot.nr, sizeof(sb->hot[0]), sb_hot_cmp, NULL);
+ 	sort(sb->cold, cold.nr, sizeof(sb->cold[0]), sb_cold_cmp, NULL);
+@@ -784,7 +1045,7 @@
+ 
+ static void sb_mark_moved(struct sb_candidate *c, u64 now)
+ {
+-	struct sb_region *r = xa_load(&c->space->regions, c->addr >> SB_REGION_SHIFT);
++	struct sb_region *r = xa_load(&c->space->regions, c->addr >> sb_heat_shift());
+ 	if (r) {
+ 		r->moved_ns = now;
+ 		/* Migration changes the PFN while preserving virtual identity. */
+@@ -795,8 +1056,10 @@
+ static int sb_move(struct sandbox *sb, struct sb_candidate *c, bool up, u64 now)
+ {
+ 	u64 started = ktime_get_ns(), core, cost;
+-	struct folio *folio = sb_validate(sb, c, up ? SMEM_NID : FMEM_NID);
+-	int err = -ENOENT;
++	struct folio *folio = NULL;
++	int err = -ENOMEM;
++	if (!sb_begin_move(c, now)) goto done;
++	folio = sb_validate(sb, c, up ? SMEM_NID : FMEM_NID); err = -ENOENT;
+ 	if (!folio) goto done;
+ 	core = ktime_get_ns();
+ 	/* The helper consumes the FOLL_GET reference, including error paths. */
+@@ -821,7 +1084,7 @@
+ 	if (!err) sb->copy_ns = (7 * sb->copy_ns + cost) / 8;
+ 	else sb->copy_ns = max(sb->copy_ns, cost);
+ 	SB_DIAG(sb, c->space, NULL, SB_D_MOVE, up, (u64)(s64)err,
+-		folio ? 1 : 0, c->benefit_ns, sb->copy_ns, cost);
++		folio ? 1 : 0, c->benefit_ns, sb->copy_ns, cost, c->addr, c->evidence);
+ 	return err;
+ }
+ 
+@@ -847,8 +1110,10 @@
+ 			struct sb_candidate *cold, u64 now)
+ {
+ 	u64 started = ktime_get_ns(), core, cost;
+-	struct folio *p = sb_validate(sb, hot, SMEM_NID), *d;
+-	int err = -ENOENT, stage = 0;
++	struct folio *p = NULL, *d;
++	int err = -ENOMEM, stage = 0;
++	if (!sb_begin_move(hot, now) || !sb_begin_move(cold, now)) goto done;
++	p = sb_validate(sb, hot, SMEM_NID); err = -ENOENT;
+ 	if (!p) goto done;
+ 	stage = 1;
+ 	d = sb_validate(sb, cold, FMEM_NID);
+@@ -876,7 +1141,8 @@
+ 	if (!err) sb->exchange_cost_ns = (7 * sb->exchange_cost_ns + cost) / 8;
+ 	else sb->exchange_cost_ns = max(sb->exchange_cost_ns, cost);
+ 	SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)err,
+-		stage, hot->benefit_ns, cold->benefit_ns, sb->exchange_cost_ns, cost);
++		stage, hot->benefit_ns, cold->benefit_ns, sb->exchange_cost_ns, cost,
++		hot->addr, cold->addr, hot->evidence, cold->evidence);
+ 	return err;
+ }
+ 
+@@ -908,6 +1174,7 @@
+ 	unsigned int scanned = 0, count = 0, visited = 0, attempts = 0;
+ 	unsigned int last_lru = sb->phase ? LRU_INACTIVE_FILE : LRU_ACTIVE_FILE;
+ 	u64 migration_ns = 0;
++	u64 stop_ns = ktime_get_ns() + sandbox_reclaim_time_ms * SB_NS_MS;
+ 	if (!sandbox_file_demotion || !budget || sb->fast_pages <= sb->quota_pages)
+ 		return 0;
+ 	/* Multi-generation pages are on separate lists; this walk covers only
+@@ -916,7 +1183,7 @@
+ 	if (!root) return 0;
+ 	/* An ancestor's effective memcg must never broaden Sandbox ownership. */
+ 	if (root->cgroup != sb->cgroup) { css_put(root); return 0; }
+-	while (scanned < sandbox_scan_pages && count < min(budget, SB_POOL_MAX) &&
++	while (scanned < sandbox_scan_pages && count < min(budget, SB_FILE_POOL_MAX) &&
+ 	       visited++ < SB_TASK_MAX) {
+ 		struct lruvec *lv;
+ 		struct folio *f;
+@@ -932,7 +1199,7 @@
+ 		spin_lock_irqsave(&lv->lru_lock, flags);
+ 		for (unsigned int lru = LRU_INACTIVE_FILE; lru <= last_lru; lru++) {
+ 			list_for_each_entry_reverse(f, &lv->lists[lru], lru) {
+-				if (scanned == sandbox_scan_pages || count == min(budget, SB_POOL_MAX))
++				if (scanned == sandbox_scan_pages || count == min(budget, SB_FILE_POOL_MAX))
+ 					break;
+ 				scanned++;
+ 				if (!sb_file_ok(sb, f) || !folio_try_get(f)) { sb->file_skipped++; continue; }
+@@ -947,6 +1214,11 @@
+ 	for (unsigned int i = 0; i < count; i++) {
+ 		struct folio *f = sb->file_pool[i];
+ 		int err;
++		if (ktime_get_ns() >= stop_ns) {
++			sb->reclaim_timeouts++;
++			for (; i < count; i++) folio_put(sb->file_pool[i]);
++			break;
++		}
+ 		if (sb->fast_pages <= sb->quota_pages || !sb_file_ok(sb, f)) {
+ 			folio_put(f); continue;
+ 		}
+@@ -967,7 +1239,8 @@
+ 
+ static void sb_decide(struct sandbox *sb, u64 now)
+ {
+-	unsigned int nh, nc, budget = sandbox_batch_pages, reclaim;
++	unsigned int nh, nc, budget = sb->phase ? sandbox_batch_pages :
++		 sandbox_wait_batch_pages, reclaim;
+ 	bool *used = sb->cold_used;
+ 	u64 elapsed = sb->decision_ns ? now - sb->decision_ns : sandbox_period_ms * SB_NS_MS;
+ 	u64 info[20] = {sb->fast_pages, sb->quota_pages, 0, 0, sb->copy_ns};
+@@ -1199,6 +1472,11 @@
+ 	mutex_lock(&sb_lock);
+ 	sb->phase = phase;
+ 	sb->kind = kind;
++	{
++		struct sb_mm *space;
++		list_for_each_entry(space, &sb->spaces, link)
++			sb_note_kind(space, phase, kind);
++	}
+ 	sb->phase_seq++;
+ 	sb->phase_start_ns = ktime_get_ns();
+ 	sb->deadline_ns = sb->phase_start_ns + horizon_ms * SB_NS_MS;
+@@ -1207,6 +1485,20 @@
+ 	mutex_unlock(&sb_lock);
+ 	return count;
+ }
++/* Keepalive changes neither phase identity nor the heat/grace clock. */
++static ssize_t horizon_ms_store(struct kobject *kobj, struct kobj_attribute *attr,
++			       const char *buf, size_t count)
++{
++	struct sandbox *sb = SB_FROM_KOBJ(kobj);
++	unsigned int horizon;
++	if (kstrtouint(buf, 10, &horizon) || horizon < 100 || horizon > 5000)
++		return -EINVAL;
++	mutex_lock(&sb_lock);
++	if (sb->phase) sb->deadline_ns = ktime_get_ns() + horizon * SB_NS_MS;
++	mutex_unlock(&sb_lock);
++	return count;
++}
++
+ static ssize_t quota_pages_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+ {
+ 	return sysfs_emit(buf, "%lu\n", READ_ONCE(SB_FROM_KOBJ(kobj)->quota_pages));
+@@ -1227,6 +1519,7 @@
+ 		return -ENOSPC;
+ 	}
+ 	SB_FROM_KOBJ(kobj)->quota_pages = quota;
++	if (sb_worker) wake_up_process(sb_worker);
+ 	mutex_unlock(&sb_lock);
+ 	return count;
+ }
+@@ -1275,6 +1568,22 @@
+ 		s->file_failed, s->file_scanned, s->file_eligible, s->file_skipped);
+ 	ret += sysfs_emit_at(buf, ret, "exchange_cost_ns %llu\nplacement_ns %llu\nsmoothed_heat %u\n",
+ 		s->exchange_cost_ns, s->placement_ns, sandbox_smoothed_heat);
++	ret += sysfs_emit_at(buf, ret, "load_event %u\n", sandbox_load_event);
++	ret += sysfs_emit_at(buf, ret,
++		"heat_shift %u\nconfidence_prior %u\nload_weighted %llu\nstore_weighted %llu\n"
++		"wait_batch_pages %u\nreclaim_timeouts %llu\nmetadata_limit %u\n",
++		sb_heat_shift(), sandbox_confidence_prior, s->load_weighted,
++		s->store_weighted, sandbox_wait_batch_pages, s->reclaim_timeouts, SB_REGION_MAX);
++	ret += sysfs_emit_at(buf, ret, "skip_unprofitable_scan %u\nunprofitable_scan_skips %llu\n",
++		sandbox_skip_unprofitable_scan, s->unprofitable_scan_skips);
++	ret += sysfs_emit_at(buf, ret, "lifetime_kind_assignments %llu\n", s->lifetime_kind_assignments);
++	ret += sysfs_emit_at(buf, ret,
++		"sample_record_bytes %zu\nsample_ring_bytes %u\nsample_format_errors %llu\n",
++		sb_sample_bytes(), SB_RING_BYTES, s->sample_format_errors);
++	ret += sysfs_emit_at(buf, ret, "phase_seq %llu\nphase_start_ns %llu\ndeadline_ns %llu\n",
++		s->phase_seq, s->phase_start_ns, s->deadline_ns);
++	ret += sysfs_emit_at(buf, ret, "load_sample_period %lu\nbackoff_entries %u\nbackoff_limited %llu\n",
++		sandbox_load_sample_period, s->nr_backoff, s->backoff_limited);
+ 	mutex_unlock(&sb_lock);
+ 	return ret;
+ }
+@@ -1314,11 +1623,12 @@
+ static struct kobj_attribute sb_diagnostics = __ATTR_RO(diagnostics);
+ static struct kobj_attribute sb_cgroup = __ATTR_RW_MODE(cgroup, 0600);
+ static struct kobj_attribute sb_phase = __ATTR_RW_MODE(phase, 0600);
++static struct kobj_attribute sb_horizon = __ATTR(horizon_ms, 0200, NULL, horizon_ms_store);
+ static struct kobj_attribute sb_quota = __ATTR_RW_MODE(quota_pages, 0600);
+ static struct kobj_attribute sb_residency = __ATTR(residency, 0200, NULL, residency_store);
+ static struct kobj_attribute sb_stats = __ATTR_RO(stats);
+ static struct attribute *sb_attrs[] = {
+-	&sb_cgroup.attr, &sb_phase.attr, &sb_quota.attr, &sb_residency.attr, &sb_stats.attr, &sb_events.attr, &sb_diagnostics.attr, NULL,
++	&sb_cgroup.attr, &sb_phase.attr, &sb_horizon.attr, &sb_quota.attr, &sb_residency.attr, &sb_stats.attr, &sb_events.attr, &sb_diagnostics.attr, NULL,
+ };
+ ATTRIBUTE_GROUPS(sb);
+ static const struct kobj_type sb_ktype = {
+@@ -1422,7 +1732,14 @@
+ 	int err;
+ 	if (!sandbox_period_ms || sandbox_period_ms > 1000 ||
+ 	    !sandbox_scan_pages || sandbox_scan_pages > 65536 ||
+-	    !sandbox_batch_pages || sandbox_batch_pages > SB_POOL_MAX)
++	    !sandbox_batch_pages || sandbox_batch_pages > SB_POOL_MAX ||
++	    !sandbox_wait_batch_pages || sandbox_wait_batch_pages > SB_FILE_POOL_MAX ||
++	    !sandbox_reclaim_time_ms || sandbox_reclaim_time_ms > 20 ||
++	    sandbox_confidence_prior > 1000 ||
++	    sandbox_load_weight_permille > 100000 ||
++	    sandbox_store_weight_permille > 100000 ||
++	    sandbox_load_sample_period < 1024 || sandbox_load_sample_period > 1000000 ||
++	    (sandbox_load_event != 0x81d0 && sandbox_load_event != 0x01cd))
+ 		return -EINVAL;
+ 	sb_root = kobject_create_and_add("sandboxes", root);
+ 	if (!sb_root)

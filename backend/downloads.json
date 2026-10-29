@@ -1,0 +1,20 @@
+{
+  "kernel": {
+    "url": "https://github.com/gregkh/linux/archive/refs/tags/v6.10.tar.gz",
+    "sha256": "604f6b618a2ac526b225d30b39ea67ca5b1d28b499bd4266591427a2c6cc29a1"
+  },
+  "system_parts": [
+    {
+      "url": "https://github.com/vtta/sosp25-demeter/releases/download/v0.0.0/root.img.zst.part0",
+      "sha256": "2688f176a15728571a601ada1dae5e4358c8c644ac0cac3551141b8cf313ee5a"
+    },
+    {
+      "url": "https://github.com/vtta/sosp25-demeter/releases/download/v0.0.0/root.img.zst.part1",
+      "sha256": "fc042ef21ff486887ebdcdd9eb6eacdf4c0ccbd62ecc610a7b6d618dee2e4802"
+    },
+    {
+      "url": "https://github.com/vtta/sosp25-demeter/releases/download/v0.0.0/root.img.zst.part2",
+      "sha256": "8dc20b70394cdb2d8a7100a3e8323dfc2e3ee97a92962a691dc234b164bd17f4"
+    }
+  ]
+}

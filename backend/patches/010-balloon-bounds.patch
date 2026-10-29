@@ -1,0 +1,39 @@
+--- a/mm/PhaseTieing/balloon.c
++++ b/mm/PhaseTieing/balloon.c
+@@ -308,8 +308,11 @@
+ 	BUG_ON(idx != I_NORMAL && idx != I_HETERO);
+ 	u32 qidx = idx == I_NORMAL ? Q_DEFLATE : Q_HETERO_DEFLATE;
+ 	struct virtio_balloon_inner *inner = &vb->inner[idx];
+-	todo = min(todo, inner->len);
+ 	mutex_lock(&inner->lock);
++	/* A resize can request many thousands of pages; each virtqueue
++	 * descriptor is backed by this fixed-size PFN buffer. Recompute the
++	 * tracked count under the lock, also covering concurrent OOM deflate. */
++	todo = min(todo, min(inner->len, (u32)ARRAY_SIZE(inner->pfns)));
+ 	u32 done = 0;
+ 	struct list_head pages = LIST_HEAD_INIT(pages);
+ 	while (done < todo) {
+@@ -318,6 +321,11 @@
+ 			break;
+ 		inner->pfns[done++] = page_to_pfn(page);
+ 		list_add(&page->lru, &pages);
++	}
++	/* Isolation/compaction may temporarily leave no dequeueable page. */
++	if (!done) {
++		mutex_unlock(&inner->lock);
++		return 0;
+ 	}
+ 	vb_send_buf(vb, qidx, inner->pfns, sizeof(*inner->pfns) * done);
+ 	wait_event(vb->ack, vb_recv_buf(vb, qidx, NULL));
+@@ -697,7 +705,10 @@
+ 	vb_work_stop(vb);
+ 	for (u64 i = 0; i < ARRAY_SIZE(vb->inner); ++i) {
+ 		struct virtio_balloon_inner *inner = &vb->inner[i];
+-		vb_inner_deflate(vb, i, inner->len);
++		while (inner->len) {
++			vb_inner_deflate(vb, i, inner->len);
++			cond_resched();
++		}
+ 	}
+ }
+ 

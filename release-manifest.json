@@ -1,0 +1,4619 @@
+{
+  "project": "PhaseTieing",
+  "scope": "runtime, kernel backend, VMM, evaluation source and report summaries",
+  "revisions": {
+    "ssd": "v66-compact",
+    "cxl": "v67-compact",
+    "linux": "6.10",
+    "cloud_hypervisor": "36.0.0"
+  },
+  "backend_source_included": true,
+  "prebuilt_backend_included": false,
+  "files": [
+    {
+      "path": ".github/workflows/source.yml",
+      "sha256": "05aea4125f202d701a8ebfc103f067c76be2f92c83e7b91bd2cdc045dd6e73e1",
+      "bytes": 253
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "98afd5fb46ac2f41c4a5936f242a6cabc651a2c87d8ae2ad56b983242c777c62",
+      "bytes": 394
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+      "bytes": 18092
+    },
+    {
+      "path": "NOTICE.md",
+      "sha256": "9a20a39678d68a1c8a2a6494c2d6625bd38807bd5556d9c666f3579847f997e9",
+      "bytes": 1442
+    },
+    {
+      "path": "README.md",
+      "sha256": "706fefc615d0cdffb7e55ff0a441901bd7a458ca287f653669cc6758227cba57",
+      "bytes": 3660
+    },
+    {
+      "path": "backend/LICENSE",
+      "sha256": "8177f97513213526df2cf6184d8ff986c675afb514d4e68a404010521b880643",
+      "bytes": 18092
+    },
+    {
+      "path": "backend/downloads.json",
+      "sha256": "58abd68d7ec5939039cdf0fe918709527a16d088f45a8460c115b2dc4a7afd96",
+      "bytes": 789
+    },
+    {
+      "path": "backend/guest.config",
+      "sha256": "dec023baef91fcac885278a14351cfcba6a22ce878fb8f9c1f277a162eef6a52",
+      "bytes": 147513
+    },
+    {
+      "path": "backend/kernel-overrides/include/linux/PhaseTieing_alloc.h",
+      "sha256": "ab30411584e21ce9fccd24b355b65546ad7d8b7ad9fa6066c44996ae8421c2c9",
+      "bytes": 1491
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/Makefile",
+      "sha256": "33c83de6a62b29340a00f79ac4efa9fe579992bd88f1cb7678700782b8635c84",
+      "bytes": 381
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/PhaseTieing.h",
+      "sha256": "6ca9fc8eefd8e2627ee392fbff966a77d6fbaf82389409b62cd30ef95d9791c8",
+      "bytes": 473
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/core.c",
+      "sha256": "aac1cf6581ecd54f4a1f223e2865301e6b8b789f4c67d570018c3d19ea5d9aee",
+      "bytes": 28016
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/cwisstable.h",
+      "sha256": "0690c32222f7bf5fc1ade649153c30ea569404bba470095de12a5852dbc324e9",
+      "bytes": 148150
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/error.h",
+      "sha256": "70b0cf6f06e73f3d1e53b3e78b5d32ba69806f8949f7671200bc37adf4fc1e30",
+      "bytes": 3385
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/hashmap.h",
+      "sha256": "d6bf6e55aa510ac2bc2e0ae2360cbd54c424063143e83313e1b83aa3d6659af1",
+      "bytes": 2124
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/module.c",
+      "sha256": "7a758a1d64dd89268affc166745a97dafba3da48737c20e8664dd360ea261525",
+      "bytes": 5933
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/module.h",
+      "sha256": "f927feb241bf749c0be3368be23ddd39256eacbea201c253789845c47911ab56",
+      "bytes": 1752
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/mpsc.h",
+      "sha256": "44d1a865136dfac6f1242f1d44e0a68c16d36901087fa2168b947fc8c2a1c7df",
+      "bytes": 3145
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/pebs.h",
+      "sha256": "5ec5f45b9d901a803f378e6ea3b31342d717ab0d267379a450506a10354b47a3",
+      "bytes": 292
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/range_tree.h",
+      "sha256": "3d1f7f2c0f9a653be2397b5646e50e11e6c2c37b984b26b983c650ac69c8ca23",
+      "bytes": 11011
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/sandbox.h",
+      "sha256": "17d963ff8d0c6b52bdc805734fcfd96975b946842d6d099bcd79ac4da4dad895",
+      "bytes": 265
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/sysfs.c",
+      "sha256": "8ccefe1dd102f6d759c592052eec8786b1e3b6b474533f328a23b0d0b28293ab",
+      "bytes": 7143
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/vector.c",
+      "sha256": "f590264bb4c243a255c60dda0e8b9d4e95ac4c78fd3c5a78a9c5f4bba2438c81",
+      "bytes": 3371
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing/vector.h",
+      "sha256": "add28aef44a8860ad843d5dee91de18f9e59b76e2142cf63f7d003a9786f453a",
+      "bytes": 1902
+    },
+    {
+      "path": "backend/kernel-overrides/mm/PhaseTieing_alloc.c",
+      "sha256": "6709f918de4677db0f5cef9487e61c5df7be6b0ef93796e1b6f991129117f9c3",
+      "bytes": 11946
+    },
+    {
+      "path": "backend/kernel-overrides/mm/migrate.c",
+      "sha256": "e33e7ed85346b3dc872dda3639aca5698f9d5ed1135365833e9cef80b0529e78",
+      "bytes": 73014
+    },
+    {
+      "path": "backend/kernel-overrides/mm/page_alloc.c",
+      "sha256": "020f51d9b4632fd6c4166e5fb4e60a71316e44cebffb33cf5e9f2dc5883474e1",
+      "bytes": 199241
+    },
+    {
+      "path": "backend/kernel-overrides/mm/page_ext.c",
+      "sha256": "bc358f3413e3dcc68f8605b094d72cb5a5449e16f379e09ec206adc60e075136",
+      "bytes": 14491
+    },
+    {
+      "path": "backend/kernel-overrides/mm/page_reporting.c",
+      "sha256": "3063c785cd34594cf232da4ed9bf51a3e0df6711e9935d6b110b070eb0d99f06",
+      "bytes": 16858
+    },
+    {
+      "path": "backend/licenses/GPL-2.0",
+      "sha256": "f6b78c087c3ebdf0f3c13415070dd480a3f35d8fc76f3d02180a407c1c812f79",
+      "bytes": 18729
+    },
+    {
+      "path": "backend/patches/000-base-kernel.patch",
+      "sha256": "ddcc25193d889214ed7bafed1cac179692fcb6faf3aa6046d86341bb86343015",
+      "bytes": 340305
+    },
+    {
+      "path": "backend/patches/001-process-tree.patch",
+      "sha256": "4c56b4efd7efefd4dd81566fd075650350e64efd0344abcd8633b37fd345fb34",
+      "bytes": 4616
+    },
+    {
+      "path": "backend/patches/002-agent-adaptive.patch",
+      "sha256": "0af8974922eb45ec774ce4b138a1622d406fa013b5e909c0a582b51166e425d5",
+      "bytes": 5010
+    },
+    {
+      "path": "backend/patches/003-candidate-trace.patch",
+      "sha256": "7cd0c2b5d72991c1d2a465c9a37712eb2f4ad1bba7f9f2d4a05390ab9a725536",
+      "bytes": 3528
+    },
+    {
+      "path": "backend/patches/004-sandbox-phase.patch",
+      "sha256": "55a9f3fae8f9564f3afdca8575bced983e6bb989f58fc41784b6ed17dacf531a",
+      "bytes": 39248
+    },
+    {
+      "path": "backend/patches/005-sandbox-diagnostics.patch",
+      "sha256": "a8bbf2e27079ecf182af626d66bdf539ee2fab083f577cc562a770a184fb6699",
+      "bytes": 18286
+    },
+    {
+      "path": "backend/patches/006-sandbox-relative.patch",
+      "sha256": "ed2d5638a619497347d87f55988f1c081e6e83c3c1294b76f92bdfc38fa9a7ca",
+      "bytes": 22395
+    },
+    {
+      "path": "backend/patches/007-host-load-fallback.patch",
+      "sha256": "143279e8445a3bb821836d514bab56dc9bae804bbee0d4737f31beecb6046d51",
+      "bytes": 847
+    },
+    {
+      "path": "backend/patches/008-sandbox-benefit.patch",
+      "sha256": "251bc70cc92b0043f0d324c9391ec0ed557b144d52045d5e5c662158b7ae6656",
+      "bytes": 10517
+    },
+    {
+      "path": "backend/patches/009-sandbox-lookahead.patch",
+      "sha256": "1f9a5070b0ce03855633a142fcf214034541990e7c6fc873726c7eade6670420",
+      "bytes": 33407
+    },
+    {
+      "path": "backend/patches/010-balloon-bounds.patch",
+      "sha256": "02bfa1d555b1230427191ccb18c9fdaf8e84ab76c49270bfb3a1ac176f5ee490",
+      "bytes": 1330
+    },
+    {
+      "path": "backend/patches/011-sandbox-allocation.patch",
+      "sha256": "132ae5dd1219294da572cf7272015f87f7099868b6067d2e5ac1ccd7ea01965b",
+      "bytes": 20196
+    },
+    {
+      "path": "backend/patches/012-sandbox-lifecycle.patch",
+      "sha256": "8ae1d474c9a4f0e7d619fd3f0a6db8b98bbec2ce9a5cf6b67ed4bb3a344a864b",
+      "bytes": 8162
+    },
+    {
+      "path": "backend/patches/013-sandbox-alloc-recovery.patch",
+      "sha256": "be025371c2ba98d5e57d50336c1c256d1286baca103aa6891799f02e2233df64",
+      "bytes": 2765
+    },
+    {
+      "path": "backend/patches/014-sandbox-alloc-noreclaim.patch",
+      "sha256": "f56ba0c980f09e2d39522a3ccb590ec03b68773cdfc378546972fa5b0a225159",
+      "bytes": 1076
+    },
+    {
+      "path": "backend/patches/015-balloon-reporting.patch",
+      "sha256": "ebaa69f182b0953e4043a8d1f2695285c440d55cfec88f4b7a9182e650c8c6fc",
+      "bytes": 4627
+    },
+    {
+      "path": "backend/patches/016-sandbox-vmm-tradeoff.patch",
+      "sha256": "7c8832788e8842e9bbc200273a4ead818b9a03563bbd1e2368160f9122dee193",
+      "bytes": 12715
+    },
+    {
+      "path": "backend/patches/017-sandbox-residency-ledger.patch",
+      "sha256": "de60d9f1b9b958f73aa203d5b75463a02fe9ed31f875bd15f4b36d13129b1c33",
+      "bytes": 17949
+    },
+    {
+      "path": "backend/patches/018-wait-reporting.patch",
+      "sha256": "e23c594d3192dfb3a63e881dd8f5bd19a7a5c65e9f6e3d686276c600cf99aa2b",
+      "bytes": 2674
+    },
+    {
+      "path": "backend/patches/019-reporting-quiesce.patch",
+      "sha256": "484fa16a025cd46449e376be33f4fa5df1f6b5796db5079c580ce01856c920a3",
+      "bytes": 5385
+    },
+    {
+      "path": "backend/patches/020-reporting-fine-counters.patch",
+      "sha256": "68d76d755c67fa0a5671bbbae415b5316e58ca4672d48c16ba8f4d428d0c16e5",
+      "bytes": 2385
+    },
+    {
+      "path": "backend/patches/021-reporting-barrier.patch",
+      "sha256": "e6a10502e217f2877f079dbc620d14beccfbf45cb994929c1dc959e26c561328",
+      "bytes": 2547
+    },
+    {
+      "path": "backend/patches/022-pebs-registration-lifecycle.patch",
+      "sha256": "f6427a76d5504ce00dc15c1f9fb520afe07acdbf64bee779b59d7ce78277a3a4",
+      "bytes": 3358
+    },
+    {
+      "path": "backend/patches/series",
+      "sha256": "178b3cd5a461b6af99229f79afb7f549488ff12922012ead0a826ce41e35cb2f",
+      "bytes": 656
+    },
+    {
+      "path": "backend/patches/vmm-base.patch",
+      "sha256": "6c81df40ee6c229a1814e725f9532f7ddcf757a20c0e4265c227457cf8b321b5",
+      "bytes": 76580
+    },
+    {
+      "path": "backend/patches/vmm-return-receipts.patch",
+      "sha256": "a2cd85d0c859ea7c8468deb92412c1c6d98d005afa8342c0179a7a9c47d886f7",
+      "bytes": 11793
+    },
+    {
+      "path": "backend/policy_exec.c",
+      "sha256": "e985d83cd7fbff14c03fd584e4c274f33ced61d7202317c79e42c06c9f3e3f64",
+      "bytes": 719
+    },
+    {
+      "path": "backend/randomize_pages.c",
+      "sha256": "8de942820290f1efff0eeb830cad88b4aadec29c8bb3ff3cf8084db624a0f762",
+      "bytes": 9466
+    },
+    {
+      "path": "backend/vmm/.github/ISSUE_TEMPLATE/bug_report.md",
+      "sha256": "1431ccf406fe8166b2343356eadda8599a6e319bd2a426c5fa30df0f210cea2f",
+      "bytes": 578
+    },
+    {
+      "path": "backend/vmm/.github/dependabot.yml",
+      "sha256": "de1d3dc68293e7a659b24f4a2eddb145f192a1c4d3d8feb2b60a380f613268d1",
+      "bytes": 370
+    },
+    {
+      "path": "backend/vmm/.github/workflows/audit.yaml",
+      "sha256": "9dee536653e08abc37de9af3fd8c18627a1e9e3c11b87af2a402c12ab68a4e2a",
+      "bytes": 330
+    },
+    {
+      "path": "backend/vmm/.github/workflows/build.yaml",
+      "sha256": "bd16fcdad6ff9398d9b9f35e64262e90cdec49ab49c8044297319ebe9b91e65b",
+      "bytes": 2447
+    },
+    {
+      "path": "backend/vmm/.github/workflows/dco.yaml",
+      "sha256": "e182d7108113eeab24c6f314414feeca817a6f1423e448ffef9da76c20e79b16",
+      "bytes": 426
+    },
+    {
+      "path": "backend/vmm/.github/workflows/docker-image.yaml",
+      "sha256": "fe99142b30cf02872dafdece6727eb200019b7d69c60573aa97a2184bda8e53b",
+      "bytes": 1655
+    },
+    {
+      "path": "backend/vmm/.github/workflows/fuzz-build.yaml",
+      "sha256": "7c56b4b00e4608c330d80926345fe3d61738d996abc499f9e236a78d80708679",
+      "bytes": 951
+    },
+    {
+      "path": "backend/vmm/.github/workflows/hadolint.yaml",
+      "sha256": "3110ec3c378ddec649bcc36f8e9872d7cb908abe03630e7638030e1132e122d3",
+      "bytes": 528
+    },
+    {
+      "path": "backend/vmm/.github/workflows/quality.yaml",
+      "sha256": "43c51ae397e552e8ad883fb550bf0e2f6b892f36b9013ce4049d525f6e177e42",
+      "bytes": 5247
+    },
+    {
+      "path": "backend/vmm/.github/workflows/release.yaml",
+      "sha256": "a1c591059dbb4613aec94c1b71f17d0796c43427eb76166375bf941ab6a565c7",
+      "bytes": 6494
+    },
+    {
+      "path": "backend/vmm/.gitignore",
+      "sha256": "804f9333a30eb2d06eab68ef115d9c81866800bcd746ac97cf3482677e7a8186",
+      "bytes": 87
+    },
+    {
+      "path": "backend/vmm/.rustfmt.toml",
+      "sha256": "fb15e8e45ebf082778eb6032eafb480cb52624bb8d415ef6db398571c3ae53ad",
+      "bytes": 16
+    },
+    {
+      "path": "backend/vmm/.stamp",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "backend/vmm/.typos.toml",
+      "sha256": "c0e842468170c8ac579fa58a655c1cc76cf9fe993e52dd11c70606ff960ac73c",
+      "bytes": 366
+    },
+    {
+      "path": "backend/vmm/CODEOWNERS",
+      "sha256": "00aace2353fcdfbae7843ad725e5b76799684715e67ef46d421aba3dec79d729",
+      "bytes": 112
+    },
+    {
+      "path": "backend/vmm/CODE_OF_CONDUCT.md",
+      "sha256": "b816184a8177ca81bfd99cb7079e331e663fb857e1ecdd4db4bc74a14bd8d9f5",
+      "bytes": 3212
+    },
+    {
+      "path": "backend/vmm/CONTRIBUTING.md",
+      "sha256": "a6333c4082b23aa612a435644df97fa8196b608cc4726689d686e47f11a6513a",
+      "bytes": 4331
+    },
+    {
+      "path": "backend/vmm/CREDITS.md",
+      "sha256": "d1e0422b13f2b5941a8e86727e670ff36194c8bb0d3450a05ce3eec69f380f82",
+      "bytes": 1174
+    },
+    {
+      "path": "backend/vmm/Cargo.lock",
+      "sha256": "d7351afa23ef27acb96527caac57822a4d5c47bf348929fec83a801ede0baedd",
+      "bytes": 68991
+    },
+    {
+      "path": "backend/vmm/Cargo.toml",
+      "sha256": "fabc62e792ab267e2c4166d283e477704fc7667084e4bfbe876f93e5c29b62a3",
+      "bytes": 2851
+    },
+    {
+      "path": "backend/vmm/Jenkinsfile",
+      "sha256": "6ada52985f2409f3a2808536fca8015d0357d4f5e093f510a8c68733a13c20de",
+      "bytes": 21122
+    },
+    {
+      "path": "backend/vmm/LICENSE-APACHE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "bytes": 11358
+    },
+    {
+      "path": "backend/vmm/LICENSE-BSD-3-Clause",
+      "sha256": "a6d3ebd1c2f37d4fd83d0676621f695fc0cc2d8c6e646cdbb831b46e0650c208",
+      "bytes": 1562
+    },
+    {
+      "path": "backend/vmm/MAINTAINERS.md",
+      "sha256": "77084257a1f2726f6eac4a7b6c2cacda29f13951b6c038d5a694ca20c600e87c",
+      "bytes": 171
+    },
+    {
+      "path": "backend/vmm/README.md",
+      "sha256": "01469e088566e9f706c702f92d8151456fe223fc2d8410a1b394fde1d46b28cd",
+      "bytes": 15211
+    },
+    {
+      "path": "backend/vmm/api_client/Cargo.toml",
+      "sha256": "9ebfe26ddf09c3ace54e37484f228c2f8733ed2d2ec62d2b7617b44c3380a078",
+      "bytes": 148
+    },
+    {
+      "path": "backend/vmm/api_client/src/lib.rs",
+      "sha256": "d4838b756450040cd82697428d6ac3257122d6b621d3c8abc310637c7ed38c61",
+      "bytes": 7326
+    },
+    {
+      "path": "backend/vmm/arch/Cargo.toml",
+      "sha256": "b7a966c355b7261a1fc7013abc4857355b387f329ba8c1998b46e5511f468473",
+      "bytes": 861
+    },
+    {
+      "path": "backend/vmm/arch/src/aarch64/fdt.rs",
+      "sha256": "a694ced8dd10da16a3fb0781e7d8a43d803b5fb0ce5ef054be9bd2a2f0cfe608",
+      "bytes": 45522
+    },
+    {
+      "path": "backend/vmm/arch/src/aarch64/layout.rs",
+      "sha256": "8807d15bc6e72862e4b19bc24008c6915e323b6f6769d5ad8f5afd4b11084552",
+      "bytes": 7371
+    },
+    {
+      "path": "backend/vmm/arch/src/aarch64/mod.rs",
+      "sha256": "c3325ebbe94f08b72e55e28fe6e9ca94786744f05cd7e630d6d8d82ad78dc9e4",
+      "bytes": 6244
+    },
+    {
+      "path": "backend/vmm/arch/src/aarch64/regs.rs",
+      "sha256": "0972681fcd93080755c0b20e784cf5132a94cd2b19a6c305622a77e7a05ed920",
+      "bytes": 1735
+    },
+    {
+      "path": "backend/vmm/arch/src/aarch64/uefi.rs",
+      "sha256": "c8f7f4c9f4c00bdfdd0448356d8cc72aaf9d2022ce24a29b2fe621f18d7901fa",
+      "bytes": 1103
+    },
+    {
+      "path": "backend/vmm/arch/src/lib.rs",
+      "sha256": "3fbdc679028e9186cf0fbdc9e64833a3881e08abc7e607147d7969d8dda17068",
+      "bytes": 5591
+    },
+    {
+      "path": "backend/vmm/arch/src/x86_64/interrupts.rs",
+      "sha256": "179a30491461e5af26d5a4ba4116669d6ec070499cbd13f16bc87351a19314dc",
+      "bytes": 1315
+    },
+    {
+      "path": "backend/vmm/arch/src/x86_64/layout.rs",
+      "sha256": "aa3e219e91b063df8cd23b9a33c1172b2fdf43a4524941fa630a2d1d3a7b1e96",
+      "bytes": 4667
+    },
+    {
+      "path": "backend/vmm/arch/src/x86_64/mod.rs",
+      "sha256": "0b68b055f7220873187b0e4df91c5ee493aeff4bc0d989a6085e5cbffb0d9b7d",
+      "bytes": 50440
+    },
+    {
+      "path": "backend/vmm/arch/src/x86_64/mpspec.rs",
+      "sha256": "e11e0e13ab6babd095ab2ed803ce355abca2c168a5ad1506b58b5a3f50082eb4",
+      "bytes": 3846
+    },
+    {
+      "path": "backend/vmm/arch/src/x86_64/mptable.rs",
+      "sha256": "54b27b2800c474c37841d1e24ffe076c7862a4bda5042bad3d9b293aacef99c0",
+      "bytes": 15969
+    },
+    {
+      "path": "backend/vmm/arch/src/x86_64/regs.rs",
+      "sha256": "2398b9bbdfef8b5c0b03241e1153b3466a9ebf10a40866cf9ad37c62f66177ea",
+      "bytes": 6942
+    },
+    {
+      "path": "backend/vmm/arch/src/x86_64/smbios.rs",
+      "sha256": "bb3dbcd077df2c73443e4f6073dcbe6c2d5db0405b1232ffe6e4c13ebbfff7e9",
+      "bytes": 9588
+    },
+    {
+      "path": "backend/vmm/arch/src/x86_64/tdx/mod.rs",
+      "sha256": "99a49b4e8e88a864d947de326b104f1b6913acdb9a7e332af216796fc2b08a03",
+      "bytes": 16741
+    },
+    {
+      "path": "backend/vmm/block/Cargo.toml",
+      "sha256": "75241e4e6c08cb9022391848fb303d94a32f063bb38de931691f8854d42eb17b",
+      "bytes": 730
+    },
+    {
+      "path": "backend/vmm/block/src/async_io.rs",
+      "sha256": "7021c4045f20493a131f62a7f88a14bf6fcaf854b27469da877a93e694d05542",
+      "bytes": 1828
+    },
+    {
+      "path": "backend/vmm/block/src/fixed_vhd.rs",
+      "sha256": "856e59081d94066e1ccece3583d8837939e2609fc8838fce554e63b4a3628de6",
+      "bytes": 2054
+    },
+    {
+      "path": "backend/vmm/block/src/fixed_vhd_async.rs",
+      "sha256": "4ab5061879247e37798deda24c74b77d20502ca64da2607136ddf8f0a650bccc",
+      "bytes": 2836
+    },
+    {
+      "path": "backend/vmm/block/src/fixed_vhd_sync.rs",
+      "sha256": "e3fa12ae4b5783e5ccdf806f3aa551f8ad213fabbbe8cf03195e20c982f79ec3",
+      "bytes": 2733
+    },
+    {
+      "path": "backend/vmm/block/src/lib.rs",
+      "sha256": "43e7436de71bd95182bae65727ae36f36a8042ffd7b76f79566073d38d242e5f",
+      "bytes": 29787
+    },
+    {
+      "path": "backend/vmm/block/src/qcow/mod.rs",
+      "sha256": "aa00e5b5782d99c8fbced661f98ebcdc558f5d4bd88f548b2d5ec4ffec4ab79a",
+      "bytes": 107260
+    },
+    {
+      "path": "backend/vmm/block/src/qcow/qcow_raw_file.rs",
+      "sha256": "ac70909afe15fc2ae12dbb0b857706a01f6cf1a82117f94a54b71c8d9a7be535",
+      "bytes": 5408
+    },
+    {
+      "path": "backend/vmm/block/src/qcow/raw_file.rs",
+      "sha256": "6cb1c0c0c475326f57e9556829d393c58109d80f6f6d0e05e7961a6cfdaf7284",
+      "bytes": 11442
+    },
+    {
+      "path": "backend/vmm/block/src/qcow/refcount.rs",
+      "sha256": "5ccabb214b7e0b89f26765721d5f2ed43d8fbbd77ac847da956a956db3d33493",
+      "bytes": 10007
+    },
+    {
+      "path": "backend/vmm/block/src/qcow/vec_cache.rs",
+      "sha256": "5f766acfd685da09dd5008f3681b66268456e5b7049acef8a8c88dccec8a5154",
+      "bytes": 5018
+    },
+    {
+      "path": "backend/vmm/block/src/qcow_sync.rs",
+      "sha256": "b6270e1e16c8282266efaad469bbaa497bb638e1e807939d07e2750089ea897a",
+      "bytes": 2749
+    },
+    {
+      "path": "backend/vmm/block/src/raw_async.rs",
+      "sha256": "d913a3385eea5e636a696a0efa2eabeca36248f253c296872542cced569d15d1",
+      "bytes": 4799
+    },
+    {
+      "path": "backend/vmm/block/src/raw_async_aio.rs",
+      "sha256": "483443a80816d7fd9ed8e7e13a2829bac73e4b62839699491714c3f1a4bce137",
+      "bytes": 4138
+    },
+    {
+      "path": "backend/vmm/block/src/raw_sync.rs",
+      "sha256": "31a8195b1ed03a7d72cfaa9223767af7010be98b252e40f06f0110bee0afc0ed",
+      "bytes": 3585
+    },
+    {
+      "path": "backend/vmm/block/src/vhd.rs",
+      "sha256": "3f375ae41bd9050b947115af858c3a3bab885eb63408d4e0855f531cb6b2a216",
+      "bytes": 8082
+    },
+    {
+      "path": "backend/vmm/block/src/vhdx/mod.rs",
+      "sha256": "4ddcdfe266de5025cd0688c1ecdc894803a88d4b23e0b5a144872ba578c91d75",
+      "bytes": 7770
+    },
+    {
+      "path": "backend/vmm/block/src/vhdx/vhdx_bat.rs",
+      "sha256": "d3c54c4334c8384187cc11bcf9a0d25aac064585f9a6282591900df477849206",
+      "bytes": 3407
+    },
+    {
+      "path": "backend/vmm/block/src/vhdx/vhdx_header.rs",
+      "sha256": "3f4ffa6facc9813cf489243a8f052b0dd3f355afc5a9574f5e1978ee5de7575f",
+      "bytes": 17196
+    },
+    {
+      "path": "backend/vmm/block/src/vhdx/vhdx_io.rs",
+      "sha256": "3c6af58928165347e80e315d1aa0b5e5ea49047a4d764a6296f47f3229a7f52b",
+      "bytes": 7819
+    },
+    {
+      "path": "backend/vmm/block/src/vhdx/vhdx_metadata.rs",
+      "sha256": "3cbcf998e851639360124e46489509d5fccae6e545bece99074ec0f348d5fb8e",
+      "bytes": 12116
+    },
+    {
+      "path": "backend/vmm/block/src/vhdx_sync.rs",
+      "sha256": "b43eabbdbf0c8392a0cb35b93309f0b5ecf847cdac37e6f91e60859f80fb1335",
+      "bytes": 2586
+    },
+    {
+      "path": "backend/vmm/build.rs",
+      "sha256": "dfbd3f5b31fc36eeee4ba8265804eab2d68988b8556f53043e48403f4472ef9e",
+      "bytes": 757
+    },
+    {
+      "path": "backend/vmm/devices/Cargo.toml",
+      "sha256": "088825e7ea37dd6f854457595118052cab8a643dd7bf5fa10ef527e8ae37be72",
+      "bytes": 804
+    },
+    {
+      "path": "backend/vmm/devices/src/acpi.rs",
+      "sha256": "b3f158acbf2cfb9d924a1c573db644f196f94f80f7840ec994902283c659acd3",
+      "bytes": 8898
+    },
+    {
+      "path": "backend/vmm/devices/src/gic.rs",
+      "sha256": "377e39741bacecf753fc7e4fd674d415577a47331e0d50979e727f2863d51835",
+      "bytes": 5727
+    },
+    {
+      "path": "backend/vmm/devices/src/interrupt_controller.rs",
+      "sha256": "b80149ca6b5464f61629beae296ad96afdf9f754f1bd0e0b14fa724095649b84",
+      "bytes": 2007
+    },
+    {
+      "path": "backend/vmm/devices/src/ioapic.rs",
+      "sha256": "33b6d9dd85e4cf1eacb71865c12d247803b07df69bd475a7ff4c2e151ba53bc6",
+      "bytes": 14935
+    },
+    {
+      "path": "backend/vmm/devices/src/legacy/cmos.rs",
+      "sha256": "078d804f794ef340c63eed922aa9d2dbbd041bb8d0fc2af76d79740071fecc67",
+      "bytes": 6570
+    },
+    {
+      "path": "backend/vmm/devices/src/legacy/debug_port.rs",
+      "sha256": "acb82219ce156029cb09614890266396f6d4a32da948a35a7529e0282a80f4e9",
+      "bytes": 2355
+    },
+    {
+      "path": "backend/vmm/devices/src/legacy/fwdebug.rs",
+      "sha256": "a67c86bed3a689ac719fddad5239471705a72ea4a9892bf3d868f5c3c743719d",
+      "bytes": 1232
+    },
+    {
+      "path": "backend/vmm/devices/src/legacy/gpio_pl061.rs",
+      "sha256": "cf518ca5266d40b90fa753d48753f821be75a309ad2836b19af01605124d3913",
+      "bytes": 15877
+    },
+    {
+      "path": "backend/vmm/devices/src/legacy/i8042.rs",
+      "sha256": "8136741efeba0fc13ab50ba4fe48334adf90537da4a946560b705c685e7d1206",
+      "bytes": 2259
+    },
+    {
+      "path": "backend/vmm/devices/src/legacy/mod.rs",
+      "sha256": "9d02663f2dddcb89a905b3372ecadc2e5cf429f1b3c476465baaf01c8d1aafb7",
+      "bytes": 1079
+    },
+    {
+      "path": "backend/vmm/devices/src/legacy/rtc_pl031.rs",
+      "sha256": "1e0a3274374b93a9aec88e03099a32bd70a5d48c71e605109a7cc582907f943e",
+      "bytes": 19688
+    },
+    {
+      "path": "backend/vmm/devices/src/legacy/serial.rs",
+      "sha256": "143ac5ad78526b45136b37df8bff3c8545cc40b8c01308996cf3396ab0b2c0fb",
+      "bytes": 16735
+    },
+    {
+      "path": "backend/vmm/devices/src/legacy/uart_pl011.rs",
+      "sha256": "b7d88d6e8ac5ea6abe71decc76b32fc2c5d13cd9cfdbe4995648ac50df263208",
+      "bytes": 16247
+    },
+    {
+      "path": "backend/vmm/devices/src/lib.rs",
+      "sha256": "d092ecd619a4a6dc8c62d16a82d5f7e424febc39ed64398c02cebbc5001ca441",
+      "bytes": 3109
+    },
+    {
+      "path": "backend/vmm/devices/src/pvpanic.rs",
+      "sha256": "3f22ab0b6c165cf31b1771b734a34c2be1658b28e13263cdb3c1179b4fa0cce0",
+      "bytes": 7724
+    },
+    {
+      "path": "backend/vmm/devices/src/tpm.rs",
+      "sha256": "3aef466ac1a03d0709475378f2291d69d1893555b72098e9abcf6ef674763671",
+      "bytes": 18119
+    },
+    {
+      "path": "backend/vmm/docs/COPYING.docs",
+      "sha256": "f85683427e83cf33106e030b03294bdacd7439b4660ccfe93b09b96c525922e6",
+      "bytes": 18732
+    },
+    {
+      "path": "backend/vmm/docs/amd_sev_snp.md",
+      "sha256": "5a359a3e072e90126a650d71716fbca8e498dda46fe3bb746bbeeaf764ebf1e3",
+      "bytes": 1137
+    },
+    {
+      "path": "backend/vmm/docs/api.md",
+      "sha256": "27dcd70bd3d44121c0653cbe38924ea9d86b013337e49d9bfdddccf116b1ea4d",
+      "bytes": 23364
+    },
+    {
+      "path": "backend/vmm/docs/balloon.md",
+      "sha256": "d588c40c17213c772a1cde6b65752af778f975666d1a90951fc000fbe510d09b",
+      "bytes": 2038
+    },
+    {
+      "path": "backend/vmm/docs/building.md",
+      "sha256": "1ade05812abc0b523574947a5edf186ac19fb41766d16c8b91df6c10e7f9ed41",
+      "bytes": 3087
+    },
+    {
+      "path": "backend/vmm/docs/coverage.md",
+      "sha256": "e2bd81afec6ddcffdd5b8de1f5a458d12d2a211af346f92ecdd1fe781d938ffe",
+      "bytes": 2671
+    },
+    {
+      "path": "backend/vmm/docs/cpu.md",
+      "sha256": "24e90ed0e80a6e652e1991db2dd10078983be864db5aae54c99bc891574292a4",
+      "bytes": 5977
+    },
+    {
+      "path": "backend/vmm/docs/custom-image.md",
+      "sha256": "8c5c4c622bf4347ff482f618519c119615837558301dfe9f9a1a70384646705b",
+      "bytes": 9237
+    },
+    {
+      "path": "backend/vmm/docs/debug-port.md",
+      "sha256": "343f7d2e7a2c3735e2cb59c6395ef494b11cf3bd7ccaa9f3feb76fe0debc778c",
+      "bytes": 2568
+    },
+    {
+      "path": "backend/vmm/docs/device_model.md",
+      "sha256": "af7f92a38c1467ca845f79a6a9272a8f95feed1563ecffd9419d419bd90aaba1",
+      "bytes": 8906
+    },
+    {
+      "path": "backend/vmm/docs/fs.md",
+      "sha256": "f386859c2ccc13f4c260be11318ca71973f8a197f6aa5ac6318853ed8cdd4739",
+      "bytes": 3090
+    },
+    {
+      "path": "backend/vmm/docs/fuzzing.md",
+      "sha256": "ece23f84c3ee331747ab91c9d0eb797ffcd91cca86d6b126dfe5c9e26646b795",
+      "bytes": 656
+    },
+    {
+      "path": "backend/vmm/docs/gdb.md",
+      "sha256": "b06918ca5937f6c78300e94ce07f7a8680d6124ea1ce5ec4525d0f9f48f771c4",
+      "bytes": 1283
+    },
+    {
+      "path": "backend/vmm/docs/heap-profiling.md",
+      "sha256": "078d7e89777e6edd3ad6bdc0c9e3181c09667cf694300c9d50f18911f3da6198",
+      "bytes": 1281
+    },
+    {
+      "path": "backend/vmm/docs/hotplug.md",
+      "sha256": "0b7f04b0c5836b82ba07de4e816feaf253d8266be3e553831e0df7ed3937bfc1",
+      "bytes": 9475
+    },
+    {
+      "path": "backend/vmm/docs/intel_sgx.md",
+      "sha256": "7b703a16e5a71858186ae3986cbdf6178c7bdcacd9aa7fc16a02bb289753ce6f",
+      "bytes": 2430
+    },
+    {
+      "path": "backend/vmm/docs/intel_tdx.md",
+      "sha256": "1003b53030bb9a46476ed9390d09232bfefb26cfb2d62914872c86ee764bcc99",
+      "bytes": 6691
+    },
+    {
+      "path": "backend/vmm/docs/io_throttling.md",
+      "sha256": "d46f68aadaf04ed0efc894a5173673b585b94f482148f56dbaff8e302da3740b",
+      "bytes": 2699
+    },
+    {
+      "path": "backend/vmm/docs/iommu.md",
+      "sha256": "9ea871e1f00759920e8aec0a645e0c33c194d1498e17a25b175ea55f8b1a95dc",
+      "bytes": 10551
+    },
+    {
+      "path": "backend/vmm/docs/live_migration.md",
+      "sha256": "0c640e93d92f1b48123648a06fef2a7c6caa7f50bdf8ab07f886a162edd8820d",
+      "bytes": 4925
+    },
+    {
+      "path": "backend/vmm/docs/logging.md",
+      "sha256": "27383eae7647b3dc99a02de58f4306003d8ce6958d33b9c0501b6bfacb0662d9",
+      "bytes": 2052
+    },
+    {
+      "path": "backend/vmm/docs/macvtap-bridge.md",
+      "sha256": "cf29b36d7345f35992eb5af2838f505f81077f9cd59b3392eaa5cc39eaf29dee",
+      "bytes": 1478
+    },
+    {
+      "path": "backend/vmm/docs/memory.md",
+      "sha256": "03965fa1880d6901465f448f953bda8673b067d22965494562339e4416584cce",
+      "bytes": 18834
+    },
+    {
+      "path": "backend/vmm/docs/performance_metrics.md",
+      "sha256": "580121c5a8c8779dc516f57aeae9d5f4e500cecc6db3d6ea2b70f72095820c03",
+      "bytes": 1111
+    },
+    {
+      "path": "backend/vmm/docs/profiling.md",
+      "sha256": "5743de2797f069266e118a960e3cdb32919c81c9808e945b583b55e0033eb3c0",
+      "bytes": 1846
+    },
+    {
+      "path": "backend/vmm/docs/releases.md",
+      "sha256": "e5d7201b03b7d3adc5e1066fb94a1cfbf4e2fd86a29f47a7ae9974a376cf514c",
+      "bytes": 3407
+    },
+    {
+      "path": "backend/vmm/docs/seccomp.md",
+      "sha256": "199290981c0cf72f4253d0746408546b933013aa6341468745693263f6e54bf2",
+      "bytes": 2369
+    },
+    {
+      "path": "backend/vmm/docs/snapshot_restore.md",
+      "sha256": "7d14a026c17cacc40335145bf438222e29a459e44cf5b28b40c1fa74622a6f34",
+      "bytes": 3223
+    },
+    {
+      "path": "backend/vmm/docs/tpm.md",
+      "sha256": "bb5de04daf48bcc31e39262fc8e72fe0eb82653fa5679a53e14ba92ebb108cb1",
+      "bytes": 3569
+    },
+    {
+      "path": "backend/vmm/docs/tracing.md",
+      "sha256": "d14788a6544635eb2da98080ae8d1202ca5736a13daeb8ba022366e72a8b27b7",
+      "bytes": 1433
+    },
+    {
+      "path": "backend/vmm/docs/uefi.md",
+      "sha256": "4cb5002cc9f0fc9e5a4dd08e1e985d703eb183b0049baf587c72e33f6a231576",
+      "bytes": 2565
+    },
+    {
+      "path": "backend/vmm/docs/vdpa.md",
+      "sha256": "4988f37798b6c04427ab30cf1ad106d70c3a6574178a6e524f7409ff9e9509b3",
+      "bytes": 3748
+    },
+    {
+      "path": "backend/vmm/docs/vfio-user.md",
+      "sha256": "f30f7e80038790e75aba7efa7761102a7aed45724b680149ba21130803d329f4",
+      "bytes": 2935
+    },
+    {
+      "path": "backend/vmm/docs/vfio.md",
+      "sha256": "58a2e0f852cd782a8b69568ca9a5714ae4f6d74802652ddf906b92f0a41982b3",
+      "bytes": 3882
+    },
+    {
+      "path": "backend/vmm/docs/vhost-user-blk-testing.md",
+      "sha256": "1eef86377372fc4446822e791063b1244f84ce7151c87e7c9c969af88d11c05a",
+      "bytes": 4149
+    },
+    {
+      "path": "backend/vmm/docs/vhost-user-net-testing.md",
+      "sha256": "a96c9e8a2397d6ffdf0625453d82c5d21bcd20b8554ffdc821507e53b3f6849e",
+      "bytes": 5957
+    },
+    {
+      "path": "backend/vmm/docs/virtiofs-root.md",
+      "sha256": "da8f5b09ff70d7cf6991e70163e9a13583bd1876bdb8b3c5880a80627fc79d01",
+      "bytes": 3285
+    },
+    {
+      "path": "backend/vmm/docs/vsock.md",
+      "sha256": "b60858fc4b8c78696dd984ae409dc79e1048785f677a711165fc781f774cfdc8",
+      "bytes": 3438
+    },
+    {
+      "path": "backend/vmm/docs/windows.md",
+      "sha256": "b2c0aa5b76e056c0c74ec0825a009122c3c2ed8739e56c10e3c89d19bcc2e880",
+      "bytes": 16419
+    },
+    {
+      "path": "backend/vmm/event_monitor/Cargo.toml",
+      "sha256": "bff2059d39c024591a8a9429efe249c25c28f10345a2cb12bf2f19777e930ed8",
+      "bytes": 267
+    },
+    {
+      "path": "backend/vmm/event_monitor/src/lib.rs",
+      "sha256": "33be14307a71139eaa13a0fc5b0e68713df866851f69edf7fd40100ab757c0c2",
+      "bytes": 3536
+    },
+    {
+      "path": "backend/vmm/fuzz/.gitignore",
+      "sha256": "254510c2c60d231ec3a5ecf9fe7f0c9fd5152ae7a09e2cebefaee9ec01a4b6c4",
+      "bytes": 25
+    },
+    {
+      "path": "backend/vmm/fuzz/Cargo.lock",
+      "sha256": "e81d931d4f1931c7d32c1ecfeea91814339306317bca698a00b55154b03b4cc4",
+      "bytes": 29235
+    },
+    {
+      "path": "backend/vmm/fuzz/Cargo.toml",
+      "sha256": "f48d5841079dca8a295318f772f788be9448ca2d87c1d4a7d6e6ace5a4439fff",
+      "bytes": 2438
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/balloon.rs",
+      "sha256": "6652ca920f29a49819442a690c0ecad1fe000a70892b6f4bf2923ece90936d91",
+      "bytes": 5025
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/block.rs",
+      "sha256": "905b057ee151fbab02e56ebb6912772e9100876dcb290f0f2a61c9674fc9766c",
+      "bytes": 4232
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/cmos.rs",
+      "sha256": "564e34454519923716a389712ebc56f38ed1f65f07add91e105690c113f84b86",
+      "bytes": 1299
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/console.rs",
+      "sha256": "91a8f9e45272cfb5187e6d79a9abc2d427026a331d19afd08f94df575b4d54e8",
+      "bytes": 6587
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/http_api.rs",
+      "sha256": "dd4bcae50fd6e2fca1ec85f61e9fde4479d7a914d7ff5c7b37ea84c1ae5941be",
+      "bytes": 8031
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/iommu.rs",
+      "sha256": "56c2abe409d997f95b89eaec65e6f532e198dbac1d508f8318b50d05020ba27b",
+      "bytes": 4970
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/linux_loader.rs",
+      "sha256": "bd662d681c6d0133aabb8c2b9e42b2eb38bb3655d7b681683374ae7ed6f65519",
+      "bytes": 1546
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/linux_loader_cmdline.rs",
+      "sha256": "6e13022c08d067c6b80e21109619fd82a9b3c27bd457fb6e70a4557d84b88e22",
+      "bytes": 1138
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/mem.rs",
+      "sha256": "ae1a7c581463455fd4f1b1d9271c9191b1ec2d833191abbc2508c7b454d1c282",
+      "bytes": 5913
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/net.rs",
+      "sha256": "dba4e05799b6e2af9fddea24911b70b0929fbd927b2f4984dde403cad5c3b534",
+      "bytes": 9251
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/pmem.rs",
+      "sha256": "529e5b4ff0ffd841a0b9ee6c3281fc985f1956d1cc8e04e07e4f0a1f3d7ed24b",
+      "bytes": 5006
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/qcow.rs",
+      "sha256": "d2716b06788f8b1b8a292002133315273249c9c82946e682eca1c3d69e4283c9",
+      "bytes": 1703
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/rng.rs",
+      "sha256": "2b4fd24e30a29fc3f1d47eb7204e3a44cae1706d1446bc595aeced82c9a8e3f1",
+      "bytes": 4286
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/serial.rs",
+      "sha256": "cae6a2c48d3c976f7d75edd39e9b2503d10468ffa88e6d6401fa8694cbcdabe1",
+      "bytes": 2081
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/vhdx.rs",
+      "sha256": "b42923b892cdec26761dc3db8576002da776add9ba8f9510a6b2bfeab41b2378",
+      "bytes": 1629
+    },
+    {
+      "path": "backend/vmm/fuzz/fuzz_targets/watchdog.rs",
+      "sha256": "9e145e0cd79f04042316778231c47ca5bd8eab7e66e80e479335d4df44bd6bdc",
+      "bytes": 3305
+    },
+    {
+      "path": "backend/vmm/hypervisor/Cargo.toml",
+      "sha256": "e5e52c618b0c402767686cb8ae14cff25a0c7365be88aecf1c414f4ee2f75ff2",
+      "bytes": 1740
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/aarch64/gic.rs",
+      "sha256": "fd5540e02b7f18c063f3b97c3b53668d64fb81e1619709350fc4f983943fef0d",
+      "bytes": 2155
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/aarch64/mod.rs",
+      "sha256": "a0dcd44df2af6b7472873f795cd1dd2d1e2dfea250db9f13cb303100c6755ae1",
+      "bytes": 86
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/emulator/mod.rs",
+      "sha256": "30a8308570fd2c8efe9b370138b57164542536564b94577422ed50999f22dad3",
+      "bytes": 4559
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/mod.rs",
+      "sha256": "5b0b9ee61a1f7b1db7731166d9cbd201d6d739aaff8ddbe64496f02f9e24dc9f",
+      "bytes": 620
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/emulator/instructions/cmp.rs",
+      "sha256": "43dd5121d14de459716501eb378afa7a30bd2b7b1964522e4b7daeb8a616367d",
+      "bytes": 10223
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/emulator/instructions/mod.rs",
+      "sha256": "3f168bf12d22a237d66d727e5eacd115e64417725c3d39ad840820fc5856df76",
+      "bytes": 4483
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/emulator/instructions/mov.rs",
+      "sha256": "8709b64f5024d5e822c492c3eefcc1d93768416d3e31127a354a42659207bed4",
+      "bytes": 22228
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/emulator/instructions/movs.rs",
+      "sha256": "de1fdb663adb2e4c1df04818a1139485cdb7889aa3e583b6c36dfa1f001e14e0",
+      "bytes": 10134
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/emulator/instructions/or.rs",
+      "sha256": "f13c7445b0a1396d87a678057b0d4a0ca94716d7237072328dc8c0d7abb79015",
+      "bytes": 2080
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/emulator/mod.rs",
+      "sha256": "aa61b498c2bc617408a90059d1e83d9a3c4ea4a55949580ab75bf269ee40641b",
+      "bytes": 30109
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/gdt.rs",
+      "sha256": "7c5a45cf5d3290e49ad6412b1a5c2c520ae87832d5d90dd4e282659cf336934d",
+      "bytes": 4753
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/mod.rs",
+      "sha256": "a74e91ff16dbf62a05daeab56f02759485ad5a702926bcbfbd4570f9f213815e",
+      "bytes": 7714
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/msr_index.rs",
+      "sha256": "c770541b9237e9e804a764c5c1070be42a58f7c3853683235be6b21bffb0ee3c",
+      "bytes": 37339
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/arch/x86/regs.rs",
+      "sha256": "9b66855eb0eb70817f4cb9bdbe42efeb60adbb297b1c62bcff614cdbdb5512cb",
+      "bytes": 833
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/cpu.rs",
+      "sha256": "b25bb88e56ba2c28ea3db2307b761f6a58ef3a6bde7eecd11a4490c235ec5aed",
+      "bytes": 14067
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/device.rs",
+      "sha256": "2ab1299a85cba2d8b921876f7031fe578cd53fae06f7b6f55244b942431ffced",
+      "bytes": 642
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/hypervisor.rs",
+      "sha256": "6df11024d331838efa8a03ae66242c935b05385b06433c9ebcac920e4acc65a6",
+      "bytes": 4892
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/kvm/aarch64/gic/dist_regs.rs",
+      "sha256": "9c83e48173929caaaa2aa6a8d93f2f52aa23977220d3ff39e14a80415b832a73",
+      "bytes": 6236
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/kvm/aarch64/gic/icc_regs.rs",
+      "sha256": "8a74547a291de7bff8876de8d31da2c05aac7d68992edfe7a9d35c9f9ebf2dfe",
+      "bytes": 7518
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/kvm/aarch64/gic/mod.rs",
+      "sha256": "238dd7351e10e1d6523b75004c43666c29147eded21c5b15ad4f6dfc12796b0a",
+      "bytes": 16917
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/kvm/aarch64/gic/redist_regs.rs",
+      "sha256": "ee7ed5ac00bf7d4939f93cad39a9ad2a97f3d904075422ad5ed373a7876cc99c",
+      "bytes": 7529
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/kvm/aarch64/mod.rs",
+      "sha256": "4beab80bafeb5ad5a1ba218e269510092db9fc2962d9d1d23a53a029c00689cd",
+      "bytes": 4233
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/kvm/mod.rs",
+      "sha256": "3e2ecc867fb257c861478210023dc14ad209da9ff025b9011b9153c3de9ea2c2",
+      "bytes": 79421
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/kvm/x86_64/mod.rs",
+      "sha256": "04a3cf2dc3e4246f2a4fc047534f69de2c5f34113098259b6c5aaf0b66bdde54",
+      "bytes": 8537
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/lib.rs",
+      "sha256": "54c065febfa8f3d9b2f938b15e63abcdf16d51cf6a2bca5738eef4c33f10edda",
+      "bytes": 4938
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/mshv/mod.rs",
+      "sha256": "c80bf91dc28f6390dd965b9ed647671514e958185f6444ad0382fcd780563db9",
+      "bytes": 73202
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/mshv/snp_constants.rs",
+      "sha256": "82fc594cd892e1664a33a728596dcf33ecd351f9402f91aee414c25259bac558",
+      "bytes": 1210
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/mshv/x86_64/mod.rs",
+      "sha256": "35d480cfb73e5fdac78d344f088cc64784a3b2407b52c72f37c7bb849175d752",
+      "bytes": 8416
+    },
+    {
+      "path": "backend/vmm/hypervisor/src/vm.rs",
+      "sha256": "f18bb586afae20bdb785bff0ebdfe2b4840c6e0112d8c5cbc83501b787b8bd49",
+      "bytes": 13001
+    },
+    {
+      "path": "backend/vmm/net_gen/Cargo.toml",
+      "sha256": "143392ddd6e66d57feba5d8a9b2155a46ec6d271479cac7bf845e36b5044360b",
+      "bytes": 140
+    },
+    {
+      "path": "backend/vmm/net_gen/src/if_tun.rs",
+      "sha256": "005fd15b6a9d14d48aaca7ba5eb73a73ed21a7dfb46e93431fadf42c3aaa3afa",
+      "bytes": 10932
+    },
+    {
+      "path": "backend/vmm/net_gen/src/iff.rs",
+      "sha256": "59d247e338cc7cb6e65d898cb5d054e67883990f87d0276aa6b0d4b7cb5c7ce2",
+      "bytes": 42808
+    },
+    {
+      "path": "backend/vmm/net_gen/src/inn.rs",
+      "sha256": "6ff377b89d01b2b2ed2279da4ab3b64d67a924ac5d59364736bad74657b2cda8",
+      "bytes": 10841
+    },
+    {
+      "path": "backend/vmm/net_gen/src/lib.rs",
+      "sha256": "dd89f77f4fcc5d3c9fccc814b833ec0a9c3cc1b26fc273097ea8928bfa22c52a",
+      "bytes": 3092
+    },
+    {
+      "path": "backend/vmm/net_gen/src/sockios.rs",
+      "sha256": "ed67acfb05b68e3b9bb1062959923f9e4deffac272473513356246a8fe3cfd6c",
+      "bytes": 3363
+    },
+    {
+      "path": "backend/vmm/net_util/Cargo.toml",
+      "sha256": "eb93db71527c3b8594d6e13003b4df655a8700a5f667c203c1fe37a369d109fe",
+      "bytes": 669
+    },
+    {
+      "path": "backend/vmm/net_util/src/ctrl_queue.rs",
+      "sha256": "10b1ceff3753eed25bd9f4325f6c96b4381bac9d70ecfaa75a4fb2ddb18fdd52",
+      "bytes": 6327
+    },
+    {
+      "path": "backend/vmm/net_util/src/lib.rs",
+      "sha256": "530f86123daf70b376e7195893b65b4bb3ee4bf53a10e959be1b3b796c73e94f",
+      "bytes": 6166
+    },
+    {
+      "path": "backend/vmm/net_util/src/mac.rs",
+      "sha256": "75c6af4ec555fc8be2d7a2afa0d415d0e52e29b17cd65f2a169caac30ef9066f",
+      "bytes": 5725
+    },
+    {
+      "path": "backend/vmm/net_util/src/open_tap.rs",
+      "sha256": "22ecd6f0674c51b24f8b9ea3d2e369dfeba778e670c72b95829dba2c83a78f17",
+      "bytes": 4463
+    },
+    {
+      "path": "backend/vmm/net_util/src/queue_pair.rs",
+      "sha256": "c7fa003e8a916f0f83185244e54f3a6eb624ad446f5919d9095ef13446c993b6",
+      "bytes": 15644
+    },
+    {
+      "path": "backend/vmm/net_util/src/tap.rs",
+      "sha256": "cb7f6aee360b2ba8747747fd8a7d58e15029a4664ebdbc37b5a20d5dc7f5dd05",
+      "bytes": 27445
+    },
+    {
+      "path": "backend/vmm/option_parser/Cargo.toml",
+      "sha256": "018985906a2160b25fbdd5f56b7111010e4c1b3b0de36c7a1e2a8fd99675be84",
+      "bytes": 111
+    },
+    {
+      "path": "backend/vmm/option_parser/src/lib.rs",
+      "sha256": "685a684065840388e4b1f4972e9a618666f09845d2c3f5329be4b5650208e2c0",
+      "bytes": 13238
+    },
+    {
+      "path": "backend/vmm/pci/Cargo.toml",
+      "sha256": "50eb1a3cbbc6d2c5e4a1245179eafb006a1ab411ed84b023dedc6776b738e19a",
+      "bytes": 979
+    },
+    {
+      "path": "backend/vmm/pci/src/bus.rs",
+      "sha256": "37f77978ed9a8ee02ab983025487ec8db013732ec7180d836a15a334a52f1ca9",
+      "bytes": 14957
+    },
+    {
+      "path": "backend/vmm/pci/src/configuration.rs",
+      "sha256": "ba6231cfce571e47650c33d639995ff62df9c27909b3db4a0069c1029bc14f80",
+      "bytes": 43782
+    },
+    {
+      "path": "backend/vmm/pci/src/device.rs",
+      "sha256": "cf2ce6a62227877d6ad1b96cd8e8900b2d0dd2b6946ecf81e25ca99a2a3e6467",
+      "bytes": 4676
+    },
+    {
+      "path": "backend/vmm/pci/src/lib.rs",
+      "sha256": "1dd83d3e2634ddfb1206cb05116765ec0ffabbdb4248109e929745076c42bfc6",
+      "bytes": 4574
+    },
+    {
+      "path": "backend/vmm/pci/src/msi.rs",
+      "sha256": "cbac0e3cbae9c4c29e0dce485ce4e265518bd570e1e1a4c37826635dcabf8acb",
+      "bytes": 9001
+    },
+    {
+      "path": "backend/vmm/pci/src/msix.rs",
+      "sha256": "6056a9067ead09406cb2415a81e70ac4b20dca8f0a7bad5713baca1b222a7253",
+      "bytes": 18180
+    },
+    {
+      "path": "backend/vmm/pci/src/vfio.rs",
+      "sha256": "4c034c5253f4e06c67f55a20a6cc22b3179b26684659529d50b8048ce1c04354",
+      "bytes": 62212
+    },
+    {
+      "path": "backend/vmm/pci/src/vfio_user.rs",
+      "sha256": "7e472f5490d50b0eedf3480cce2e7a4fed46281f3757b5bf4cbef8845dd6ec55",
+      "bytes": 18985
+    },
+    {
+      "path": "backend/vmm/performance-metrics/Cargo.toml",
+      "sha256": "d2d3188133371f4d9ecfe0273e0dbf2e54c8be1bb39fdb611123fd6db01181f3",
+      "bytes": 394
+    },
+    {
+      "path": "backend/vmm/performance-metrics/src/main.rs",
+      "sha256": "bd5820b5125a1d7591f8a35dc311b24728646143bdc36734fde036f06c4d0a19",
+      "bytes": 24403
+    },
+    {
+      "path": "backend/vmm/performance-metrics/src/performance_tests.rs",
+      "sha256": "ddd51e474f5f24208f93772b0e45e8e250055aba63d7a790cadf957c2dff3a63",
+      "bytes": 17998
+    },
+    {
+      "path": "backend/vmm/rate_limiter/Cargo.toml",
+      "sha256": "585781f78809b2dea0da933e090bd2844871e13e45dc6369c8c4e848c613cf64",
+      "bytes": 139
+    },
+    {
+      "path": "backend/vmm/rate_limiter/src/lib.rs",
+      "sha256": "ec76a567929d5bb2ab559bff10f964bca31d240b1b9d1d2b5043f36d09301613",
+      "bytes": 36494
+    },
+    {
+      "path": "backend/vmm/release-notes.md",
+      "sha256": "67da8a7badbec9b5ced2d72bcb0550ba9bffd77fc48558b62567092462b40901",
+      "bytes": 114840
+    },
+    {
+      "path": "backend/vmm/resources/Dockerfile",
+      "sha256": "bd819e866a071d05149acf9be582a1e66d2698a47c6cf8bc64dfa09bfc531041",
+      "bytes": 6249
+    },
+    {
+      "path": "backend/vmm/resources/linux-config-aarch64",
+      "sha256": "3beb3d50f40418b786368b08923f0b4e78900cea11a9834de8db19e4f6839dfb",
+      "bytes": 82194
+    },
+    {
+      "path": "backend/vmm/resources/linux-config-x86_64",
+      "sha256": "ff5f573a22f967cd861bfe3d3b1aed6b15bf034e4cd44c40947b72e56d90e06f",
+      "bytes": 80048
+    },
+    {
+      "path": "backend/vmm/scripts/ch-trace-visualiser.py",
+      "sha256": "9330edc5fdeef41b20fa9eb8a516e7026b35e441ebf5be53bdb0a595b030d02c",
+      "bytes": 3134
+    },
+    {
+      "path": "backend/vmm/scripts/check-image-compatibility.sh",
+      "sha256": "355449c26cb86b378d0adbfee0d97e971e38daffb133589233d6e199f20a707d",
+      "bytes": 5193
+    },
+    {
+      "path": "backend/vmm/scripts/common-aarch64.sh",
+      "sha256": "c272b94b87165d1d936d4707d3ca56f9d3df75fa16d515f70bacfc9f72fe4da2",
+      "bytes": 1637
+    },
+    {
+      "path": "backend/vmm/scripts/create-cloud-init.sh",
+      "sha256": "0b20b877c7a4bafab274ac1e8db1aac04889262524e51d79460ba3b39f99270e",
+      "bytes": 368
+    },
+    {
+      "path": "backend/vmm/scripts/dev_cli.sh",
+      "sha256": "04afd98e8da59960a1ff48e632592416647723603995a61e47ff79bbfb407d7f",
+      "bytes": 22215
+    },
+    {
+      "path": "backend/vmm/scripts/prepare_vdpa.sh",
+      "sha256": "53287477cf2f7edfc0dbff19516525860145e5522da65272982165714b19cba0",
+      "bytes": 1106
+    },
+    {
+      "path": "backend/vmm/scripts/run_integration_tests_aarch64.sh",
+      "sha256": "eda1d4eca95cebaf31df4c1a0d921e3d74a644821662c4a97610912e810ab7a0",
+      "bytes": 11262
+    },
+    {
+      "path": "backend/vmm/scripts/run_integration_tests_live_migration.sh",
+      "sha256": "627f1ec6ebc46e45f41c4eb6f8c94b9f06e660843058b1c1e370af7bd22485bd",
+      "bytes": 2641
+    },
+    {
+      "path": "backend/vmm/scripts/run_integration_tests_rate_limiter.sh",
+      "sha256": "89a76603f1d1147f9351abe4b1568f113a09bd84938bca7b59e33b8a692f9b19",
+      "bytes": 1578
+    },
+    {
+      "path": "backend/vmm/scripts/run_integration_tests_sgx.sh",
+      "sha256": "e9a416c5c27dd6290e76942de3485a6732ef99af97c24bfbbcccd66c2849d16d",
+      "bytes": 1510
+    },
+    {
+      "path": "backend/vmm/scripts/run_integration_tests_vfio.sh",
+      "sha256": "018e06325e5b69590ef5eae54c226e25ffdd87489c32f5a54366cd7fcd3f3164",
+      "bytes": 1134
+    },
+    {
+      "path": "backend/vmm/scripts/run_integration_tests_windows_aarch64.sh",
+      "sha256": "2e587787fe164a81ba20ee47ddd279ae7f42fac2c645a75fcfe4b3587c95d874",
+      "bytes": 1389
+    },
+    {
+      "path": "backend/vmm/scripts/run_integration_tests_windows_x86_64.sh",
+      "sha256": "f4d1928790889d42dc947b6cc82ed3d393d0e540a163d2ac640f2537f56a2a08",
+      "bytes": 1708
+    },
+    {
+      "path": "backend/vmm/scripts/run_integration_tests_x86_64.sh",
+      "sha256": "0e34cdc5f7fdb17fd52dc558e980601579278de65e7598ac1dd361f148987f30",
+      "bytes": 6750
+    },
+    {
+      "path": "backend/vmm/scripts/run_metrics.sh",
+      "sha256": "05a9ce608eaffdcf66098367bec21731066bf066c966e72e178796a501efbd42",
+      "bytes": 3650
+    },
+    {
+      "path": "backend/vmm/scripts/run_openapi_tests.sh",
+      "sha256": "479c9e69233bc3e1f7387d0c05c842376af65554f46c0c3f96ee32f7b6ffef6b",
+      "bytes": 161
+    },
+    {
+      "path": "backend/vmm/scripts/run_unit_tests.sh",
+      "sha256": "6866fa7be5f86addf07d890a4e57515b6fef5173efa1efe47ba4470767c53c06",
+      "bytes": 464
+    },
+    {
+      "path": "backend/vmm/scripts/sha1sums-aarch64",
+      "sha256": "3b707ecfc59c6714df6ecdc555702fc29f90edeb893b7f2e51e2ce2d48f30b45",
+      "bytes": 674
+    },
+    {
+      "path": "backend/vmm/scripts/sha1sums-x86_64",
+      "sha256": "3ee829fd641e7da1ce856cd2c13fc1160fe3dd6bf43a3f72d3058805493f7fad",
+      "bytes": 441
+    },
+    {
+      "path": "backend/vmm/scripts/test-util.sh",
+      "sha256": "97792b85862885703540d8bf70278fce95f567d020e92bd6dd208c189681d979",
+      "bytes": 3011
+    },
+    {
+      "path": "backend/vmm/scripts/windows-11-iot-enterprise-aarch64.raw.sha1",
+      "sha256": "ca24ac46b9081ca5abe6d5700eb2e7acd277c2d749a0f156735f76a3858b00a5",
+      "bytes": 80
+    },
+    {
+      "path": "backend/vmm/serial_buffer/Cargo.toml",
+      "sha256": "955cae283035aed442bd8f1b0e1d7bb82acb44fee4e0a55664abadca0cefb889",
+      "bytes": 110
+    },
+    {
+      "path": "backend/vmm/serial_buffer/src/lib.rs",
+      "sha256": "0f6e0f315c6e35f49edf4cfe44e8996aa0ffcf93278d0482de48f473b0ea34b4",
+      "bytes": 3379
+    },
+    {
+      "path": "backend/vmm/src/bin/ch-remote.rs",
+      "sha256": "ea54f0b7924d3324dc9a78624cd99d9cd0ce36b6c236ddc8dc9617f6e7ca4ca6",
+      "bytes": 41860
+    },
+    {
+      "path": "backend/vmm/src/main.rs",
+      "sha256": "940f93f727942a54e221ef8759980fbb9040a4d3c2b79d05ea309564b01b5212",
+      "bytes": 63503
+    },
+    {
+      "path": "backend/vmm/test_data/cloud-init/ubuntu/ci/meta-data",
+      "sha256": "f00d5d802e1901e8bc9e8b26783471cac2ccce15bd217ab7331c192d478f132a",
+      "bytes": 41
+    },
+    {
+      "path": "backend/vmm/test_data/cloud-init/ubuntu/ci/network-config",
+      "sha256": "95b8bbcefb9a4444298db9ca1869e7a830b3346b514f84ecf7917585a71f8dc4",
+      "bytes": 486
+    },
+    {
+      "path": "backend/vmm/test_data/cloud-init/ubuntu/ci/user-data",
+      "sha256": "2cf2bc637196acb15246e6dc1fbe30192b1d1e870ceea1015b13d1d428e76778",
+      "bytes": 2702
+    },
+    {
+      "path": "backend/vmm/test_data/cloud-init/ubuntu/local/meta-data",
+      "sha256": "f00d5d802e1901e8bc9e8b26783471cac2ccce15bd217ab7331c192d478f132a",
+      "bytes": 41
+    },
+    {
+      "path": "backend/vmm/test_data/cloud-init/ubuntu/local/network-config",
+      "sha256": "050b780cedf7781222fe3075dcbe9d4e0134234e5fdd96fbe37be5d778d04035",
+      "bytes": 140
+    },
+    {
+      "path": "backend/vmm/test_data/cloud-init/ubuntu/local/user-data",
+      "sha256": "6eb0fbebddf61d70fac82378193b756abb1bbe7052861f7c433eac7f6047fe98",
+      "bytes": 271
+    },
+    {
+      "path": "backend/vmm/test_infra/Cargo.toml",
+      "sha256": "7829653b2291a64a13e32ba56abf60bd6fe22f1f34daf847bbd8c1a9197e1773",
+      "bytes": 386
+    },
+    {
+      "path": "backend/vmm/test_infra/src/lib.rs",
+      "sha256": "dd44f0afeb1b35f6875c0a84dce10623692665cf9437f476671ccaa69454fe2b",
+      "bytes": 54683
+    },
+    {
+      "path": "backend/vmm/tests/integration.rs",
+      "sha256": "f62851cbdc9cd31fb0e22278bf8b0679fc1da37752cbb7f8b9dc71de044c05e8",
+      "bytes": 343285
+    },
+    {
+      "path": "backend/vmm/tpm/Cargo.toml",
+      "sha256": "d5f22181d1a956cbd21636cf4ac041637daa6b33cb01523ca59bfbd073c6a369",
+      "bytes": 278
+    },
+    {
+      "path": "backend/vmm/tpm/src/emulator.rs",
+      "sha256": "10575c77d6f7d793940715327ec6de8c9e10c868ede948577ee512836514aa8a",
+      "bytes": 14696
+    },
+    {
+      "path": "backend/vmm/tpm/src/lib.rs",
+      "sha256": "72e0f06d413078dc1686003785edd4a4040e09bf196adce5a57d2e6617c8f3c3",
+      "bytes": 11259
+    },
+    {
+      "path": "backend/vmm/tpm/src/socket.rs",
+      "sha256": "9687cf7c9fc40243ff78150691aa814d65842ea832ad8903f7e9e5af375e1fb5",
+      "bytes": 3801
+    },
+    {
+      "path": "backend/vmm/tracer/Cargo.toml",
+      "sha256": "4520c116ee99fb51baaf0dd46cbd4500c291e0c8d8c811551192bcb2ab8f4f6e",
+      "bytes": 282
+    },
+    {
+      "path": "backend/vmm/tracer/src/lib.rs",
+      "sha256": "f7aba347c72f115461dc00841216324c910025bf7b7a5704556cf31174037433",
+      "bytes": 340
+    },
+    {
+      "path": "backend/vmm/tracer/src/tracer.rs",
+      "sha256": "fb51ad90127c0ae7a0c2429ba73c429793155fe85c3b750f6234f8ec6b06449f",
+      "bytes": 5388
+    },
+    {
+      "path": "backend/vmm/tracer/src/tracer_noop.rs",
+      "sha256": "f9e13a8761106a07578ebbf2952b732bb7ab2c114f3c9878b4d9a592189ba379",
+      "bytes": 262
+    },
+    {
+      "path": "backend/vmm/vhost_user_block/Cargo.toml",
+      "sha256": "3c8188a59a7d891331a34be55e16cf74aaae0e550c7cf87592513ba85b78558e",
+      "bytes": 550
+    },
+    {
+      "path": "backend/vmm/vhost_user_block/src/lib.rs",
+      "sha256": "de4d00f23a3733a9f857abd096827d9343d7cc94dba803b4daacc743b8231954",
+      "bytes": 17362
+    },
+    {
+      "path": "backend/vmm/vhost_user_block/src/main.rs",
+      "sha256": "bfe3dea46dee945c4f06411db010fe8e66c0319fb20265f8ccda746436f88600",
+      "bytes": 1053
+    },
+    {
+      "path": "backend/vmm/vhost_user_net/Cargo.toml",
+      "sha256": "7271d5965ed5b5000641763fcdb53f6eb5c5b77823b616b68596a12eae07abc2",
+      "bytes": 531
+    },
+    {
+      "path": "backend/vmm/vhost_user_net/src/lib.rs",
+      "sha256": "addec99cb52964f801921d63ab4895839f68c3cbb14c0d2977995ff0c8b3f8b5",
+      "bytes": 12652
+    },
+    {
+      "path": "backend/vmm/vhost_user_net/src/main.rs",
+      "sha256": "c63da874d94267d9cf5618c03743add3ca64aa68fa522b86094740b385373743",
+      "bytes": 942
+    },
+    {
+      "path": "backend/vmm/virtio-devices/Cargo.toml",
+      "sha256": "790ea771e5dcab0ebb64047de1df3cd3bf9a685696a4bca39ee13bb3cc2f817f",
+      "bytes": 1184
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/balloon.rs",
+      "sha256": "2ad867311f5a099950aaf5fcdc2383a1baf4f3281020f866b4993adb9249903e",
+      "bytes": 45017
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/block.rs",
+      "sha256": "30c313912961599fd5b953159c2c44106e43438d6f5f971a547b6011fe2e4622",
+      "bytes": 32589
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/console.rs",
+      "sha256": "8111e9e15809b296a7aae27d176bedcee3c6c7546390a01d940671e53ed2e4c5",
+      "bytes": 28259
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/device.rs",
+      "sha256": "220aa31f3d6956db6403f634f71960e75eff47df829288128536dafa00fc24df",
+      "bytes": 11701
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/epoll_helper.rs",
+      "sha256": "c02d65ad9becbf27d244219155b5ca036e74e11d5c09ae05fb80a72cfcb0c626",
+      "bytes": 12049
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/iommu.rs",
+      "sha256": "f2738b11ac1004b98954c3aa77cdd768aff6d039f79ecb8e3a6c2fe76a87435e",
+      "bytes": 38028
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/lib.rs",
+      "sha256": "968fff5ccc16f5b2a261ef56e2e240943c8f5e00aadf6cdfe3216c6e5f4f355a",
+      "bytes": 5519
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/mem.rs",
+      "sha256": "833677d181f488349316d63e6345a6c4ebf34ae4c0af1cdc91845ea76d86a8f2",
+      "bytes": 33039
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/net.rs",
+      "sha256": "88162108610bc2bbd1c5ab827771b48fd8aa4a9949265557cca56b9390056532",
+      "bytes": 30657
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/pmem.rs",
+      "sha256": "128e745365fbc012c9a1e4822f0517c26428cc1678782e0b21b64ed535e944e3",
+      "bytes": 14542
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/rng.rs",
+      "sha256": "68bbb8b03066b133e122b2615fad7f90dd6852dec2c50e7bf831c34d93d6fa93",
+      "bytes": 10255
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/seccomp_filters.rs",
+      "sha256": "b6f64639da820a61fcde01b2050368d1015297b90f3ff304abe96ce524121a20",
+      "bytes": 9698
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/thread_helper.rs",
+      "sha256": "8db9d92315fc10aa30565841528e80dc09d805be9ba910f22aa4a4294e7f8e0a",
+      "bytes": 2009
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/transport/mod.rs",
+      "sha256": "e3e4522f08f3bdee766a982d8590a09b80f8c305be2ba8fede1f874309eb8f9c",
+      "bytes": 422
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/transport/pci_common_config.rs",
+      "sha256": "3f09b864cfc34b4aa4acdea0e4314e5cf1a8e780cc5f51e78809ec0393693137",
+      "bytes": 16253
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/transport/pci_device.rs",
+      "sha256": "34738498de5388c80e28803e0092762d66c273b18972e0025966dbee082d5a0e",
+      "bytes": 45690
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vdpa.rs",
+      "sha256": "aa1643ff66ffa0128754a65d2b5e3b3a3c98f8ef2fa4f7162523e151a11a6a6a",
+      "bytes": 19190
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vhost_user/blk.rs",
+      "sha256": "f539b7a7131a715185f6a8e041e9911bd4bc8e19ae4f7fea6bd83b5018ef4207",
+      "bytes": 13694
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vhost_user/fs.rs",
+      "sha256": "4cfab0ea3c1134c2dbd198f516a2dc04ed9c9a4b580f84e312ed19922443e9cb",
+      "bytes": 22062
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vhost_user/mod.rs",
+      "sha256": "98245099b475878265065b3745e332965e97c3499a2daaaa012470a0bc1e9457",
+      "bytes": 18382
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vhost_user/net.rs",
+      "sha256": "4a374a5caf43f132f3078ce8a25c26075bc7d1e9b0d641c6c628dcdd9d71d0a1",
+      "bytes": 16335
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vhost_user/vu_common_ctrl.rs",
+      "sha256": "069491d8b2910afd024f98784b6f14a03927f271ea5afa6e170d7c93275ca041",
+      "bytes": 20858
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/csm/connection.rs",
+      "sha256": "3d42b9d56712edb267350d30e691c5126e5d2c8699f3538038ae5143487acb6b",
+      "bytes": 51405
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/csm/mod.rs",
+      "sha256": "76ddd5742a8362c0e49c15eb905133e6fcdd256c5d3c313f7e333cd4f57cc4a2",
+      "bytes": 4139
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/csm/txbuf.rs",
+      "sha256": "228ba37fc0da0df4b1fd09697e0facbaf2a3932dfce086ca2397aa1be49bdead",
+      "bytes": 8967
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/device.rs",
+      "sha256": "98251eb55f2a1f19a1aa27164fb2aad9a0031d6a3b6fe60f5b9294150283d6f6",
+      "bytes": 31936
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/mod.rs",
+      "sha256": "8e8e7324b622425eaee29c5678c0b14db7f79e980428c14492ecc775bb4f1e16",
+      "bytes": 13716
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/packet.rs",
+      "sha256": "b252324af45f70eb0c9ffed13d292e514e2a14893a00a4b7974895932972ef8b",
+      "bytes": 25451
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/unix/mod.rs",
+      "sha256": "8c6b7998604642d6e96756170d7adf6f2ebb4d64b9d67143a7b1fc9841849297",
+      "bytes": 2020
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/unix/muxer.rs",
+      "sha256": "dfd718539a98fbb1222da44c114ac4651f0d7a70e176622c409c54e69d9a41ad",
+      "bytes": 56450
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/unix/muxer_killq.rs",
+      "sha256": "5047387e9576f5b77ea9cb0d78fcfbec1983433208521e78373c760e1538f342",
+      "bytes": 5150
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/vsock/unix/muxer_rxq.rs",
+      "sha256": "f565804c7b3afcbcd609f8fe4714c7e52bc2a98d8467a1d452bae75bd5483d37",
+      "bytes": 4943
+    },
+    {
+      "path": "backend/vmm/virtio-devices/src/watchdog.rs",
+      "sha256": "fcce5bff58ad342b9e836706d1fea7a5e7a91d0a6809b028d7faf2ba86a445ea",
+      "bytes": 14086
+    },
+    {
+      "path": "backend/vmm/vm-allocator/Cargo.toml",
+      "sha256": "4b4b2b92a7b634d70ef24c959013ae0c7182f8d87f0073fd6d4a367c0a59c82e",
+      "bytes": 241
+    },
+    {
+      "path": "backend/vmm/vm-allocator/src/address.rs",
+      "sha256": "51f968edfcf3fd7054013e0116d1de2080130081f86cfc56bbe0f84f01bf3230",
+      "bytes": 12668
+    },
+    {
+      "path": "backend/vmm/vm-allocator/src/gsi.rs",
+      "sha256": "bdc1c026691fdc1e7e3740c53e09c61da0924447f01846b379e6519cbf644e9b",
+      "bytes": 2672
+    },
+    {
+      "path": "backend/vmm/vm-allocator/src/lib.rs",
+      "sha256": "02d34ce60781f6dbf88118ba63f9504a1f2d9d376047473e856a1bbd2c990bdc",
+      "bytes": 727
+    },
+    {
+      "path": "backend/vmm/vm-allocator/src/page_size.rs",
+      "sha256": "2ee2bf306920f48bdfa37853dc912687af024ad81aabf16b5fb94c18f790d1c5",
+      "bytes": 1024
+    },
+    {
+      "path": "backend/vmm/vm-allocator/src/system.rs",
+      "sha256": "9b95bea95837c4ee035183e28a52268815ee99e955bdbd76aa814ddac35ce134",
+      "bytes": 6106
+    },
+    {
+      "path": "backend/vmm/vm-device/Cargo.toml",
+      "sha256": "b2e5983809cfcff80acfc42dbc177f9871c181b36cec39c809a94aff74920152",
+      "bytes": 533
+    },
+    {
+      "path": "backend/vmm/vm-device/src/bus.rs",
+      "sha256": "0c7d23945370d99113b26c2dabeea6a2457657a0a0123ce78d7b991ecb3cb79d",
+      "bytes": 11614
+    },
+    {
+      "path": "backend/vmm/vm-device/src/dma_mapping/mod.rs",
+      "sha256": "144e0d60a26f15ae9894fd9bb509b889fdd0e0076941b76f719dfe7d9d2705cb",
+      "bytes": 640
+    },
+    {
+      "path": "backend/vmm/vm-device/src/dma_mapping/vfio.rs",
+      "sha256": "730ab24a2c490c0860ca552fc8368b99b40aeda35a5a529db7a8ea6c4282a5f1",
+      "bytes": 2408
+    },
+    {
+      "path": "backend/vmm/vm-device/src/interrupt/mod.rs",
+      "sha256": "a5c1067ba674d920f389a8cf46f18ef62d532dacd4b7200068d0f96640ac33ad",
+      "bytes": 7853
+    },
+    {
+      "path": "backend/vmm/vm-device/src/lib.rs",
+      "sha256": "47cf0b3bf0d9e06335e51120e34e5bee290ae6eda6c8f6b8ba45f13816a9dfef",
+      "bytes": 1349
+    },
+    {
+      "path": "backend/vmm/vm-migration/Cargo.toml",
+      "sha256": "ea88941f44b7ae048c4fe5b44cf5954a11ff3516aa0727376bacb9398e8f8ab5",
+      "bytes": 381
+    },
+    {
+      "path": "backend/vmm/vm-migration/src/lib.rs",
+      "sha256": "dab6900d5fe710d32dc9eddc49dc9ae6b35261225e8af75a898a16e66116271b",
+      "bytes": 9373
+    },
+    {
+      "path": "backend/vmm/vm-migration/src/protocol.rs",
+      "sha256": "15a02620fe8ef442432e35db7e8e9146ab503daf2e17821fb69b9356a6c6001b",
+      "bytes": 8903
+    },
+    {
+      "path": "backend/vmm/vm-virtio/Cargo.toml",
+      "sha256": "7abb0bc15684e10fb31e4b4d52f3f35580286074c606f7ab2c419a7b6f8caf52",
+      "bytes": 286
+    },
+    {
+      "path": "backend/vmm/vm-virtio/src/lib.rs",
+      "sha256": "9cec37330f458f830faff9908e195c712eb1d2fbd20e54b7c54208d94aa6e99c",
+      "bytes": 5140
+    },
+    {
+      "path": "backend/vmm/vm-virtio/src/queue.rs",
+      "sha256": "f4e222941c4ae3b51699bb40aa3c22085f168784499aace7619e12821b3df6d6",
+      "bytes": 7351
+    },
+    {
+      "path": "backend/vmm/vmm/Cargo.toml",
+      "sha256": "3119ec243f08c2c07050b7eda11922b1dd3a66d622993e83782d9c270f310ff7",
+      "bytes": 2421
+    },
+    {
+      "path": "backend/vmm/vmm/src/acpi.rs",
+      "sha256": "0cb8bf8c5ec5e82dd9520b6adf369b8a59de76fc3f8a333a8526b68c0834f0aa",
+      "bytes": 27155
+    },
+    {
+      "path": "backend/vmm/vmm/src/api/dbus/mod.rs",
+      "sha256": "3e58d2090e2bf15451191d662b9cb4fa9dd590a9e0a64d5e0b20670a565fe7a5",
+      "bytes": 14627
+    },
+    {
+      "path": "backend/vmm/vmm/src/api/http/http_endpoint.rs",
+      "sha256": "a491c77ec784456c8dbda33825813cde8a6f7e46a767d0654ccdcbfd0a3d8197",
+      "bytes": 11190
+    },
+    {
+      "path": "backend/vmm/vmm/src/api/http/mod.rs",
+      "sha256": "d11874abc99e67ff0293980c5b48502197f2daf91815febb760aa327a877c473",
+      "bytes": 12409
+    },
+    {
+      "path": "backend/vmm/vmm/src/api/mod.rs",
+      "sha256": "72076a6786a43938382aeabbfd915abb31a9e1013320c3c0fccd499ace4a1074",
+      "bytes": 21041
+    },
+    {
+      "path": "backend/vmm/vmm/src/api/openapi/cloud-hypervisor.yaml",
+      "sha256": "df6e503f6a05a6a6cce51764c477f38b5890491110e6db2b4de1bdb81c778d93",
+      "bytes": 29767
+    },
+    {
+      "path": "backend/vmm/vmm/src/clone3.rs",
+      "sha256": "341b38e660b1f8a364b6486ea1ca99c953a25aec69a8cdf4b553a89bf6be6f41",
+      "bytes": 630
+    },
+    {
+      "path": "backend/vmm/vmm/src/config.rs",
+      "sha256": "a7c7017d18c0257a258269b9f1370e94bd6bdf8c9c6cf8fbdd3234e17d847e33",
+      "bytes": 123593
+    },
+    {
+      "path": "backend/vmm/vmm/src/coredump.rs",
+      "sha256": "91442dc6f26f351364ef0bdb679b44c1747a6c1acdcaee5da123498fad70d5b0",
+      "bytes": 9372
+    },
+    {
+      "path": "backend/vmm/vmm/src/cpu.rs",
+      "sha256": "851e18966d0bf69c5cde58b1af405c6bc9013090dd1361f1e90f4aca0f47f461",
+      "bytes": 104394
+    },
+    {
+      "path": "backend/vmm/vmm/src/device_manager.rs",
+      "sha256": "46521e0938d192a7a997066246198ba5b9d4c143951c5b258163835bb85fa866",
+      "bytes": 172932
+    },
+    {
+      "path": "backend/vmm/vmm/src/device_tree.rs",
+      "sha256": "67ef4eec25ab2bd53845ee7998b20aec934e08c39474cadbaa1718a7bd8f3d10",
+      "bytes": 8323
+    },
+    {
+      "path": "backend/vmm/vmm/src/gdb.rs",
+      "sha256": "854ef0094adbc1ebdabe828ee1649247574e47d2a0823caa2eb35449da29bbca",
+      "bytes": 16854
+    },
+    {
+      "path": "backend/vmm/vmm/src/interrupt.rs",
+      "sha256": "9de25601b2f73afef69657a9e32a0073918e74fff3bef31a1929b494b3d15c74",
+      "bytes": 8931
+    },
+    {
+      "path": "backend/vmm/vmm/src/lib.rs",
+      "sha256": "d5a8277b300b3e168a2b65e1ea6c9ad8590598f96135216929a107bf36d50b9c",
+      "bytes": 98351
+    },
+    {
+      "path": "backend/vmm/vmm/src/memory_manager.rs",
+      "sha256": "d3ab2bc184a0a95ee608b08748f02662cb2002db531f244f4241ec42d40548a3",
+      "bytes": 98123
+    },
+    {
+      "path": "backend/vmm/vmm/src/migration.rs",
+      "sha256": "7e0ea5a9534d81367e31d1a0311bee52ff11fa2c3da80d329b8772c98632a054",
+      "bytes": 2653
+    },
+    {
+      "path": "backend/vmm/vmm/src/pci_segment.rs",
+      "sha256": "9f8f6f0f1b0073a34609852b976772d1782bfa3d61929e9a14decb1bdf1fe0ef",
+      "bytes": 15468
+    },
+    {
+      "path": "backend/vmm/vmm/src/seccomp_filters.rs",
+      "sha256": "1abc3c29f2e85fedf975eb0f9e7a279f4d6ac6f49365c1caac55d66844371c2d",
+      "bytes": 36173
+    },
+    {
+      "path": "backend/vmm/vmm/src/serial_manager.rs",
+      "sha256": "4035d6c9c52dcf9927ae0da2f816ef4769392a64f43634e3ff7e8912356a2b48",
+      "bytes": 19213
+    },
+    {
+      "path": "backend/vmm/vmm/src/sigwinch_listener.rs",
+      "sha256": "3d9c4d298bc7db924ee0b1a56aeb447ee9c7ffad1e694c149178af3023b6960f",
+      "bytes": 7765
+    },
+    {
+      "path": "backend/vmm/vmm/src/vm.rs",
+      "sha256": "70ffd7cd87ef91aea8fcafa684cea7188e384271f90ab2b89678f0e13d04ebb8",
+      "bytes": 107401
+    },
+    {
+      "path": "backend/vmm/vmm/src/vm_config.rs",
+      "sha256": "9189dd4d8d78c761b1a4f15df990d178263c23593e9b6c2cc6299a562c2af0e3",
+      "bytes": 16561
+    },
+    {
+      "path": "bin/PhaseTieing-controller",
+      "sha256": "a4a27864cf044050389a707a1e357f004d27dd24d6a2a7a4b20d16f86222132a",
+      "bytes": 493
+    },
+    {
+      "path": "bin/check-source",
+      "sha256": "3520d96cc0f0dd961e8b21a66074e4b200a281c8dac5394d02b1a912e95836da",
+      "bytes": 456
+    },
+    {
+      "path": "configs/cxl-6144-16.json",
+      "sha256": "6f505d949275b7514e2d4198349f444f981e67af5afb862ce914b9451a155497",
+      "bytes": 110
+    },
+    {
+      "path": "configs/sandbox.example.json",
+      "sha256": "16c4c2877bb9e6901dd8775559635872f932673d05e81094029761a33d892f13",
+      "bytes": 46
+    },
+    {
+      "path": "configs/sandboxes.example.json",
+      "sha256": "02b5247c23f9daa3660ceb8444ad98d7ddebbfdf4aa7bc7be94b1a630c94b4c1",
+      "bytes": 231
+    },
+    {
+      "path": "configs/ssd-6144-16.json",
+      "sha256": "bd59e40ecdb34ee36b2dd008f95e19532845c9ee6ad0cab3381574a139521805",
+      "bytes": 143
+    },
+    {
+      "path": "docs/architecture.md",
+      "sha256": "6163735a9260d7c9ec18c83e41f36ded84f987b2e8ab500acd554e816c4793d1",
+      "bytes": 5081
+    },
+    {
+      "path": "docs/backend-requirements.md",
+      "sha256": "bff7f5717ef3df081607f9fda911fd0c324cf7adc353be25aa7a83c6dca04661",
+      "bytes": 2614
+    },
+    {
+      "path": "docs/build.md",
+      "sha256": "ecd7a85e1d1a4813ed58825475d431af64f30c2aedfcbb7602aeaf08cecfeffb",
+      "bytes": 2469
+    },
+    {
+      "path": "docs/filename-renames.json",
+      "sha256": "cc4e901d26eec9de79cc98edbde003d6f0685a317a9299befd1faf462a929d76",
+      "bytes": 18830
+    },
+    {
+      "path": "docs/upload.md",
+      "sha256": "bd15d79546bb9d7fe96d1fc5e90196ed77ee8a2e83896385fa35e3eefa7dfb4c",
+      "bytes": 1316
+    },
+    {
+      "path": "docs/verification.md",
+      "sha256": "273e92f35df08424f127e1378e3aaf03006919079fa00a1c78742b46d906b5f4",
+      "bytes": 988
+    },
+    {
+      "path": "evaluation/README.md",
+      "sha256": "455241ad9b7a63c34ce3bbfb11cc4d89049c69c2b7e8f364dc682aefa3baadc7",
+      "bytes": 1528
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/adaptive_controller_cxl.py",
+      "sha256": "2c6a4c429b20cf655437f000b575e517b7ae2cea85d8735ae234a6e473b1c96c",
+      "bytes": 16128
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/coordinator.py",
+      "sha256": "8000107b01d8c9a36fb89fed6b8f02a1b618a5e656e5a2afdb7c9efcb9e10a9a",
+      "bytes": 16206
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/eligibility.py",
+      "sha256": "3599b68c1261e03670dc894a9437bde7cf32518af32ba3a3980b7c342e5fa12c",
+      "bytes": 3293
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/execution.py",
+      "sha256": "15cc5c770e8ea3765d9d32f6b91151959e86add8c550aa16aa1ae2d9515c9841",
+      "bytes": 10120
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/finalize.py",
+      "sha256": "3e58b5fed69215bdb4952613a99f2d1d2f974f20fa03b570c3befce87a7a6250",
+      "bytes": 10152
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/geometry.py",
+      "sha256": "72fd9fb134afa7891609e125f059da46d1756f19a8bb5d5b17c5c2fa72cc9aba",
+      "bytes": 3254
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/images.py",
+      "sha256": "a400d5649184c587c6848b9815c3d6bad6e12fd6823b0ede14825b0cd1fafa93",
+      "bytes": 5125
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/inventory.py",
+      "sha256": "7f4123a6a448e2af098cc5ae0ec5dbc914965a00924b9d609239e103d0240d08",
+      "bytes": 4655
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/isolation.py",
+      "sha256": "e884c84df59e22f326983bfd73bfb2105203d45c49ded43d34c1fe13fe6440f5",
+      "bytes": 4765
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/package_proxy.py",
+      "sha256": "9d59a5b77a8cb77a4da41d5df403fd8f1323e4634545447ede7ebe2692236ee8",
+      "bytes": 3326
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/records.py",
+      "sha256": "25f6bd20efae11cf05a749b1bfaacce4e37cece986b4baa697572c96567ba157",
+      "bytes": 6034
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/relocate_private.py",
+      "sha256": "7c6311b559adc9e8679c248a0ac3d99e908a08ed62dd0ba5997ce297abba3efc",
+      "bytes": 3797
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/resources.py",
+      "sha256": "434b6c88bcea82a947120b9e48e26227e6de92bafe8e56589c7bda4125dec249",
+      "bytes": 3709
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/run_single.sh",
+      "sha256": "c22fdb722b55201f97980c24ff3c279f046f9930489adbba17489023db593e7b",
+      "bytes": 39501
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/semantics.py",
+      "sha256": "d8b34465ba563e5efe78accdfe9fbd63698df27023825fb7413feb6cd081faf6",
+      "bytes": 3109
+    },
+    {
+      "path": "evaluation/reference/phase/all_traces_v67/waves.py",
+      "sha256": "ac5b31e5a4c7808fc485b3ce22f432b2dea64b7478ae6e4881eb1c91fa5dd9bf",
+      "bytes": 3609
+    },
+    {
+      "path": "evaluation/reference/phase/baselines/startup_monitor.py",
+      "sha256": "43fb136c664c263347f02d8347fbc1ca996235de79ea185f47b0b41abd8a820c",
+      "bytes": 2572
+    },
+    {
+      "path": "evaluation/reference/phase/cold_media/analyze.py",
+      "sha256": "99b038c55f164da655956bf1d840a1e2fa1c8fb57f00560a2c59e78c9086dc4c",
+      "bytes": 17507
+    },
+    {
+      "path": "evaluation/reference/phase/ssd_placement_v54/analyze.py",
+      "sha256": "3cd6e0839d928c17f62a8fe9d802763a39e3033d1becb5eabb65b3acb33bdd02",
+      "bytes": 7351
+    },
+    {
+      "path": "evaluation/reference/phase/ssd_placement_v54/controller.py",
+      "sha256": "3de5d26bd63120b6e221e048cb24ffe0e7ae1bd19486ab376c3e3fd312079b36",
+      "bytes": 14890
+    },
+    {
+      "path": "evaluation/reference/phase/ssd_placement_v54/guest_state.py",
+      "sha256": "5123be1625e4518af577c686142f5040d5fb3e0ca2fee8a2002a19a2539e98a4",
+      "bytes": 4412
+    },
+    {
+      "path": "evaluation/reference/phase/ssd_placement_v54/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "evaluation/reference/phase/ssd_placement_v54/host_monitor.py",
+      "sha256": "c82d23481160c67ec78c41461e3b08a22841b2f75342a38c0dc2617dcd942734",
+      "bytes": 14887
+    },
+    {
+      "path": "evaluation/reference/phase/ssd_placement_v54/placement.py",
+      "sha256": "d9175110ae5dad686eaaab8f4e6426eaca0f46fe772bf5fbd626bc2057c5ee66",
+      "bytes": 16934
+    },
+    {
+      "path": "evaluation/reference/phase/ssd_placement_v54/study.py",
+      "sha256": "5222281f00fa8007121af7439909a28ee563c0ae94b67b758beb162a50372a43",
+      "bytes": 10561
+    },
+    {
+      "path": "evaluation/reference/phase/three_modes/verify_topology.py",
+      "sha256": "1448af9bae1cc8280c8f50eeffb9765439bf459b868eee7db993574beb66ecdd",
+      "bytes": 2008
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/adaptive_controller_cxl.py",
+      "sha256": "2c6a4c429b20cf655437f000b575e517b7ae2cea85d8735ae234a6e473b1c96c",
+      "bytes": 16128
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/coordinator.py",
+      "sha256": "8000107b01d8c9a36fb89fed6b8f02a1b618a5e656e5a2afdb7c9efcb9e10a9a",
+      "bytes": 16206
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/eligibility.py",
+      "sha256": "3599b68c1261e03670dc894a9437bde7cf32518af32ba3a3980b7c342e5fa12c",
+      "bytes": 3293
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/execution.py",
+      "sha256": "36ded090b1e30237e8c8a5dbc6da1bca204d8bf3edc9ff2bbc47910e500f1406",
+      "bytes": 10152
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/finalize.py",
+      "sha256": "3e58b5fed69215bdb4952613a99f2d1d2f974f20fa03b570c3befce87a7a6250",
+      "bytes": 10152
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/geometry.py",
+      "sha256": "72fd9fb134afa7891609e125f059da46d1756f19a8bb5d5b17c5c2fa72cc9aba",
+      "bytes": 3254
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/images.py",
+      "sha256": "a400d5649184c587c6848b9815c3d6bad6e12fd6823b0ede14825b0cd1fafa93",
+      "bytes": 5125
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/inventory.py",
+      "sha256": "7f4123a6a448e2af098cc5ae0ec5dbc914965a00924b9d609239e103d0240d08",
+      "bytes": 4655
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/isolation.py",
+      "sha256": "e884c84df59e22f326983bfd73bfb2105203d45c49ded43d34c1fe13fe6440f5",
+      "bytes": 4765
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/package_proxy.py",
+      "sha256": "9d59a5b77a8cb77a4da41d5df403fd8f1323e4634545447ede7ebe2692236ee8",
+      "bytes": 3326
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/records.py",
+      "sha256": "25f6bd20efae11cf05a749b1bfaacce4e37cece986b4baa697572c96567ba157",
+      "bytes": 6034
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/relocate_private.py",
+      "sha256": "cf34d9bd6aa5d610584e94f8797fe01676903d1f7228f65750e1452aee1de362",
+      "bytes": 3817
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/resources.py",
+      "sha256": "434b6c88bcea82a947120b9e48e26227e6de92bafe8e56589c7bda4125dec249",
+      "bytes": 3709
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/run_single.sh",
+      "sha256": "309d96446e03ad0f8b941e98ef3eac4e1d7e625b8c00eb83690d33ea0918d546",
+      "bytes": 39439
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/semantics.py",
+      "sha256": "d8b34465ba563e5efe78accdfe9fbd63698df27023825fb7413feb6cd081faf6",
+      "bytes": 3109
+    },
+    {
+      "path": "experiments/phase/all_traces_v67/waves.py",
+      "sha256": "ac5b31e5a4c7808fc485b3ce22f432b2dea64b7478ae6e4881eb1c91fa5dd9bf",
+      "bytes": 3609
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-balloon-reporting.patch",
+      "sha256": "ebaa69f182b0953e4043a8d1f2695285c440d55cfec88f4b7a9182e650c8c6fc",
+      "bytes": 4627
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-pebs-registration-lifecycle.patch",
+      "sha256": "f6427a76d5504ce00dc15c1f9fb520afe07acdbf64bee779b59d7ce78277a3a4",
+      "bytes": 3358
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-reporting-barrier.patch",
+      "sha256": "e6a10502e217f2877f079dbc620d14beccfbf45cb994929c1dc959e26c561328",
+      "bytes": 2547
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-reporting-fine-counters.patch",
+      "sha256": "68d76d755c67fa0a5671bbbae415b5316e58ca4672d48c16ba8f4d428d0c16e5",
+      "bytes": 2385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-reporting-quiesce.patch",
+      "sha256": "484fa16a025cd46449e376be33f4fa5df1f6b5796db5079c580ce01856c920a3",
+      "bytes": 5385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-sandbox-alloc-noreclaim.patch",
+      "sha256": "f56ba0c980f09e2d39522a3ccb590ec03b68773cdfc378546972fa5b0a225159",
+      "bytes": 1076
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-sandbox-alloc-recovery.patch",
+      "sha256": "be025371c2ba98d5e57d50336c1c256d1286baca103aa6891799f02e2233df64",
+      "bytes": 2765
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-sandbox-lifecycle.patch",
+      "sha256": "8ae1d474c9a4f0e7d619fd3f0a6db8b98bbec2ce9a5cf6b67ed4bb3a344a864b",
+      "bytes": 8162
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing-wait-reporting.patch",
+      "sha256": "e23c594d3192dfb3a63e881dd8f5bd19a7a5c65e9f6e3d686276c600cf99aa2b",
+      "bytes": 2674
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing_alloc.c",
+      "sha256": "6709f918de4677db0f5cef9487e61c5df7be6b0ef93796e1b6f991129117f9c3",
+      "bytes": 11946
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/PhaseTieing_alloc.h",
+      "sha256": "ab30411584e21ce9fccd24b355b65546ad7d8b7ad9fa6066c44996ae8421c2c9",
+      "bytes": 1491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/actuator.py",
+      "sha256": "6dbafaf8e9e71342f48b88896f8530e18e03b3f280f2496287eda6b4ae667b54",
+      "bytes": 15655
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/adaptive_controller.py",
+      "sha256": "ba2f6e959541f5a4d9ec7fe91d243a4d8cbbf537a1a0dd5c2f4de2cd3a4f238f",
+      "bytes": 15181
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/collect.py",
+      "sha256": "0f36d236781755dbec08744a86ae224ccdeb6e24cebc0d609c4a114b490c59c1",
+      "bytes": 4240
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/controller.py",
+      "sha256": "dcd30e5002464fb4d485b280783eba6a9e01e26c9fc1d2d2ddaa00930fc8f913",
+      "bytes": 167
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/cxl_controller.py",
+      "sha256": "ce3d1bce922565df8aee6690e307ce14d9ac8371f5b23364fa1c932c8438d614",
+      "bytes": 26360
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/feedback.py",
+      "sha256": "fefdd4c57c0da19303f311595a5621744b6ae31b2ed2d68475927cbcbbf3053e",
+      "bytes": 8585
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/guest.config",
+      "sha256": "dec023baef91fcac885278a14351cfcba6a22ce878fb8f9c1f277a162eef6a52",
+      "bytes": 147513
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/legacy_controller.py",
+      "sha256": "5b888a2790e0a25d61a2b2487b344d7e66183e9948fab279b3f2b5b4acd40350",
+      "bytes": 539
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/migrate.c",
+      "sha256": "e33e7ed85346b3dc872dda3639aca5698f9d5ed1135365833e9cef80b0529e78",
+      "bytes": 73014
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/page_alloc.c",
+      "sha256": "020f51d9b4632fd6c4166e5fb4e60a71316e44cebffb33cf5e9f2dc5883474e1",
+      "bytes": 199241
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/page_ext.c",
+      "sha256": "bc358f3413e3dcc68f8605b094d72cb5a5449e16f379e09ec206adc60e075136",
+      "bytes": 14491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/page_reporting.c",
+      "sha256": "3063c785cd34594cf232da4ed9bf51a3e0df6711e9935d6b110b070eb0d99f06",
+      "bytes": 16858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/Makefile",
+      "sha256": "01b8533e88dbadb5006a2383d8d74d1cddb7f314ef3a6f6ada5dcdc19daad002",
+      "bytes": 381
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/PhaseTieing.h",
+      "sha256": "6ca9fc8eefd8e2627ee392fbff966a77d6fbaf82389409b62cd30ef95d9791c8",
+      "bytes": 473
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/core.c",
+      "sha256": "aac1cf6581ecd54f4a1f223e2865301e6b8b789f4c67d570018c3d19ea5d9aee",
+      "bytes": 28016
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/cwisstable.h",
+      "sha256": "0690c32222f7bf5fc1ade649153c30ea569404bba470095de12a5852dbc324e9",
+      "bytes": 148150
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/error.h",
+      "sha256": "70b0cf6f06e73f3d1e53b3e78b5d32ba69806f8949f7671200bc37adf4fc1e30",
+      "bytes": 3385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/hashmap.h",
+      "sha256": "d6bf6e55aa510ac2bc2e0ae2360cbd54c424063143e83313e1b83aa3d6659af1",
+      "bytes": 2124
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/module.c",
+      "sha256": "7a758a1d64dd89268affc166745a97dafba3da48737c20e8664dd360ea261525",
+      "bytes": 5933
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/module.h",
+      "sha256": "f927feb241bf749c0be3368be23ddd39256eacbea201c253789845c47911ab56",
+      "bytes": 1752
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/mpsc.h",
+      "sha256": "44d1a865136dfac6f1242f1d44e0a68c16d36901087fa2168b947fc8c2a1c7df",
+      "bytes": 3145
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/pebs.h",
+      "sha256": "5ec5f45b9d901a803f378e6ea3b31342d717ab0d267379a450506a10354b47a3",
+      "bytes": 292
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/range_tree.h",
+      "sha256": "3d1f7f2c0f9a653be2397b5646e50e11e6c2c37b984b26b983c650ac69c8ca23",
+      "bytes": 11011
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/sandbox.h",
+      "sha256": "17d963ff8d0c6b52bdc805734fcfd96975b946842d6d099bcd79ac4da4dad895",
+      "bytes": 265
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/sysfs.c",
+      "sha256": "8ccefe1dd102f6d759c592052eec8786b1e3b6b474533f328a23b0d0b28293ab",
+      "bytes": 7143
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/vector.c",
+      "sha256": "f590264bb4c243a255c60dda0e8b9d4e95ac4c78fd3c5a78a9c5f4bba2438c81",
+      "bytes": 3371
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement-source/vector.h",
+      "sha256": "add28aef44a8860ad843d5dee91de18f9e59b76e2142cf63f7d003a9786f453a",
+      "bytes": 1902
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/placement.py",
+      "sha256": "3b7cd37811555521d10dc102a9d631f2cc361e6b0829b423a2de08b4057145d8",
+      "bytes": 17202
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/policy_exec.c",
+      "sha256": "e985d83cd7fbff14c03fd584e4c274f33ced61d7202317c79e42c06c9f3e3f64",
+      "bytes": 719
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/protocol/analyze.py",
+      "sha256": "cddc1dd9d2603c5d6c69a579bc03cd7a1079474c76bcf0ca80359567f0bdecac",
+      "bytes": 9867
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/protocol/faithful_replay.py",
+      "sha256": "f6abd7482b0112edd01a3943b8beb4c854dccb2aa380e5d4902fa8967bce8e95",
+      "bytes": 41766
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/protocol/lifecycle_probe.py",
+      "sha256": "972f40560585416dc6700c0cf62900e31dab1fc9d7c88b906c6c31faebd3f8e8",
+      "bytes": 9858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/protocol/lifecycle_probe_v2.py",
+      "sha256": "824566a0e8d398825448205657005906fb4a11c04bff4891e5efbf8e49c15760",
+      "bytes": 9932
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/protocol/prepare_xonsh.py",
+      "sha256": "e79639ae56f09b3545cba6ef2cbf6ec4729ad9ebe75adebf661bf4c2b29d9ce5",
+      "bytes": 2233
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/protocol/run_matrix.py",
+      "sha256": "ea93dfb4e4bbd501c34d5a406d115ced56c2153da641c4d77a2a23216e4f8c47",
+      "bytes": 6871
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/protocol/run_probe.sh",
+      "sha256": "e35453fe789612ef4752c5fa441cb6b32bfcda344df680234f1e2c4ba2fd18f7",
+      "bytes": 21656
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/protocol/run_single.sh",
+      "sha256": "ad01a59c58a986b37da87f426c8521f64834a8fd3cab5838b1d2cba40880d310",
+      "bytes": 22472
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/protocol/test_faithful.py",
+      "sha256": "8f7fe7a47e3278ad3e1035873d9150681fa4b2ecb97a9732ec7354b95b5d55cf",
+      "bytes": 2575
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/replay_agentcgroup.py",
+      "sha256": "8cb00b2b6572ce8400cfae480be08e66f9f9a93b8f0eeeacfb1ed58e51277792",
+      "bytes": 43612
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/ssd_controller.py",
+      "sha256": "ca85cba8b9a84f2212f8c49058980889f3a3d1f7a37fa549565f222525326ca7",
+      "bytes": 8443
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/start-vm.sh",
+      "sha256": "69e9d1329b54e4a7f2f613b9cc763a5ce9d890476a1d055eb80c5691944ef8be",
+      "bytes": 3737
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/vmm-balloon.rs",
+      "sha256": "2ad867311f5a099950aaf5fcdc2383a1baf4f3281020f866b4993adb9249903e",
+      "bytes": 45017
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/vmm-parent-seccomp.rs",
+      "sha256": "1abc3c29f2e85fedf975eb0f9e7a279f4d6ac6f49365c1caac55d66844371c2d",
+      "bytes": 36173
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/vmm-seccomp.rs",
+      "sha256": "b6f64639da820a61fcde01b2050368d1015297b90f3ff304abe96ce524121a20",
+      "bytes": 9698
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope/vmm_pytest_compat.py",
+      "sha256": "e2d618a465dac49007caa6c583961e051af5d049381e59614b3c64883e5ce440",
+      "bytes": 1550
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-balloon-reporting.patch",
+      "sha256": "ebaa69f182b0953e4043a8d1f2695285c440d55cfec88f4b7a9182e650c8c6fc",
+      "bytes": 4627
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-pebs-registration-lifecycle.patch",
+      "sha256": "f6427a76d5504ce00dc15c1f9fb520afe07acdbf64bee779b59d7ce78277a3a4",
+      "bytes": 3358
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-reporting-barrier.patch",
+      "sha256": "e6a10502e217f2877f079dbc620d14beccfbf45cb994929c1dc959e26c561328",
+      "bytes": 2547
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-reporting-fine-counters.patch",
+      "sha256": "68d76d755c67fa0a5671bbbae415b5316e58ca4672d48c16ba8f4d428d0c16e5",
+      "bytes": 2385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-reporting-quiesce.patch",
+      "sha256": "484fa16a025cd46449e376be33f4fa5df1f6b5796db5079c580ce01856c920a3",
+      "bytes": 5385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-sandbox-alloc-noreclaim.patch",
+      "sha256": "f56ba0c980f09e2d39522a3ccb590ec03b68773cdfc378546972fa5b0a225159",
+      "bytes": 1076
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-sandbox-alloc-recovery.patch",
+      "sha256": "be025371c2ba98d5e57d50336c1c256d1286baca103aa6891799f02e2233df64",
+      "bytes": 2765
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-sandbox-lifecycle.patch",
+      "sha256": "8ae1d474c9a4f0e7d619fd3f0a6db8b98bbec2ce9a5cf6b67ed4bb3a344a864b",
+      "bytes": 8162
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing-wait-reporting.patch",
+      "sha256": "e23c594d3192dfb3a63e881dd8f5bd19a7a5c65e9f6e3d686276c600cf99aa2b",
+      "bytes": 2674
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing_alloc.c",
+      "sha256": "6709f918de4677db0f5cef9487e61c5df7be6b0ef93796e1b6f991129117f9c3",
+      "bytes": 11946
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/PhaseTieing_alloc.h",
+      "sha256": "ab30411584e21ce9fccd24b355b65546ad7d8b7ad9fa6066c44996ae8421c2c9",
+      "bytes": 1491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/actuator.py",
+      "sha256": "6dbafaf8e9e71342f48b88896f8530e18e03b3f280f2496287eda6b4ae667b54",
+      "bytes": 15655
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/adaptive_controller.py",
+      "sha256": "ba2f6e959541f5a4d9ec7fe91d243a4d8cbbf537a1a0dd5c2f4de2cd3a4f238f",
+      "bytes": 15181
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/collect.py",
+      "sha256": "0f36d236781755dbec08744a86ae224ccdeb6e24cebc0d609c4a114b490c59c1",
+      "bytes": 4240
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/controller.py",
+      "sha256": "dcd30e5002464fb4d485b280783eba6a9e01e26c9fc1d2d2ddaa00930fc8f913",
+      "bytes": 167
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/cxl_controller.py",
+      "sha256": "ce3d1bce922565df8aee6690e307ce14d9ac8371f5b23364fa1c932c8438d614",
+      "bytes": 26360
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/feedback.py",
+      "sha256": "fefdd4c57c0da19303f311595a5621744b6ae31b2ed2d68475927cbcbbf3053e",
+      "bytes": 8585
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/guest.config",
+      "sha256": "dec023baef91fcac885278a14351cfcba6a22ce878fb8f9c1f277a162eef6a52",
+      "bytes": 147513
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/legacy_controller.py",
+      "sha256": "5b888a2790e0a25d61a2b2487b344d7e66183e9948fab279b3f2b5b4acd40350",
+      "bytes": 539
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/migrate.c",
+      "sha256": "e33e7ed85346b3dc872dda3639aca5698f9d5ed1135365833e9cef80b0529e78",
+      "bytes": 73014
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/page_alloc.c",
+      "sha256": "020f51d9b4632fd6c4166e5fb4e60a71316e44cebffb33cf5e9f2dc5883474e1",
+      "bytes": 199241
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/page_ext.c",
+      "sha256": "bc358f3413e3dcc68f8605b094d72cb5a5449e16f379e09ec206adc60e075136",
+      "bytes": 14491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/page_reporting.c",
+      "sha256": "3063c785cd34594cf232da4ed9bf51a3e0df6711e9935d6b110b070eb0d99f06",
+      "bytes": 16858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/Makefile",
+      "sha256": "01b8533e88dbadb5006a2383d8d74d1cddb7f314ef3a6f6ada5dcdc19daad002",
+      "bytes": 381
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/PhaseTieing.h",
+      "sha256": "6ca9fc8eefd8e2627ee392fbff966a77d6fbaf82389409b62cd30ef95d9791c8",
+      "bytes": 473
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/core.c",
+      "sha256": "aac1cf6581ecd54f4a1f223e2865301e6b8b789f4c67d570018c3d19ea5d9aee",
+      "bytes": 28016
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/cwisstable.h",
+      "sha256": "0690c32222f7bf5fc1ade649153c30ea569404bba470095de12a5852dbc324e9",
+      "bytes": 148150
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/error.h",
+      "sha256": "70b0cf6f06e73f3d1e53b3e78b5d32ba69806f8949f7671200bc37adf4fc1e30",
+      "bytes": 3385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/hashmap.h",
+      "sha256": "d6bf6e55aa510ac2bc2e0ae2360cbd54c424063143e83313e1b83aa3d6659af1",
+      "bytes": 2124
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/module.c",
+      "sha256": "7a758a1d64dd89268affc166745a97dafba3da48737c20e8664dd360ea261525",
+      "bytes": 5933
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/module.h",
+      "sha256": "f927feb241bf749c0be3368be23ddd39256eacbea201c253789845c47911ab56",
+      "bytes": 1752
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/mpsc.h",
+      "sha256": "44d1a865136dfac6f1242f1d44e0a68c16d36901087fa2168b947fc8c2a1c7df",
+      "bytes": 3145
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/pebs.h",
+      "sha256": "5ec5f45b9d901a803f378e6ea3b31342d717ab0d267379a450506a10354b47a3",
+      "bytes": 292
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/range_tree.h",
+      "sha256": "3d1f7f2c0f9a653be2397b5646e50e11e6c2c37b984b26b983c650ac69c8ca23",
+      "bytes": 11011
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/sandbox.h",
+      "sha256": "17d963ff8d0c6b52bdc805734fcfd96975b946842d6d099bcd79ac4da4dad895",
+      "bytes": 265
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/sysfs.c",
+      "sha256": "8ccefe1dd102f6d759c592052eec8786b1e3b6b474533f328a23b0d0b28293ab",
+      "bytes": 7143
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/vector.c",
+      "sha256": "f590264bb4c243a255c60dda0e8b9d4e95ac4c78fd3c5a78a9c5f4bba2438c81",
+      "bytes": 3371
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement-source/vector.h",
+      "sha256": "add28aef44a8860ad843d5dee91de18f9e59b76e2142cf63f7d003a9786f453a",
+      "bytes": 1902
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/placement.py",
+      "sha256": "3b7cd37811555521d10dc102a9d631f2cc361e6b0829b423a2de08b4057145d8",
+      "bytes": 17202
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/policy_exec.c",
+      "sha256": "e985d83cd7fbff14c03fd584e4c274f33ced61d7202317c79e42c06c9f3e3f64",
+      "bytes": 719
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/protocol/analyze.py",
+      "sha256": "cddc1dd9d2603c5d6c69a579bc03cd7a1079474c76bcf0ca80359567f0bdecac",
+      "bytes": 9867
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/protocol/faithful_replay.py",
+      "sha256": "f6abd7482b0112edd01a3943b8beb4c854dccb2aa380e5d4902fa8967bce8e95",
+      "bytes": 41766
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/protocol/lifecycle_probe.py",
+      "sha256": "972f40560585416dc6700c0cf62900e31dab1fc9d7c88b906c6c31faebd3f8e8",
+      "bytes": 9858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/protocol/lifecycle_probe_v2.py",
+      "sha256": "824566a0e8d398825448205657005906fb4a11c04bff4891e5efbf8e49c15760",
+      "bytes": 9932
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/protocol/prepare_xonsh.py",
+      "sha256": "e79639ae56f09b3545cba6ef2cbf6ec4729ad9ebe75adebf661bf4c2b29d9ce5",
+      "bytes": 2233
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/protocol/run_matrix.py",
+      "sha256": "ea93dfb4e4bbd501c34d5a406d115ced56c2153da641c4d77a2a23216e4f8c47",
+      "bytes": 6871
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/protocol/run_probe.sh",
+      "sha256": "e35453fe789612ef4752c5fa441cb6b32bfcda344df680234f1e2c4ba2fd18f7",
+      "bytes": 21656
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/protocol/run_single.sh",
+      "sha256": "ad01a59c58a986b37da87f426c8521f64834a8fd3cab5838b1d2cba40880d310",
+      "bytes": 22472
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/protocol/test_faithful.py",
+      "sha256": "8f7fe7a47e3278ad3e1035873d9150681fa4b2ecb97a9732ec7354b95b5d55cf",
+      "bytes": 2575
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/replay_agentcgroup.py",
+      "sha256": "1d405742920366910e2c002fecf01721a20441dbf167329ac43039967386363c",
+      "bytes": 43856
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/ssd_controller.py",
+      "sha256": "ca85cba8b9a84f2212f8c49058980889f3a3d1f7a37fa549565f222525326ca7",
+      "bytes": 8443
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/start-vm.sh",
+      "sha256": "69e9d1329b54e4a7f2f613b9cc763a5ce9d890476a1d055eb80c5691944ef8be",
+      "bytes": 3737
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/vmm-balloon.rs",
+      "sha256": "2ad867311f5a099950aaf5fcdc2383a1baf4f3281020f866b4993adb9249903e",
+      "bytes": 45017
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/vmm-parent-seccomp.rs",
+      "sha256": "1abc3c29f2e85fedf975eb0f9e7a279f4d6ac6f49365c1caac55d66844371c2d",
+      "bytes": 36173
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/vmm-seccomp.rs",
+      "sha256": "b6f64639da820a61fcde01b2050368d1015297b90f3ff304abe96ce524121a20",
+      "bytes": 9698
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v65-ssd-scope-readguard/vmm_pytest_compat.py",
+      "sha256": "e2d618a465dac49007caa6c583961e051af5d049381e59614b3c64883e5ce440",
+      "bytes": 1550
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-balloon-reporting.patch",
+      "sha256": "ebaa69f182b0953e4043a8d1f2695285c440d55cfec88f4b7a9182e650c8c6fc",
+      "bytes": 4627
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-pebs-registration-lifecycle.patch",
+      "sha256": "f6427a76d5504ce00dc15c1f9fb520afe07acdbf64bee779b59d7ce78277a3a4",
+      "bytes": 3358
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-reporting-barrier.patch",
+      "sha256": "e6a10502e217f2877f079dbc620d14beccfbf45cb994929c1dc959e26c561328",
+      "bytes": 2547
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-reporting-fine-counters.patch",
+      "sha256": "68d76d755c67fa0a5671bbbae415b5316e58ca4672d48c16ba8f4d428d0c16e5",
+      "bytes": 2385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-reporting-quiesce.patch",
+      "sha256": "484fa16a025cd46449e376be33f4fa5df1f6b5796db5079c580ce01856c920a3",
+      "bytes": 5385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-sandbox-alloc-noreclaim.patch",
+      "sha256": "f56ba0c980f09e2d39522a3ccb590ec03b68773cdfc378546972fa5b0a225159",
+      "bytes": 1076
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-sandbox-alloc-recovery.patch",
+      "sha256": "be025371c2ba98d5e57d50336c1c256d1286baca103aa6891799f02e2233df64",
+      "bytes": 2765
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-sandbox-lifecycle.patch",
+      "sha256": "8ae1d474c9a4f0e7d619fd3f0a6db8b98bbec2ce9a5cf6b67ed4bb3a344a864b",
+      "bytes": 8162
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing-wait-reporting.patch",
+      "sha256": "e23c594d3192dfb3a63e881dd8f5bd19a7a5c65e9f6e3d686276c600cf99aa2b",
+      "bytes": 2674
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing_alloc.c",
+      "sha256": "6709f918de4677db0f5cef9487e61c5df7be6b0ef93796e1b6f991129117f9c3",
+      "bytes": 11946
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/PhaseTieing_alloc.h",
+      "sha256": "ab30411584e21ce9fccd24b355b65546ad7d8b7ad9fa6066c44996ae8421c2c9",
+      "bytes": 1491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/actuator.py",
+      "sha256": "6dbafaf8e9e71342f48b88896f8530e18e03b3f280f2496287eda6b4ae667b54",
+      "bytes": 15655
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/adaptive_controller.py",
+      "sha256": "ba2f6e959541f5a4d9ec7fe91d243a4d8cbbf537a1a0dd5c2f4de2cd3a4f238f",
+      "bytes": 15181
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/collect.py",
+      "sha256": "0f36d236781755dbec08744a86ae224ccdeb6e24cebc0d609c4a114b490c59c1",
+      "bytes": 4240
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/controller.py",
+      "sha256": "dcd30e5002464fb4d485b280783eba6a9e01e26c9fc1d2d2ddaa00930fc8f913",
+      "bytes": 167
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/cxl_controller.py",
+      "sha256": "ce3d1bce922565df8aee6690e307ce14d9ac8371f5b23364fa1c932c8438d614",
+      "bytes": 26360
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/feedback.py",
+      "sha256": "fefdd4c57c0da19303f311595a5621744b6ae31b2ed2d68475927cbcbbf3053e",
+      "bytes": 8585
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/guest.config",
+      "sha256": "dec023baef91fcac885278a14351cfcba6a22ce878fb8f9c1f277a162eef6a52",
+      "bytes": 147513
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/legacy_controller.py",
+      "sha256": "5b888a2790e0a25d61a2b2487b344d7e66183e9948fab279b3f2b5b4acd40350",
+      "bytes": 539
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/migrate.c",
+      "sha256": "e33e7ed85346b3dc872dda3639aca5698f9d5ed1135365833e9cef80b0529e78",
+      "bytes": 73014
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/page_alloc.c",
+      "sha256": "020f51d9b4632fd6c4166e5fb4e60a71316e44cebffb33cf5e9f2dc5883474e1",
+      "bytes": 199241
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/page_ext.c",
+      "sha256": "bc358f3413e3dcc68f8605b094d72cb5a5449e16f379e09ec206adc60e075136",
+      "bytes": 14491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/page_reporting.c",
+      "sha256": "3063c785cd34594cf232da4ed9bf51a3e0df6711e9935d6b110b070eb0d99f06",
+      "bytes": 16858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/Makefile",
+      "sha256": "01b8533e88dbadb5006a2383d8d74d1cddb7f314ef3a6f6ada5dcdc19daad002",
+      "bytes": 381
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/PhaseTieing.h",
+      "sha256": "6ca9fc8eefd8e2627ee392fbff966a77d6fbaf82389409b62cd30ef95d9791c8",
+      "bytes": 473
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/core.c",
+      "sha256": "aac1cf6581ecd54f4a1f223e2865301e6b8b789f4c67d570018c3d19ea5d9aee",
+      "bytes": 28016
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/cwisstable.h",
+      "sha256": "0690c32222f7bf5fc1ade649153c30ea569404bba470095de12a5852dbc324e9",
+      "bytes": 148150
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/error.h",
+      "sha256": "70b0cf6f06e73f3d1e53b3e78b5d32ba69806f8949f7671200bc37adf4fc1e30",
+      "bytes": 3385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/hashmap.h",
+      "sha256": "d6bf6e55aa510ac2bc2e0ae2360cbd54c424063143e83313e1b83aa3d6659af1",
+      "bytes": 2124
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/module.c",
+      "sha256": "7a758a1d64dd89268affc166745a97dafba3da48737c20e8664dd360ea261525",
+      "bytes": 5933
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/module.h",
+      "sha256": "f927feb241bf749c0be3368be23ddd39256eacbea201c253789845c47911ab56",
+      "bytes": 1752
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/mpsc.h",
+      "sha256": "44d1a865136dfac6f1242f1d44e0a68c16d36901087fa2168b947fc8c2a1c7df",
+      "bytes": 3145
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/pebs.h",
+      "sha256": "5ec5f45b9d901a803f378e6ea3b31342d717ab0d267379a450506a10354b47a3",
+      "bytes": 292
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/range_tree.h",
+      "sha256": "3d1f7f2c0f9a653be2397b5646e50e11e6c2c37b984b26b983c650ac69c8ca23",
+      "bytes": 11011
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/sandbox.h",
+      "sha256": "17d963ff8d0c6b52bdc805734fcfd96975b946842d6d099bcd79ac4da4dad895",
+      "bytes": 265
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/sysfs.c",
+      "sha256": "8ccefe1dd102f6d759c592052eec8786b1e3b6b474533f328a23b0d0b28293ab",
+      "bytes": 7143
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/vector.c",
+      "sha256": "f590264bb4c243a255c60dda0e8b9d4e95ac4c78fd3c5a78a9c5f4bba2438c81",
+      "bytes": 3371
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement-source/vector.h",
+      "sha256": "add28aef44a8860ad843d5dee91de18f9e59b76e2142cf63f7d003a9786f453a",
+      "bytes": 1902
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/placement.py",
+      "sha256": "3b7cd37811555521d10dc102a9d631f2cc361e6b0829b423a2de08b4057145d8",
+      "bytes": 17202
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/policy_exec.c",
+      "sha256": "e985d83cd7fbff14c03fd584e4c274f33ced61d7202317c79e42c06c9f3e3f64",
+      "bytes": 719
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/protocol/analyze.py",
+      "sha256": "cddc1dd9d2603c5d6c69a579bc03cd7a1079474c76bcf0ca80359567f0bdecac",
+      "bytes": 9867
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/protocol/faithful_replay.py",
+      "sha256": "f6abd7482b0112edd01a3943b8beb4c854dccb2aa380e5d4902fa8967bce8e95",
+      "bytes": 41766
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/protocol/lifecycle_probe.py",
+      "sha256": "972f40560585416dc6700c0cf62900e31dab1fc9d7c88b906c6c31faebd3f8e8",
+      "bytes": 9858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/protocol/lifecycle_probe_v2.py",
+      "sha256": "824566a0e8d398825448205657005906fb4a11c04bff4891e5efbf8e49c15760",
+      "bytes": 9932
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/protocol/prepare_xonsh.py",
+      "sha256": "e79639ae56f09b3545cba6ef2cbf6ec4729ad9ebe75adebf661bf4c2b29d9ce5",
+      "bytes": 2233
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/protocol/run_matrix.py",
+      "sha256": "ea93dfb4e4bbd501c34d5a406d115ced56c2153da641c4d77a2a23216e4f8c47",
+      "bytes": 6871
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/protocol/run_probe.sh",
+      "sha256": "e35453fe789612ef4752c5fa441cb6b32bfcda344df680234f1e2c4ba2fd18f7",
+      "bytes": 21656
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/protocol/run_single.sh",
+      "sha256": "ad01a59c58a986b37da87f426c8521f64834a8fd3cab5838b1d2cba40880d310",
+      "bytes": 22472
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/protocol/test_faithful.py",
+      "sha256": "8f7fe7a47e3278ad3e1035873d9150681fa4b2ecb97a9732ec7354b95b5d55cf",
+      "bytes": 2575
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/replay_agentcgroup.py",
+      "sha256": "8cb00b2b6572ce8400cfae480be08e66f9f9a93b8f0eeeacfb1ed58e51277792",
+      "bytes": 43612
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/ssd_controller.py",
+      "sha256": "ca85cba8b9a84f2212f8c49058980889f3a3d1f7a37fa549565f222525326ca7",
+      "bytes": 8443
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/start-vm.sh",
+      "sha256": "c6c456caa38f3f828361f94ebd372a9cbcd8aede20cc4e6fdad4e760f63b7bd7",
+      "bytes": 3767
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/vmm-balloon.rs",
+      "sha256": "2ad867311f5a099950aaf5fcdc2383a1baf4f3281020f866b4993adb9249903e",
+      "bytes": 45017
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/vmm-parent-seccomp.rs",
+      "sha256": "1abc3c29f2e85fedf975eb0f9e7a279f4d6ac6f49365c1caac55d66844371c2d",
+      "bytes": 36173
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/vmm-seccomp.rs",
+      "sha256": "b6f64639da820a61fcde01b2050368d1015297b90f3ff304abe96ce524121a20",
+      "bytes": 9698
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact/vmm_pytest_compat.py",
+      "sha256": "e2d618a465dac49007caa6c583961e051af5d049381e59614b3c64883e5ce440",
+      "bytes": 1550
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-balloon-reporting.patch",
+      "sha256": "ebaa69f182b0953e4043a8d1f2695285c440d55cfec88f4b7a9182e650c8c6fc",
+      "bytes": 4627
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-pebs-registration-lifecycle.patch",
+      "sha256": "f6427a76d5504ce00dc15c1f9fb520afe07acdbf64bee779b59d7ce78277a3a4",
+      "bytes": 3358
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-reporting-barrier.patch",
+      "sha256": "e6a10502e217f2877f079dbc620d14beccfbf45cb994929c1dc959e26c561328",
+      "bytes": 2547
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-reporting-fine-counters.patch",
+      "sha256": "68d76d755c67fa0a5671bbbae415b5316e58ca4672d48c16ba8f4d428d0c16e5",
+      "bytes": 2385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-reporting-quiesce.patch",
+      "sha256": "484fa16a025cd46449e376be33f4fa5df1f6b5796db5079c580ce01856c920a3",
+      "bytes": 5385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-sandbox-alloc-noreclaim.patch",
+      "sha256": "f56ba0c980f09e2d39522a3ccb590ec03b68773cdfc378546972fa5b0a225159",
+      "bytes": 1076
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-sandbox-alloc-recovery.patch",
+      "sha256": "be025371c2ba98d5e57d50336c1c256d1286baca103aa6891799f02e2233df64",
+      "bytes": 2765
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-sandbox-lifecycle.patch",
+      "sha256": "8ae1d474c9a4f0e7d619fd3f0a6db8b98bbec2ce9a5cf6b67ed4bb3a344a864b",
+      "bytes": 8162
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing-wait-reporting.patch",
+      "sha256": "e23c594d3192dfb3a63e881dd8f5bd19a7a5c65e9f6e3d686276c600cf99aa2b",
+      "bytes": 2674
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing_alloc.c",
+      "sha256": "6709f918de4677db0f5cef9487e61c5df7be6b0ef93796e1b6f991129117f9c3",
+      "bytes": 11946
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/PhaseTieing_alloc.h",
+      "sha256": "ab30411584e21ce9fccd24b355b65546ad7d8b7ad9fa6066c44996ae8421c2c9",
+      "bytes": 1491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/actuator.py",
+      "sha256": "6dbafaf8e9e71342f48b88896f8530e18e03b3f280f2496287eda6b4ae667b54",
+      "bytes": 15655
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/adaptive_controller.py",
+      "sha256": "ba2f6e959541f5a4d9ec7fe91d243a4d8cbbf537a1a0dd5c2f4de2cd3a4f238f",
+      "bytes": 15181
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/collect.py",
+      "sha256": "0f36d236781755dbec08744a86ae224ccdeb6e24cebc0d609c4a114b490c59c1",
+      "bytes": 4240
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/controller.py",
+      "sha256": "dcd30e5002464fb4d485b280783eba6a9e01e26c9fc1d2d2ddaa00930fc8f913",
+      "bytes": 167
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/cxl_controller.py",
+      "sha256": "ce3d1bce922565df8aee6690e307ce14d9ac8371f5b23364fa1c932c8438d614",
+      "bytes": 26360
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/feedback.py",
+      "sha256": "fefdd4c57c0da19303f311595a5621744b6ae31b2ed2d68475927cbcbbf3053e",
+      "bytes": 8585
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/guest.config",
+      "sha256": "dec023baef91fcac885278a14351cfcba6a22ce878fb8f9c1f277a162eef6a52",
+      "bytes": 147513
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/legacy_controller.py",
+      "sha256": "5b888a2790e0a25d61a2b2487b344d7e66183e9948fab279b3f2b5b4acd40350",
+      "bytes": 539
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/migrate.c",
+      "sha256": "e33e7ed85346b3dc872dda3639aca5698f9d5ed1135365833e9cef80b0529e78",
+      "bytes": 73014
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/page_alloc.c",
+      "sha256": "020f51d9b4632fd6c4166e5fb4e60a71316e44cebffb33cf5e9f2dc5883474e1",
+      "bytes": 199241
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/page_ext.c",
+      "sha256": "bc358f3413e3dcc68f8605b094d72cb5a5449e16f379e09ec206adc60e075136",
+      "bytes": 14491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/page_reporting.c",
+      "sha256": "3063c785cd34594cf232da4ed9bf51a3e0df6711e9935d6b110b070eb0d99f06",
+      "bytes": 16858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/Makefile",
+      "sha256": "01b8533e88dbadb5006a2383d8d74d1cddb7f314ef3a6f6ada5dcdc19daad002",
+      "bytes": 381
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/PhaseTieing.h",
+      "sha256": "6ca9fc8eefd8e2627ee392fbff966a77d6fbaf82389409b62cd30ef95d9791c8",
+      "bytes": 473
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/core.c",
+      "sha256": "aac1cf6581ecd54f4a1f223e2865301e6b8b789f4c67d570018c3d19ea5d9aee",
+      "bytes": 28016
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/cwisstable.h",
+      "sha256": "0690c32222f7bf5fc1ade649153c30ea569404bba470095de12a5852dbc324e9",
+      "bytes": 148150
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/error.h",
+      "sha256": "70b0cf6f06e73f3d1e53b3e78b5d32ba69806f8949f7671200bc37adf4fc1e30",
+      "bytes": 3385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/hashmap.h",
+      "sha256": "d6bf6e55aa510ac2bc2e0ae2360cbd54c424063143e83313e1b83aa3d6659af1",
+      "bytes": 2124
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/module.c",
+      "sha256": "7a758a1d64dd89268affc166745a97dafba3da48737c20e8664dd360ea261525",
+      "bytes": 5933
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/module.h",
+      "sha256": "f927feb241bf749c0be3368be23ddd39256eacbea201c253789845c47911ab56",
+      "bytes": 1752
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/mpsc.h",
+      "sha256": "44d1a865136dfac6f1242f1d44e0a68c16d36901087fa2168b947fc8c2a1c7df",
+      "bytes": 3145
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/pebs.h",
+      "sha256": "5ec5f45b9d901a803f378e6ea3b31342d717ab0d267379a450506a10354b47a3",
+      "bytes": 292
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/range_tree.h",
+      "sha256": "3d1f7f2c0f9a653be2397b5646e50e11e6c2c37b984b26b983c650ac69c8ca23",
+      "bytes": 11011
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/sandbox.h",
+      "sha256": "17d963ff8d0c6b52bdc805734fcfd96975b946842d6d099bcd79ac4da4dad895",
+      "bytes": 265
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/sysfs.c",
+      "sha256": "8ccefe1dd102f6d759c592052eec8786b1e3b6b474533f328a23b0d0b28293ab",
+      "bytes": 7143
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/vector.c",
+      "sha256": "f590264bb4c243a255c60dda0e8b9d4e95ac4c78fd3c5a78a9c5f4bba2438c81",
+      "bytes": 3371
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement-source/vector.h",
+      "sha256": "add28aef44a8860ad843d5dee91de18f9e59b76e2142cf63f7d003a9786f453a",
+      "bytes": 1902
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/placement.py",
+      "sha256": "3b7cd37811555521d10dc102a9d631f2cc361e6b0829b423a2de08b4057145d8",
+      "bytes": 17202
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/policy_exec.c",
+      "sha256": "e985d83cd7fbff14c03fd584e4c274f33ced61d7202317c79e42c06c9f3e3f64",
+      "bytes": 719
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/protocol/analyze.py",
+      "sha256": "cddc1dd9d2603c5d6c69a579bc03cd7a1079474c76bcf0ca80359567f0bdecac",
+      "bytes": 9867
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/protocol/faithful_replay.py",
+      "sha256": "f6abd7482b0112edd01a3943b8beb4c854dccb2aa380e5d4902fa8967bce8e95",
+      "bytes": 41766
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/protocol/lifecycle_probe.py",
+      "sha256": "972f40560585416dc6700c0cf62900e31dab1fc9d7c88b906c6c31faebd3f8e8",
+      "bytes": 9858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/protocol/lifecycle_probe_v2.py",
+      "sha256": "824566a0e8d398825448205657005906fb4a11c04bff4891e5efbf8e49c15760",
+      "bytes": 9932
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/protocol/prepare_xonsh.py",
+      "sha256": "e79639ae56f09b3545cba6ef2cbf6ec4729ad9ebe75adebf661bf4c2b29d9ce5",
+      "bytes": 2233
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/protocol/run_matrix.py",
+      "sha256": "ea93dfb4e4bbd501c34d5a406d115ced56c2153da641c4d77a2a23216e4f8c47",
+      "bytes": 6871
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/protocol/run_probe.sh",
+      "sha256": "e35453fe789612ef4752c5fa441cb6b32bfcda344df680234f1e2c4ba2fd18f7",
+      "bytes": 21656
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/protocol/run_single.sh",
+      "sha256": "ad01a59c58a986b37da87f426c8521f64834a8fd3cab5838b1d2cba40880d310",
+      "bytes": 22472
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/protocol/test_faithful.py",
+      "sha256": "8f7fe7a47e3278ad3e1035873d9150681fa4b2ecb97a9732ec7354b95b5d55cf",
+      "bytes": 2575
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/replay_agentcgroup.py",
+      "sha256": "1d405742920366910e2c002fecf01721a20441dbf167329ac43039967386363c",
+      "bytes": 43856
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/ssd_controller.py",
+      "sha256": "ca85cba8b9a84f2212f8c49058980889f3a3d1f7a37fa549565f222525326ca7",
+      "bytes": 8443
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/start-vm.sh",
+      "sha256": "c6c456caa38f3f828361f94ebd372a9cbcd8aede20cc4e6fdad4e760f63b7bd7",
+      "bytes": 3767
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/vmm-balloon.rs",
+      "sha256": "2ad867311f5a099950aaf5fcdc2383a1baf4f3281020f866b4993adb9249903e",
+      "bytes": 45017
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/vmm-parent-seccomp.rs",
+      "sha256": "1abc3c29f2e85fedf975eb0f9e7a279f4d6ac6f49365c1caac55d66844371c2d",
+      "bytes": 36173
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/vmm-seccomp.rs",
+      "sha256": "b6f64639da820a61fcde01b2050368d1015297b90f3ff304abe96ce524121a20",
+      "bytes": 9698
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v66-ssd-compact-readguard/vmm_pytest_compat.py",
+      "sha256": "e2d618a465dac49007caa6c583961e051af5d049381e59614b3c64883e5ce440",
+      "bytes": 1550
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-balloon-reporting.patch",
+      "sha256": "ebaa69f182b0953e4043a8d1f2695285c440d55cfec88f4b7a9182e650c8c6fc",
+      "bytes": 4627
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-pebs-registration-lifecycle.patch",
+      "sha256": "f6427a76d5504ce00dc15c1f9fb520afe07acdbf64bee779b59d7ce78277a3a4",
+      "bytes": 3358
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-reporting-barrier.patch",
+      "sha256": "e6a10502e217f2877f079dbc620d14beccfbf45cb994929c1dc959e26c561328",
+      "bytes": 2547
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-reporting-fine-counters.patch",
+      "sha256": "68d76d755c67fa0a5671bbbae415b5316e58ca4672d48c16ba8f4d428d0c16e5",
+      "bytes": 2385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-reporting-quiesce.patch",
+      "sha256": "484fa16a025cd46449e376be33f4fa5df1f6b5796db5079c580ce01856c920a3",
+      "bytes": 5385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-sandbox-alloc-noreclaim.patch",
+      "sha256": "f56ba0c980f09e2d39522a3ccb590ec03b68773cdfc378546972fa5b0a225159",
+      "bytes": 1076
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-sandbox-alloc-recovery.patch",
+      "sha256": "be025371c2ba98d5e57d50336c1c256d1286baca103aa6891799f02e2233df64",
+      "bytes": 2765
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-sandbox-lifecycle.patch",
+      "sha256": "8ae1d474c9a4f0e7d619fd3f0a6db8b98bbec2ce9a5cf6b67ed4bb3a344a864b",
+      "bytes": 8162
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing-wait-reporting.patch",
+      "sha256": "e23c594d3192dfb3a63e881dd8f5bd19a7a5c65e9f6e3d686276c600cf99aa2b",
+      "bytes": 2674
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing_alloc.c",
+      "sha256": "6709f918de4677db0f5cef9487e61c5df7be6b0ef93796e1b6f991129117f9c3",
+      "bytes": 11946
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/PhaseTieing_alloc.h",
+      "sha256": "ab30411584e21ce9fccd24b355b65546ad7d8b7ad9fa6066c44996ae8421c2c9",
+      "bytes": 1491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/actuator.py",
+      "sha256": "6dbafaf8e9e71342f48b88896f8530e18e03b3f280f2496287eda6b4ae667b54",
+      "bytes": 15655
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/adaptive_controller.py",
+      "sha256": "2c6a4c429b20cf655437f000b575e517b7ae2cea85d8735ae234a6e473b1c96c",
+      "bytes": 16128
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/collect.py",
+      "sha256": "0f36d236781755dbec08744a86ae224ccdeb6e24cebc0d609c4a114b490c59c1",
+      "bytes": 4240
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/controller.py",
+      "sha256": "dcd30e5002464fb4d485b280783eba6a9e01e26c9fc1d2d2ddaa00930fc8f913",
+      "bytes": 167
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/cxl_controller.py",
+      "sha256": "ce3d1bce922565df8aee6690e307ce14d9ac8371f5b23364fa1c932c8438d614",
+      "bytes": 26360
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/feedback.py",
+      "sha256": "fefdd4c57c0da19303f311595a5621744b6ae31b2ed2d68475927cbcbbf3053e",
+      "bytes": 8585
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/guest.config",
+      "sha256": "dec023baef91fcac885278a14351cfcba6a22ce878fb8f9c1f277a162eef6a52",
+      "bytes": 147513
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/legacy_controller.py",
+      "sha256": "5b888a2790e0a25d61a2b2487b344d7e66183e9948fab279b3f2b5b4acd40350",
+      "bytes": 539
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/migrate.c",
+      "sha256": "e33e7ed85346b3dc872dda3639aca5698f9d5ed1135365833e9cef80b0529e78",
+      "bytes": 73014
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/page_alloc.c",
+      "sha256": "020f51d9b4632fd6c4166e5fb4e60a71316e44cebffb33cf5e9f2dc5883474e1",
+      "bytes": 199241
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/page_ext.c",
+      "sha256": "bc358f3413e3dcc68f8605b094d72cb5a5449e16f379e09ec206adc60e075136",
+      "bytes": 14491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/page_reporting.c",
+      "sha256": "3063c785cd34594cf232da4ed9bf51a3e0df6711e9935d6b110b070eb0d99f06",
+      "bytes": 16858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/Makefile",
+      "sha256": "01b8533e88dbadb5006a2383d8d74d1cddb7f314ef3a6f6ada5dcdc19daad002",
+      "bytes": 381
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/PhaseTieing.h",
+      "sha256": "6ca9fc8eefd8e2627ee392fbff966a77d6fbaf82389409b62cd30ef95d9791c8",
+      "bytes": 473
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/core.c",
+      "sha256": "aac1cf6581ecd54f4a1f223e2865301e6b8b789f4c67d570018c3d19ea5d9aee",
+      "bytes": 28016
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/cwisstable.h",
+      "sha256": "0690c32222f7bf5fc1ade649153c30ea569404bba470095de12a5852dbc324e9",
+      "bytes": 148150
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/error.h",
+      "sha256": "70b0cf6f06e73f3d1e53b3e78b5d32ba69806f8949f7671200bc37adf4fc1e30",
+      "bytes": 3385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/hashmap.h",
+      "sha256": "d6bf6e55aa510ac2bc2e0ae2360cbd54c424063143e83313e1b83aa3d6659af1",
+      "bytes": 2124
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/module.c",
+      "sha256": "7a758a1d64dd89268affc166745a97dafba3da48737c20e8664dd360ea261525",
+      "bytes": 5933
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/module.h",
+      "sha256": "f927feb241bf749c0be3368be23ddd39256eacbea201c253789845c47911ab56",
+      "bytes": 1752
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/mpsc.h",
+      "sha256": "44d1a865136dfac6f1242f1d44e0a68c16d36901087fa2168b947fc8c2a1c7df",
+      "bytes": 3145
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/pebs.h",
+      "sha256": "5ec5f45b9d901a803f378e6ea3b31342d717ab0d267379a450506a10354b47a3",
+      "bytes": 292
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/range_tree.h",
+      "sha256": "3d1f7f2c0f9a653be2397b5646e50e11e6c2c37b984b26b983c650ac69c8ca23",
+      "bytes": 11011
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/sandbox.h",
+      "sha256": "17d963ff8d0c6b52bdc805734fcfd96975b946842d6d099bcd79ac4da4dad895",
+      "bytes": 265
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/sysfs.c",
+      "sha256": "8ccefe1dd102f6d759c592052eec8786b1e3b6b474533f328a23b0d0b28293ab",
+      "bytes": 7143
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/vector.c",
+      "sha256": "f590264bb4c243a255c60dda0e8b9d4e95ac4c78fd3c5a78a9c5f4bba2438c81",
+      "bytes": 3371
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement-source/vector.h",
+      "sha256": "add28aef44a8860ad843d5dee91de18f9e59b76e2142cf63f7d003a9786f453a",
+      "bytes": 1902
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/placement.py",
+      "sha256": "3b7cd37811555521d10dc102a9d631f2cc361e6b0829b423a2de08b4057145d8",
+      "bytes": 17202
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/policy_exec.c",
+      "sha256": "e985d83cd7fbff14c03fd584e4c274f33ced61d7202317c79e42c06c9f3e3f64",
+      "bytes": 719
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/protocol/analyze.py",
+      "sha256": "cddc1dd9d2603c5d6c69a579bc03cd7a1079474c76bcf0ca80359567f0bdecac",
+      "bytes": 9867
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/protocol/faithful_replay.py",
+      "sha256": "f6abd7482b0112edd01a3943b8beb4c854dccb2aa380e5d4902fa8967bce8e95",
+      "bytes": 41766
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/protocol/lifecycle_probe.py",
+      "sha256": "972f40560585416dc6700c0cf62900e31dab1fc9d7c88b906c6c31faebd3f8e8",
+      "bytes": 9858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/protocol/lifecycle_probe_v2.py",
+      "sha256": "824566a0e8d398825448205657005906fb4a11c04bff4891e5efbf8e49c15760",
+      "bytes": 9932
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/protocol/prepare_xonsh.py",
+      "sha256": "e79639ae56f09b3545cba6ef2cbf6ec4729ad9ebe75adebf661bf4c2b29d9ce5",
+      "bytes": 2233
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/protocol/run_matrix.py",
+      "sha256": "ea93dfb4e4bbd501c34d5a406d115ced56c2153da641c4d77a2a23216e4f8c47",
+      "bytes": 6871
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/protocol/run_probe.sh",
+      "sha256": "e35453fe789612ef4752c5fa441cb6b32bfcda344df680234f1e2c4ba2fd18f7",
+      "bytes": 21656
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/protocol/run_single.sh",
+      "sha256": "ad01a59c58a986b37da87f426c8521f64834a8fd3cab5838b1d2cba40880d310",
+      "bytes": 22472
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/protocol/test_faithful.py",
+      "sha256": "8f7fe7a47e3278ad3e1035873d9150681fa4b2ecb97a9732ec7354b95b5d55cf",
+      "bytes": 2575
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/replay_agentcgroup.py",
+      "sha256": "8cb00b2b6572ce8400cfae480be08e66f9f9a93b8f0eeeacfb1ed58e51277792",
+      "bytes": 43612
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/ssd_controller.py",
+      "sha256": "ca85cba8b9a84f2212f8c49058980889f3a3d1f7a37fa549565f222525326ca7",
+      "bytes": 8443
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/start-vm.sh",
+      "sha256": "c6c456caa38f3f828361f94ebd372a9cbcd8aede20cc4e6fdad4e760f63b7bd7",
+      "bytes": 3767
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/vmm-balloon.rs",
+      "sha256": "2ad867311f5a099950aaf5fcdc2383a1baf4f3281020f866b4993adb9249903e",
+      "bytes": 45017
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/vmm-parent-seccomp.rs",
+      "sha256": "1abc3c29f2e85fedf975eb0f9e7a279f4d6ac6f49365c1caac55d66844371c2d",
+      "bytes": 36173
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/vmm-seccomp.rs",
+      "sha256": "b6f64639da820a61fcde01b2050368d1015297b90f3ff304abe96ce524121a20",
+      "bytes": 9698
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl/vmm_pytest_compat.py",
+      "sha256": "e2d618a465dac49007caa6c583961e051af5d049381e59614b3c64883e5ce440",
+      "bytes": 1550
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-balloon-reporting.patch",
+      "sha256": "ebaa69f182b0953e4043a8d1f2695285c440d55cfec88f4b7a9182e650c8c6fc",
+      "bytes": 4627
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-pebs-registration-lifecycle.patch",
+      "sha256": "f6427a76d5504ce00dc15c1f9fb520afe07acdbf64bee779b59d7ce78277a3a4",
+      "bytes": 3358
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-reporting-barrier.patch",
+      "sha256": "e6a10502e217f2877f079dbc620d14beccfbf45cb994929c1dc959e26c561328",
+      "bytes": 2547
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-reporting-fine-counters.patch",
+      "sha256": "68d76d755c67fa0a5671bbbae415b5316e58ca4672d48c16ba8f4d428d0c16e5",
+      "bytes": 2385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-reporting-quiesce.patch",
+      "sha256": "484fa16a025cd46449e376be33f4fa5df1f6b5796db5079c580ce01856c920a3",
+      "bytes": 5385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-sandbox-alloc-noreclaim.patch",
+      "sha256": "f56ba0c980f09e2d39522a3ccb590ec03b68773cdfc378546972fa5b0a225159",
+      "bytes": 1076
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-sandbox-alloc-recovery.patch",
+      "sha256": "be025371c2ba98d5e57d50336c1c256d1286baca103aa6891799f02e2233df64",
+      "bytes": 2765
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-sandbox-lifecycle.patch",
+      "sha256": "8ae1d474c9a4f0e7d619fd3f0a6db8b98bbec2ce9a5cf6b67ed4bb3a344a864b",
+      "bytes": 8162
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing-wait-reporting.patch",
+      "sha256": "e23c594d3192dfb3a63e881dd8f5bd19a7a5c65e9f6e3d686276c600cf99aa2b",
+      "bytes": 2674
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing_alloc.c",
+      "sha256": "6709f918de4677db0f5cef9487e61c5df7be6b0ef93796e1b6f991129117f9c3",
+      "bytes": 11946
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/PhaseTieing_alloc.h",
+      "sha256": "ab30411584e21ce9fccd24b355b65546ad7d8b7ad9fa6066c44996ae8421c2c9",
+      "bytes": 1491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/actuator.py",
+      "sha256": "6dbafaf8e9e71342f48b88896f8530e18e03b3f280f2496287eda6b4ae667b54",
+      "bytes": 15655
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/adaptive_controller.py",
+      "sha256": "2c6a4c429b20cf655437f000b575e517b7ae2cea85d8735ae234a6e473b1c96c",
+      "bytes": 16128
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/collect.py",
+      "sha256": "0f36d236781755dbec08744a86ae224ccdeb6e24cebc0d609c4a114b490c59c1",
+      "bytes": 4240
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/controller.py",
+      "sha256": "dcd30e5002464fb4d485b280783eba6a9e01e26c9fc1d2d2ddaa00930fc8f913",
+      "bytes": 167
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/cxl_controller.py",
+      "sha256": "ce3d1bce922565df8aee6690e307ce14d9ac8371f5b23364fa1c932c8438d614",
+      "bytes": 26360
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/feedback.py",
+      "sha256": "fefdd4c57c0da19303f311595a5621744b6ae31b2ed2d68475927cbcbbf3053e",
+      "bytes": 8585
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/guest.config",
+      "sha256": "dec023baef91fcac885278a14351cfcba6a22ce878fb8f9c1f277a162eef6a52",
+      "bytes": 147513
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/legacy_controller.py",
+      "sha256": "5b888a2790e0a25d61a2b2487b344d7e66183e9948fab279b3f2b5b4acd40350",
+      "bytes": 539
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/migrate.c",
+      "sha256": "e33e7ed85346b3dc872dda3639aca5698f9d5ed1135365833e9cef80b0529e78",
+      "bytes": 73014
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/page_alloc.c",
+      "sha256": "020f51d9b4632fd6c4166e5fb4e60a71316e44cebffb33cf5e9f2dc5883474e1",
+      "bytes": 199241
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/page_ext.c",
+      "sha256": "bc358f3413e3dcc68f8605b094d72cb5a5449e16f379e09ec206adc60e075136",
+      "bytes": 14491
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/page_reporting.c",
+      "sha256": "3063c785cd34594cf232da4ed9bf51a3e0df6711e9935d6b110b070eb0d99f06",
+      "bytes": 16858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/Makefile",
+      "sha256": "01b8533e88dbadb5006a2383d8d74d1cddb7f314ef3a6f6ada5dcdc19daad002",
+      "bytes": 381
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/PhaseTieing.h",
+      "sha256": "6ca9fc8eefd8e2627ee392fbff966a77d6fbaf82389409b62cd30ef95d9791c8",
+      "bytes": 473
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/balloon.c",
+      "sha256": "4dc8f4ec42fa8bcc9fb2e6a71e3909c0ee455ed9197566ddbd4d689be59f9b32",
+      "bytes": 25522
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/core.c",
+      "sha256": "aac1cf6581ecd54f4a1f223e2865301e6b8b789f4c67d570018c3d19ea5d9aee",
+      "bytes": 28016
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/cwisstable.h",
+      "sha256": "0690c32222f7bf5fc1ade649153c30ea569404bba470095de12a5852dbc324e9",
+      "bytes": 148150
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/error.h",
+      "sha256": "70b0cf6f06e73f3d1e53b3e78b5d32ba69806f8949f7671200bc37adf4fc1e30",
+      "bytes": 3385
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/hashmap.h",
+      "sha256": "d6bf6e55aa510ac2bc2e0ae2360cbd54c424063143e83313e1b83aa3d6659af1",
+      "bytes": 2124
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/module.c",
+      "sha256": "7a758a1d64dd89268affc166745a97dafba3da48737c20e8664dd360ea261525",
+      "bytes": 5933
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/module.h",
+      "sha256": "f927feb241bf749c0be3368be23ddd39256eacbea201c253789845c47911ab56",
+      "bytes": 1752
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/mpsc.h",
+      "sha256": "44d1a865136dfac6f1242f1d44e0a68c16d36901087fa2168b947fc8c2a1c7df",
+      "bytes": 3145
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/pebs.h",
+      "sha256": "5ec5f45b9d901a803f378e6ea3b31342d717ab0d267379a450506a10354b47a3",
+      "bytes": 292
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/range_tree.h",
+      "sha256": "3d1f7f2c0f9a653be2397b5646e50e11e6c2c37b984b26b983c650ac69c8ca23",
+      "bytes": 11011
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/sandbox.h",
+      "sha256": "17d963ff8d0c6b52bdc805734fcfd96975b946842d6d099bcd79ac4da4dad895",
+      "bytes": 265
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/sysfs.c",
+      "sha256": "8ccefe1dd102f6d759c592052eec8786b1e3b6b474533f328a23b0d0b28293ab",
+      "bytes": 7143
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/vector.c",
+      "sha256": "f590264bb4c243a255c60dda0e8b9d4e95ac4c78fd3c5a78a9c5f4bba2438c81",
+      "bytes": 3371
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement-source/vector.h",
+      "sha256": "add28aef44a8860ad843d5dee91de18f9e59b76e2142cf63f7d003a9786f453a",
+      "bytes": 1902
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/placement.py",
+      "sha256": "3b7cd37811555521d10dc102a9d631f2cc361e6b0829b423a2de08b4057145d8",
+      "bytes": 17202
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/policy_exec.c",
+      "sha256": "e985d83cd7fbff14c03fd584e4c274f33ced61d7202317c79e42c06c9f3e3f64",
+      "bytes": 719
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/protocol/analyze.py",
+      "sha256": "cddc1dd9d2603c5d6c69a579bc03cd7a1079474c76bcf0ca80359567f0bdecac",
+      "bytes": 9867
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/protocol/faithful_replay.py",
+      "sha256": "f6abd7482b0112edd01a3943b8beb4c854dccb2aa380e5d4902fa8967bce8e95",
+      "bytes": 41766
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/protocol/lifecycle_probe.py",
+      "sha256": "972f40560585416dc6700c0cf62900e31dab1fc9d7c88b906c6c31faebd3f8e8",
+      "bytes": 9858
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/protocol/lifecycle_probe_v2.py",
+      "sha256": "824566a0e8d398825448205657005906fb4a11c04bff4891e5efbf8e49c15760",
+      "bytes": 9932
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/protocol/prepare_xonsh.py",
+      "sha256": "e79639ae56f09b3545cba6ef2cbf6ec4729ad9ebe75adebf661bf4c2b29d9ce5",
+      "bytes": 2233
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/protocol/run_matrix.py",
+      "sha256": "ea93dfb4e4bbd501c34d5a406d115ced56c2153da641c4d77a2a23216e4f8c47",
+      "bytes": 6871
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/protocol/run_probe.sh",
+      "sha256": "e35453fe789612ef4752c5fa441cb6b32bfcda344df680234f1e2c4ba2fd18f7",
+      "bytes": 21656
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/protocol/run_single.sh",
+      "sha256": "ad01a59c58a986b37da87f426c8521f64834a8fd3cab5838b1d2cba40880d310",
+      "bytes": 22472
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/protocol/test_faithful.py",
+      "sha256": "8f7fe7a47e3278ad3e1035873d9150681fa4b2ecb97a9732ec7354b95b5d55cf",
+      "bytes": 2575
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/replay_agentcgroup.py",
+      "sha256": "1d405742920366910e2c002fecf01721a20441dbf167329ac43039967386363c",
+      "bytes": 43856
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/sandbox.c",
+      "sha256": "41e3d1f30bb652204dc88458237993b31919bcd82a04c0039560e753a628c722",
+      "bytes": 78714
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/ssd_controller.py",
+      "sha256": "ca85cba8b9a84f2212f8c49058980889f3a3d1f7a37fa549565f222525326ca7",
+      "bytes": 8443
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/start-vm.sh",
+      "sha256": "c6c456caa38f3f828361f94ebd372a9cbcd8aede20cc4e6fdad4e760f63b7bd7",
+      "bytes": 3767
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/vmm-balloon.rs",
+      "sha256": "2ad867311f5a099950aaf5fcdc2383a1baf4f3281020f866b4993adb9249903e",
+      "bytes": 45017
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/vmm-parent-seccomp.rs",
+      "sha256": "1abc3c29f2e85fedf975eb0f9e7a279f4d6ac6f49365c1caac55d66844371c2d",
+      "bytes": 36173
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/vmm-seccomp.rs",
+      "sha256": "b6f64639da820a61fcde01b2050368d1015297b90f3ff304abe96ce524121a20",
+      "bytes": 9698
+    },
+    {
+      "path": "experiments/phase/artifacts/vmm-v67-compact-cxl-readguard/vmm_pytest_compat.py",
+      "sha256": "e2d618a465dac49007caa6c583961e051af5d049381e59614b3c64883e5ce440",
+      "bytes": 1550
+    },
+    {
+      "path": "experiments/phase/baselines/analyze.py",
+      "sha256": "93d17c9bb6d24ff8c598dbc7ab09ed5a56c853708b5ce078ecd1923ee421ec33",
+      "bytes": 11976
+    },
+    {
+      "path": "experiments/phase/baselines/analyze_mixed.py",
+      "sha256": "4383041473308610c3c9b0bb24e1a401691d9bf5d0d7d61ab341787b023791c9",
+      "bytes": 4396
+    },
+    {
+      "path": "experiments/phase/baselines/audit.py",
+      "sha256": "34df37568ee1cb5ddc9194ab78ce20e847f24379881201c79c8f5ad4d567174c",
+      "bytes": 2520
+    },
+    {
+      "path": "experiments/phase/baselines/build_report.py",
+      "sha256": "4b7efb742feb8e6d71b4f2cbb70301005335b1d1fba2abe4594d592382b3f1dd",
+      "bytes": 25277
+    },
+    {
+      "path": "experiments/phase/baselines/finish_after.py",
+      "sha256": "96e495d189c87e1f3211bda61351f075284e02e053d24e508cf075ed975a2ee5",
+      "bytes": 900
+    },
+    {
+      "path": "experiments/phase/baselines/finish_after_v2.py",
+      "sha256": "608a64fd0bd8d4e180d1f9215f96a0add49851ec3bfc6d4561427103bfd2a006",
+      "bytes": 913
+    },
+    {
+      "path": "experiments/phase/baselines/guest_state.py",
+      "sha256": "b3f6602cf8146f7e91b37fdc53e4b41d890f0375f263551b8354085bfd62207b",
+      "bytes": 1614
+    },
+    {
+      "path": "experiments/phase/baselines/host_monitor.py",
+      "sha256": "018a7d8d79e59a1498d49c156fcc6b47131fb710248cf60653dc361e4032e97e",
+      "bytes": 10094
+    },
+    {
+      "path": "experiments/phase/baselines/host_monitor_whole.py",
+      "sha256": "d0d0c22039ccddc2959dcb5ab599cb3ce6d78d953842f1e0643a022fb50ae14d",
+      "bytes": 10294
+    },
+    {
+      "path": "experiments/phase/baselines/joint_monitor.py",
+      "sha256": "76c755681afab4b86d38637077574da7ec02644ee804681abecd16234bc8cf8f",
+      "bytes": 2512
+    },
+    {
+      "path": "experiments/phase/baselines/plot.py",
+      "sha256": "5b630c59f64b1b13fea5c449b72c50a499e6e32f3cf371771f9810dbc85ef5db",
+      "bytes": 1987
+    },
+    {
+      "path": "experiments/phase/baselines/progress.py",
+      "sha256": "72d1dd9ba625c2ab2f16959c1d4f29e2e6a100e3197f91ce8602a33c83c2b4ce",
+      "bytes": 1764
+    },
+    {
+      "path": "experiments/phase/baselines/run_all.py",
+      "sha256": "af4076edf51b0d4833b91a52b7a13e803f29f090f855486b19eae2f9f43fd5c7",
+      "bytes": 919
+    },
+    {
+      "path": "experiments/phase/baselines/run_matrix.py",
+      "sha256": "8a5f7522c94dc8ebe8d91131d3378597f01b619741c59dabf0c932e0e2a0c37a",
+      "bytes": 5878
+    },
+    {
+      "path": "experiments/phase/baselines/run_mixed.py",
+      "sha256": "34d4c0966660fd127df78b7577c8a6b64db683c220d8183cb6a030b9a971e560",
+      "bytes": 7190
+    },
+    {
+      "path": "experiments/phase/baselines/run_mixed_after.py",
+      "sha256": "32c705f23fe0b7bc337f4a866cf9b6cd6024a611923c0d4272b706831797e7c8",
+      "bytes": 361
+    },
+    {
+      "path": "experiments/phase/baselines/run_single.sh",
+      "sha256": "86277ba7e2e5e19ccaa472b2a1c5990f1dc72b747be514a8aadff4d1f9a96d43",
+      "bytes": 27171
+    },
+    {
+      "path": "experiments/phase/baselines/run_whole_after.py",
+      "sha256": "488696b1ad467903e43b4e6247773fc924d34cdcb00bfead8e133529065bff50",
+      "bytes": 371
+    },
+    {
+      "path": "experiments/phase/baselines/run_whole_matrix.py",
+      "sha256": "ef6a86a5e6fc0e4a0cd6f823ffc12d95c196fbcc543cf6f48cf58230a55aeab8",
+      "bytes": 5891
+    },
+    {
+      "path": "experiments/phase/baselines/run_whole_single.sh",
+      "sha256": "50143adc69eab4d8dd5f47c291d1812cb35c81d0bd2f8f5126f52b03f69dd5f3",
+      "bytes": 27377
+    },
+    {
+      "path": "experiments/phase/baselines/startup_monitor.py",
+      "sha256": "43fb136c664c263347f02d8347fbc1ca996235de79ea185f47b0b41abd8a820c",
+      "bytes": 2572
+    },
+    {
+      "path": "experiments/phase/baselines/tool_quality.py",
+      "sha256": "2a5e844d9b906609eb3e6447b2d50bcad500800d2a3a51920b7fcdb07436766c",
+      "bytes": 4119
+    },
+    {
+      "path": "experiments/phase/cold_media/analyze.py",
+      "sha256": "99b038c55f164da655956bf1d840a1e2fa1c8fb57f00560a2c59e78c9086dc4c",
+      "bytes": 17507
+    },
+    {
+      "path": "experiments/phase/cold_media/audit_probe.py",
+      "sha256": "e67139778e51480dc32cbb46226254d958b1c92a2dd2657f35aaf002ba7dd411",
+      "bytes": 2642
+    },
+    {
+      "path": "experiments/phase/cold_media/controller.py",
+      "sha256": "5b888a2790e0a25d61a2b2487b344d7e66183e9948fab279b3f2b5b4acd40350",
+      "bytes": 539
+    },
+    {
+      "path": "experiments/phase/cold_media/guest_state.py",
+      "sha256": "9f553f3be9d1bb3814d88f16dd91938485fcf667184c5c3e99880275e5c406d6",
+      "bytes": 3455
+    },
+    {
+      "path": "experiments/phase/cold_media/host_monitor.py",
+      "sha256": "308308c81312c095f38909e9da0f46540fc5f79a2ede8e3770ecc0a3c635a87c",
+      "bytes": 13812
+    },
+    {
+      "path": "experiments/phase/cold_media/make_probe.py",
+      "sha256": "08d5dc2f1b48969831a2755a148e250b5591c1396a86f1fd01e696589f90e0a8",
+      "bytes": 2382
+    },
+    {
+      "path": "experiments/phase/cold_media/plot.py",
+      "sha256": "030586e476ed9301533fdbfcbcc7cb9d4aeb857a3f2105b205be30003f3ab798",
+      "bytes": 1636
+    },
+    {
+      "path": "experiments/phase/cold_media/prepare.py",
+      "sha256": "56ac32741dd63d4c5bd94eaadf3fc98a73fbc609217b6a4ea79f8e7d913562f0",
+      "bytes": 10945
+    },
+    {
+      "path": "experiments/phase/cold_media/progress.py",
+      "sha256": "bb2228569981583d279361208238c491aa1e292142a0678705ffb13f397d2b01",
+      "bytes": 1133
+    },
+    {
+      "path": "experiments/phase/cold_media/run_matrix.py",
+      "sha256": "ada063852fed8923c1b601c5044daf3b0757253048878f688db5db9f387baca0",
+      "bytes": 9104
+    },
+    {
+      "path": "experiments/phase/cold_media/run_single.sh",
+      "sha256": "29f90f36b2a4eeb0e5a9785dcc746ffa95a9ce4ac00d3b081723ae91e15bba99",
+      "bytes": 33911
+    },
+    {
+      "path": "experiments/phase/cold_media/ssd_controller.py",
+      "sha256": "ca85cba8b9a84f2212f8c49058980889f3a3d1f7a37fa549565f222525326ca7",
+      "bytes": 8443
+    },
+    {
+      "path": "experiments/phase/cold_media/study.py",
+      "sha256": "63921848871016e080de35c5ec6432b70c3e0dd91715f31c06cd54b68090745e",
+      "bytes": 2213
+    },
+    {
+      "path": "experiments/phase/cold_media/test_protocol.py",
+      "sha256": "14fca0c3f97dd3c74699656aba50ff02f6fbe16abac238edcc5b392cf6887b85",
+      "bytes": 4925
+    },
+    {
+      "path": "experiments/phase/ssd_placement_v54/analyze.py",
+      "sha256": "3cd6e0839d928c17f62a8fe9d802763a39e3033d1becb5eabb65b3acb33bdd02",
+      "bytes": 7351
+    },
+    {
+      "path": "experiments/phase/ssd_placement_v54/controller.py",
+      "sha256": "3de5d26bd63120b6e221e048cb24ffe0e7ae1bd19486ab376c3e3fd312079b36",
+      "bytes": 14890
+    },
+    {
+      "path": "experiments/phase/ssd_placement_v54/guest_state.py",
+      "sha256": "5123be1625e4518af577c686142f5040d5fb3e0ca2fee8a2002a19a2539e98a4",
+      "bytes": 4412
+    },
+    {
+      "path": "experiments/phase/ssd_placement_v54/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "experiments/phase/ssd_placement_v54/host_monitor.py",
+      "sha256": "c82d23481160c67ec78c41461e3b08a22841b2f75342a38c0dc2617dcd942734",
+      "bytes": 14887
+    },
+    {
+      "path": "experiments/phase/ssd_placement_v54/placement.py",
+      "sha256": "d9175110ae5dad686eaaab8f4e6426eaca0f46fe772bf5fbd626bc2057c5ee66",
+      "bytes": 16934
+    },
+    {
+      "path": "experiments/phase/ssd_placement_v54/run_single.sh",
+      "sha256": "6f22d3978fcee5379806528c91fc812dcb0451ee5247d2f94c70f5387480c8bc",
+      "bytes": 35739
+    },
+    {
+      "path": "experiments/phase/ssd_placement_v54/study.py",
+      "sha256": "5222281f00fa8007121af7439909a28ee563c0ae94b67b758beb162a50372a43",
+      "bytes": 10561
+    },
+    {
+      "path": "experiments/phase/ssd_placement_v54/test_placement.py",
+      "sha256": "55c216b3f956d48fa4d313d1b4bae17dd5edd46468339a067c98a921ce83a293",
+      "bytes": 6490
+    },
+    {
+      "path": "experiments/phase/three_modes/analyze.py",
+      "sha256": "d4b906fab01d7e2a65f79b3f3a58edd9339acb4312aed96acf8adcdaa8b8a8ef",
+      "bytes": 14516
+    },
+    {
+      "path": "experiments/phase/three_modes/build_report.py",
+      "sha256": "d66ac5def0bbbc73a482b2f1126a13f7ef38b10003e92f5b86d49a5f11c6f5e0",
+      "bytes": 38756
+    },
+    {
+      "path": "experiments/phase/three_modes/credits.py",
+      "sha256": "37693b748b1fa23c0e4a7f3a923c65585c4adc11c5c34811dacb0f46ddb34c1e",
+      "bytes": 1796
+    },
+    {
+      "path": "experiments/phase/three_modes/finish_study.py",
+      "sha256": "20b7632b8f8f01af16a4f86ccb2bc7673e88b4f3f8ebac93008da3c78923fa8f",
+      "bytes": 2680
+    },
+    {
+      "path": "experiments/phase/three_modes/host_monitor.py",
+      "sha256": "e940127dc377bba6c1321ce0cc5c88f5e5c2d14a2d7db20564e1f9ebe3ed983d",
+      "bytes": 11619
+    },
+    {
+      "path": "experiments/phase/three_modes/mechanisms.py",
+      "sha256": "698afea879c929b79d47f3ce5531c57ced871c23fd9266b5e4aaa06ec60241ca",
+      "bytes": 6305
+    },
+    {
+      "path": "experiments/phase/three_modes/phase_signal.py",
+      "sha256": "ff2d6ab464e963f8f255b7c4ca5d19613fbca6c1b8fdcd07adcbb87ec7d59f9f",
+      "bytes": 2003
+    },
+    {
+      "path": "experiments/phase/three_modes/plot.py",
+      "sha256": "46575f8ba4a1f3b831a638a13808b468878c99620a2966af0b7a2fbcb66b7e00",
+      "bytes": 4410
+    },
+    {
+      "path": "experiments/phase/three_modes/prepare.py",
+      "sha256": "85617b7ff661c23ed454a0335b75dee454f63d78c45c684d4c4b662e6938f999",
+      "bytes": 7535
+    },
+    {
+      "path": "experiments/phase/three_modes/prepare_confirm.py",
+      "sha256": "4cee8e29d25d409483495787fef6a5b5570667427a8e4719113fa14a00638885",
+      "bytes": 4770
+    },
+    {
+      "path": "experiments/phase/three_modes/prepare_study.py",
+      "sha256": "dbb3955a9019543eb87d76b6f180f1ea18ae7ecb8b21b6301b9f960e85fe1a3b",
+      "bytes": 714
+    },
+    {
+      "path": "experiments/phase/three_modes/prepare_validated.py",
+      "sha256": "4655536311d3152c2ebe678fdb48ee3fb3f19883620b21d5420a910ece452670",
+      "bytes": 5146
+    },
+    {
+      "path": "experiments/phase/three_modes/relocate_private.py",
+      "sha256": "f4b6a3ea36e2df0738713a7a7b67c5d79f3ea583b5688f440e8e1b8d8ae5f03f",
+      "bytes": 3440
+    },
+    {
+      "path": "experiments/phase/three_modes/resident_gap.py",
+      "sha256": "bb3d3319d7179288df68b6eea2f02c52de72d87061c12a5e050a4015b78f311e",
+      "bytes": 2925
+    },
+    {
+      "path": "experiments/phase/three_modes/run_confirm_matrix.py",
+      "sha256": "89d1cc6b17aaab5dea2cee7e49a61f70f2d9d1f6777f1e860aaad2c160ea9a12",
+      "bytes": 7821
+    },
+    {
+      "path": "experiments/phase/three_modes/run_confirm_single.sh",
+      "sha256": "7ba8f73fe0e812983f2d017d27399fa877bc14e930735fa0b0d1d3bf9be0d64f",
+      "bytes": 29307
+    },
+    {
+      "path": "experiments/phase/three_modes/run_matrix.py",
+      "sha256": "3a13a772d207b051da10724e11f8d6e3ba9e612b010f36cc983ea0b6546cd7c3",
+      "bytes": 7491
+    },
+    {
+      "path": "experiments/phase/three_modes/run_reporting_matrix.py",
+      "sha256": "455fe1cb4aac1f5776b08a73fb0069e44035949aec767bf0ab8cc88a5402e0a0",
+      "bytes": 8403
+    },
+    {
+      "path": "experiments/phase/three_modes/run_signal_matrix.py",
+      "sha256": "3f549334c0f837025c7ea8671ac6931e9486646c4cdccd8501f54f851885b74d",
+      "bytes": 9384
+    },
+    {
+      "path": "experiments/phase/three_modes/run_single.sh",
+      "sha256": "760c9ac74d1e6e0828a3131f5787bb784545213822dff56b27cefcc8d240d494",
+      "bytes": 28888
+    },
+    {
+      "path": "experiments/phase/three_modes/run_study_matrix.py",
+      "sha256": "d3ad5ba9cca4e5ba52b17cc592008953bd7f03a1134fe5bd584c4fd25c4e791a",
+      "bytes": 8295
+    },
+    {
+      "path": "experiments/phase/three_modes/run_validated_matrix.py",
+      "sha256": "c466f5e4a2c5bf7aceb89871df226e6c1b3259c66c50adb2b61be4b0c3301e70",
+      "bytes": 8076
+    },
+    {
+      "path": "experiments/phase/three_modes/run_validated_single.sh",
+      "sha256": "695fe4c92c2f003c673b44a6fdf1913d8a4e5026f6bc9c5342cfbec4b45e8dc1",
+      "bytes": 29763
+    },
+    {
+      "path": "experiments/phase/three_modes/stages.py",
+      "sha256": "c141e0f35e1a364fcff5c48f067fc999a78632f4795d525793597b8cc5e60cb7",
+      "bytes": 2404
+    },
+    {
+      "path": "experiments/phase/three_modes/verify_topology.py",
+      "sha256": "1448af9bae1cc8280c8f50eeffb9765439bf459b868eee7db993574beb66ecdd",
+      "bytes": 2008
+    },
+    {
+      "path": "experiments/randomize_cgroup_once.sh",
+      "sha256": "c696741efc1a1007dc9d90df1f379d9a81ce177b5454d8b085fc4da0bd2724c5",
+      "bytes": 1741
+    },
+    {
+      "path": "experiments/trajectory_launcher.py",
+      "sha256": "b312cfd4e7fc75db40a1537fc31da922376c7f207f7df8e4fd1186dada5446fc",
+      "bytes": 7959
+    },
+    {
+      "path": "published/EXPERIMENTS.md",
+      "sha256": "aa0c19ccf25d06b12bd733ddccefd46d72012a91466fbc7299856a1d243f09d4",
+      "bytes": 49717
+    },
+    {
+      "path": "published/SSD-OPTIMIZATION.md",
+      "sha256": "508c13e53b2c7f347e3102cafdb328d38c035031922f7bcc60cae69de77b291b",
+      "bytes": 14115
+    },
+    {
+      "path": "published/v67/case-coverage.csv",
+      "sha256": "f6544a9e8d818f22d6ff43d1028b9371c5d17de0cacba561d6883998799d079c",
+      "bytes": 43426
+    },
+    {
+      "path": "published/v67/groups.csv",
+      "sha256": "55ac2df6740f5577bd40d3dd035e229cb5c12e41afdebcfdc2eaec94ed7cd8ea",
+      "bytes": 143975
+    },
+    {
+      "path": "published/v67/latency-service.pdf",
+      "sha256": "fcd2b86805020127ea957b2805d6e669ff8d05c67121645f14f70a23f4a52727",
+      "bytes": 92461
+    },
+    {
+      "path": "published/v67/latency-service.png",
+      "sha256": "122a3c0dad92dbbd8cfb1201043f5755d3ff5dc5006eb7b19b3b195c1a6ef06b",
+      "bytes": 409198
+    },
+    {
+      "path": "published/v67/memory-summary.pdf",
+      "sha256": "3af73444976994d34cce4c01d3cec3e3e43ae870dda596cc58d090c7abcca97b",
+      "bytes": 44742
+    },
+    {
+      "path": "published/v67/memory-summary.png",
+      "sha256": "feddc97caacd27f56d9b637f5a099d32ae981146618f30af684058502697a873",
+      "bytes": 371197
+    },
+    {
+      "path": "published/v67/new-traces.pdf",
+      "sha256": "20d7fd63120233f342a067aaa4f5772a3ac6054cc1de76773e2dbfea4bc68d21",
+      "bytes": 24921
+    },
+    {
+      "path": "published/v67/new-traces.png",
+      "sha256": "10eb42dfa9fe5d7f9785bd55ce0eb7487744a9c0947488a6b9109939a420ffc2",
+      "bytes": 141696
+    },
+    {
+      "path": "published/v67/pairs.csv",
+      "sha256": "3795c2e4daca1834b1c94fb5ee37f52ba1f4f1df78f6c351ddb2e31e30d72cf6",
+      "bytes": 212402
+    },
+    {
+      "path": "published/v67/report-verification.json",
+      "sha256": "fdfd49d8c117d710c535a1f9f64bb635f975decaa02ab1ef67b88b458158f288",
+      "bytes": 439
+    },
+    {
+      "path": "published/v67/saving-decomposition.pdf",
+      "sha256": "c78c5a9914c8efc6f48881d9673e2553a9ec8ae61d1383140c293443ab885f17",
+      "bytes": 34680
+    },
+    {
+      "path": "published/v67/saving-decomposition.png",
+      "sha256": "16c39acde9ccf6d5c6e2e6edb3608041d90c8e559f8e5133d9cfb1bd2d1f81b1",
+      "bytes": 369555
+    },
+    {
+      "path": "published/v67/summary.json",
+      "sha256": "83d03f0891d7c9fdf112d59fd1b10c1a34b557c027c8d96eaf9750cce4e29d17",
+      "bytes": 4869
+    },
+    {
+      "path": "runtime/cxl/adaptive_controller.py",
+      "sha256": "2c6a4c429b20cf655437f000b575e517b7ae2cea85d8735ae234a6e473b1c96c",
+      "bytes": 16128
+    },
+    {
+      "path": "runtime/cxl/cxl_controller.py",
+      "sha256": "ce3d1bce922565df8aee6690e307ce14d9ac8371f5b23364fa1c932c8438d614",
+      "bytes": 26360
+    },
+    {
+      "path": "runtime/cxl/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "runtime/cxl/placement.py",
+      "sha256": "3b7cd37811555521d10dc102a9d631f2cc361e6b0829b423a2de08b4057145d8",
+      "bytes": 17202
+    },
+    {
+      "path": "runtime/ssd/adaptive_controller.py",
+      "sha256": "ba2f6e959541f5a4d9ec7fe91d243a4d8cbbf537a1a0dd5c2f4de2cd3a4f238f",
+      "bytes": 15181
+    },
+    {
+      "path": "runtime/ssd/cxl_controller.py",
+      "sha256": "ce3d1bce922565df8aee6690e307ce14d9ac8371f5b23364fa1c932c8438d614",
+      "bytes": 26360
+    },
+    {
+      "path": "runtime/ssd/history.py",
+      "sha256": "10ab9061ca96e063c7326a71828efc1c0d9dc9971c753ca4002b3625c7d041fe",
+      "bytes": 9068
+    },
+    {
+      "path": "runtime/ssd/placement.py",
+      "sha256": "3b7cd37811555521d10dc102a9d631f2cc361e6b0829b423a2de08b4057145d8",
+      "bytes": 17202
+    },
+    {
+      "path": "tests/test_cxl_allocation.py",
+      "sha256": "146e0ed34f9c45604d61e2d04cc2d801cec7857d26e558b1c2c8dd52908ffba0",
+      "bytes": 3364
+    },
+    {
+      "path": "tests/test_cxl_horizon.py",
+      "sha256": "ac7acf8d15539374b64f1b7f8a935b32e4befc0539c381c7a9119f79d5a4bc97",
+      "bytes": 1453
+    },
+    {
+      "path": "tests/test_cxl_ordering.py",
+      "sha256": "a36190637df222d866246f3abce38747ce615e2e5f269ad8c248f6cc3bf3bd9b",
+      "bytes": 1963
+    },
+    {
+      "path": "tests/test_placement.py",
+      "sha256": "d0e4b71e2763a16c1c43f9be4f7ff2afca094d83ace9831ad5a918ef9bbca0a2",
+      "bytes": 6499
+    },
+    {
+      "path": "tests/test_policy.py",
+      "sha256": "dd79d4a40fcbb5933468341e677c84e73e9b416fb9c8a1de78305bdd08ae287b",
+      "bytes": 1227
+    },
+    {
+      "path": "tests/test_reporting.py",
+      "sha256": "99fba39aa0752b187567ad4a7be6d3998801f5ad541e802b4517bac632405596",
+      "bytes": 7883
+    },
+    {
+      "path": "tools/check_release.py",
+      "sha256": "709228b3f6b7301a8837e25fe9bbfd60c2c80e656a4129fe9014259352f891eb",
+      "bytes": 1941
+    },
+    {
+      "path": "tools/prepare_backend.py",
+      "sha256": "8c258d46c55754b84a6e63ee4b30a5d4104aef78c0eb4a79ae04f636a5e387e5",
+      "bytes": 3462
+    },
+    {
+      "path": "tools/reference/collect.py",
+      "sha256": "0f36d236781755dbec08744a86ae224ccdeb6e24cebc0d609c4a114b490c59c1",
+      "bytes": 4240
+    },
+    {
+      "path": "tools/reference/faithful_replay.py",
+      "sha256": "f6abd7482b0112edd01a3943b8beb4c854dccb2aa380e5d4902fa8967bce8e95",
+      "bytes": 41766
+    },
+    {
+      "path": "tools/reference/policy_exec.c",
+      "sha256": "e985d83cd7fbff14c03fd584e4c274f33ced61d7202317c79e42c06c9f3e3f64",
+      "bytes": 719
+    },
+    {
+      "path": "tools/reference/readguard/replay_agentcgroup.py",
+      "sha256": "1d405742920366910e2c002fecf01721a20441dbf167329ac43039967386363c",
+      "bytes": 43856
+    },
+    {
+      "path": "tools/reference/replay_agentcgroup.py",
+      "sha256": "8cb00b2b6572ce8400cfae480be08e66f9f9a93b8f0eeeacfb1ed58e51277792",
+      "bytes": 43612
+    },
+    {
+      "path": "tools/reference/start-vm.sh",
+      "sha256": "db77805e9b945483160437a4ad8e09537487df1d5b38c3e5e333e2f19c2544a2",
+      "bytes": 3834
+    },
+    {
+      "path": "tools/reference/vmm_pytest_compat.py",
+      "sha256": "e2d618a465dac49007caa6c583961e051af5d049381e59614b3c64883e5ce440",
+      "bytes": 1550
+    },
+    {
+      "path": "tools/release_manifest.py",
+      "sha256": "92937eba88af993610a998e439d4f36e480733740ff65afa1f60962a7a4dc848",
+      "bytes": 1079
+    }
+  ]
+}

@@ -1,0 +1,562 @@
+--- a/mm/Makefile
++++ b/mm/Makefile
+@@ -143,3 +143,6 @@
+ obj-$(CONFIG_EXCHANGE) += exchange.o
+ obj-$(CONFIG_EXCHANGE_TEST) += exchange_test.o
+ obj-$(CONFIG_DEMETER) += PhaseTieing/
++
++# Sandbox-scoped anonymous allocation policy.
++obj-$(CONFIG_NUMA) += PhaseTieing_alloc.o
+--- a/mm/mempolicy.c
++++ b/mm/mempolicy.c
+@@ -88,6 +88,7 @@
+ #include <linux/sched/task.h>
+ #include <linux/nodemask.h>
+ #include <linux/cpuset.h>
++#include <linux/PhaseTieing_alloc.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
+ #include <linux/export.h>
+@@ -2300,6 +2301,8 @@
+ 	pgoff_t ilx;
+ 	struct page *page;
+ 
++	if (demeter_alloc_vma(gfp | __GFP_COMP, order, vma, &page))
++		return page_rmappable_folio(page);
+ 	pol = get_vma_policy(vma, addr, order, &ilx);
+ 	page = alloc_pages_mpol_noprof(gfp | __GFP_COMP, order,
+ 				       pol, ilx, numa_node_id());
+--- a/mm/PhaseTieing/sandbox.c
++++ b/mm/PhaseTieing/sandbox.c
+@@ -4,7 +4,9 @@
+  * descriptors are resolved and revalidated immediately before migration.
+  */
+ #include <linux/cgroup.h>
++#include <linux/PhaseTieing_alloc.h>
+ #include <linux/kthread.h>
++#include <linux/irq_work.h>
+ #include <linux/mm.h>
+ #include <linux/mm_inline.h>
+ #include <linux/mmu_notifier.h>
+@@ -24,6 +26,13 @@
+ #include "module.h"
+ #include "mpsc.h"
+ #include "sandbox.h"
++
++static bool sandbox_allocation_enabled = true;
++module_param(sandbox_allocation_enabled, bool, 0444);
++static bool sandbox_sample_wakeup = true;
++module_param(sandbox_sample_wakeup, bool, 0444);
++static bool sandbox_sample_batch = true;
++module_param(sandbox_sample_batch, bool, 0444);
+ 
+ #define SB_MAX 8
+ #define SB_TASK_MAX 64
+@@ -122,7 +131,7 @@
+ struct sb_region {
+ 	unsigned long base, last_addr, last_pfn, pfn_addr;
+ 	/* Page mode keeps fractional rates in units of 1/1024 access per ms. */
+-	u64 accesses, rate, history[4], last_sample_ns, moved_ns;
++	u64 accesses, rate, history[4], last_sample_ns, moved_ns, validated_bucket;
+ 	u64 phase_seq;
+ 	u64 heat[8], heat_stamp[8];
+ 	u32 hits[8];
+@@ -185,8 +194,11 @@
+ 	struct kobject kobj;
+ 	unsigned int id;
+ 	struct cgroup *cgroup;
++	struct demeter_alloc_rule *alloc_rule;
+ 	struct list_head tasks, spaces;
+ 	mpsc_t samples;
++	struct irq_work sample_wake;
++	atomic64_t sample_wakeups;
+ 	unsigned int nr_tasks, nr_regions;
+ 	u64 sequence, phase_seq, phase_start_ns, deadline_ns;
+ 	unsigned int phase, kind;
+@@ -204,7 +216,10 @@
+ 	u64 load_weighted, store_weighted, reclaim_timeouts, unprofitable_scan_skips, lifetime_kind_assignments;
+ 	unsigned int nr_backoff;
+ 	u64 backoff_limited;
+-	u64 sample_format_errors;
++	u64 sample_format_errors, samples_received, sample_cache_hits, sample_drain_ns, sample_budget_hits, sample_max_age_ns;
++	unsigned int sample_cpu, sample_burst;
++	bool sample_backlog;
++	u64 maintenance_ns, maintenance_phase_seq;
+ 	struct folio *file_pool[SB_FILE_POOL_MAX];
+ 	struct sb_mm *mm_order[SB_TASK_MAX];
+ 	bool cold_used[SB_POOL_MAX];
+@@ -220,6 +235,7 @@
+ static unsigned int nr_sandboxes;
+ static unsigned long sb_budget_pages;
+ static struct task_struct *sb_worker;
++static DEFINE_SPINLOCK(sb_wake_lock);
+ static atomic64_t mm_sequence = ATOMIC64_INIT(0);
+ extern struct mutex demeter_sysfs_lock;
+ extern int demeter_migrate_folio_to_node(struct folio *, int);
+@@ -341,14 +357,29 @@
+ 	kfree(space);
+ }
+ 
++/* perf callbacks can run in NMI. Defer scheduler interaction to irq_work.
++ * The lock synchronizes the worker pointer with module exit; rule/queue
++ * teardown waits for pending work after releasing all producer events. */
++static void sb_sample_wake(struct irq_work *work)
++{
++ struct sandbox *sb = container_of(work, struct sandbox, sample_wake);
++ unsigned long flags;
++ spin_lock_irqsave(&sb_wake_lock, flags);
++ if (sb_worker) {
++  atomic64_inc(&sb->sample_wakeups);
++  wake_up_process(sb_worker);
++ }
++ spin_unlock_irqrestore(&sb_wake_lock, flags);
++}
++
+ static void sb_overflow(struct perf_event *event, struct perf_sample_data *data,
+ 			struct pt_regs *regs)
+ {
+ 	struct sb_task *target = event->overflow_handler_context;
+ 	struct sb_sample sample;
+-	u64 started = ktime_get_mono_fast_ns(), period;
++	u64 started = ktime_get_mono_fast_ns(), period, capture_index;
+ 	perf_prepare_sample(data, event, regs);
+-	atomic64_inc(event->attr.config == sandbox_load_event ?
++	capture_index = atomic64_inc_return(event->attr.config == sandbox_load_event ?
+ 		&target->sandbox->captured_load : &target->sandbox->captured_store);
+ 	/* exec may change this task's mm before the discovery tick. An old mm
+ 	 * can remain live in a CLONE_VM sibling: generation lookup alone would
+@@ -377,7 +408,9 @@
+ 	/* Non-inheriting events are explicitly installed on each discovered
+ 	 * thread, so each mm has a single shared heat table without duplicates.
+ 	 */
+-	mpsc_send(target->sandbox->samples, &sample, sb_sample_bytes());
++	if (mpsc_send(target->sandbox->samples, &sample, sb_sample_bytes()) > 0 &&
++	    sandbox_sample_batch && sandbox_sample_wakeup && !(capture_index % 128))
++		irq_work_queue(&target->sandbox->sample_wake);
+ 	atomic64_add(ktime_get_mono_fast_ns() - started, &target->sandbox->sampling_ns);
+ }
+ 
+@@ -536,13 +569,34 @@
+ 			sb_space_drop(sb, space);
+ }
+ 
++/* Stay on one CPU for at most 64 records, then rotate, including empty CPUs.
++ * Unlike mpsc_recv, this does not start every search at CPU zero. */
++static ssize_t sb_recv(struct sandbox *sb, struct sb_sample *sample)
++{
++ unsigned int tried;
++ ssize_t n;
++ if (!sandbox_sample_batch) return mpsc_recv(sb->samples, sample, sizeof(*sample));
++ for (tried = 0; tried < num_online_cpus(); tried++) {
++  if (!cpu_online(sb->sample_cpu)) sb->sample_cpu = cpumask_first(cpu_online_mask);
++  n = mpsc_recv_cpu(sb->samples, sb->sample_cpu, sample, sizeof(*sample));
++  if (n > 0 && ++sb->sample_burst < 64) return n;
++  sb->sample_burst = 0;
++  sb->sample_cpu = cpumask_next(sb->sample_cpu, cpu_online_mask);
++  if (sb->sample_cpu >= nr_cpu_ids) sb->sample_cpu = cpumask_first(cpu_online_mask);
++  if (n > 0) return n;
++ }
++ return -EAGAIN;
++}
++
+ static noinline void sb_samples(struct sandbox *sb)
+ {
+ 	struct sb_sample sample;
+ 	unsigned int batch = 0;
+ 	ssize_t received;
++	u64 started = ktime_get_ns();
++	sb->sample_backlog = false;
+ 	while (batch++ < 32768 &&
+-	       (received = mpsc_recv(sb->samples, &sample, sizeof(sample))) > 0) {
++	       !sb->sample_backlog && (received = sb_recv(sb, &sample)) > 0) {
+ 		struct sb_mm *space, *match = NULL;
+ 		struct sb_region *r;
+ 		unsigned long index;
+@@ -550,6 +604,14 @@
+ 			sb->sample_format_errors++;
+ 			continue;
+ 		}
++		sb->samples_received++;
++		if (sandbox_sample_batch && !(batch % 64) &&
++		    ktime_get_ns() - started > 5 * SB_NS_MS) {
++			/* Process this consumed record; yield before consuming another. */
++			sb->sample_backlog = true;
++		}
++		sb->sample_max_age_ns = max(sb->sample_max_age_ns,
++			ktime_get_ns() - min(ktime_get_ns(), sample.time_ns));
+ 		index = sample.addr >> sb_heat_shift();
+ 		list_for_each_entry(space, &sb->spaces, link)
+ 			if (space->generation == sample.generation) {
+@@ -569,16 +631,19 @@
+ 			SB_DIAG(sb, match, NULL, SB_D_SAMPLE, sample.source,
+ 				sample.addr, sample.period, sample.accesses, sample.latency,
+ 				sb_heat_shift(), sample.data_src, sample.time_ns);
++		r = xa_load(&match->regions, index);
+ 		if (sandbox_page_heat) {
+ 			struct folio *f;
+ 			u64 bucket = div64_u64(sample.time_ns, 125 * SB_NS_MS);
+ 			unsigned int slot = bucket % ARRAY_SIZE(match->heat);
+ 			if (!sample.accesses) continue;
+-			mmap_read_lock(match->mm);
+-			f = sb_resolve(match, sample.addr, SB_R_SAMPLE);
+-			mmap_read_unlock(match->mm);
+-			if (!f) continue;
+-			folio_put(f);
++			if (!sandbox_sample_batch || !r || r->validated_bucket != bucket + 1) {
++				mmap_read_lock(match->mm);
++				f = sb_resolve(match, sample.addr, SB_R_SAMPLE);
++				mmap_read_unlock(match->mm);
++				if (!f) continue;
++				folio_put(f);
++			} else sb->sample_cache_hits++;
+ 			if (match->sample_phase_seq != sb->phase_seq) {
+ 				memset(match->heat, 0, sizeof(match->heat));
+ 				memset(match->heat_stamp, 0, sizeof(match->heat_stamp));
+@@ -612,6 +677,7 @@
+ 			match->nr_regions++;
+ 			sb->nr_regions++;
+ 		}
++		r->validated_bucket = div64_u64(sample.time_ns, 125 * SB_NS_MS) + 1;
+ 		/* The history belongs to this exact mm and mapping epoch. A phase
+ 		 * change never imports the preceding process's virtual addresses.
+ 		 */
+@@ -641,6 +707,9 @@
+ 		sb->sampled++;
+   if (sandbox_diagnostics) match->diag_samples++;
+ 	}
++	if (batch >= 32768) sb->sample_backlog = true;
++	sb->sample_budget_hits += sb->sample_backlog;
++	sb->sample_drain_ns += ktime_get_ns() - started;
+ }
+ 
+ /* Caller holds mmap_read_lock. FOLL_GET references never escape candidate
+@@ -1300,7 +1369,8 @@
+ 		/* A swap can be cheaper than allocating a destination folio. Keep
+ 		 * that positive-gain alternative even when DRAM has spare quota.
+ 		 */
+-		if (sb->fast_pages < sb->quota_pages && hot->benefit_ns > sb->copy_ns) {
++		if (sb->fast_pages < sb->quota_pages && hot->benefit_ns > sb->copy_ns &&
++		    demeter_alloc_take(sb->alloc_rule)) {
+ 			info[6]++; sb_move(sb, hot, true, now); budget--;
+ 			continue;
+ 		}
+@@ -1339,6 +1409,7 @@
+ {
+ 	while (!kthread_should_stop()) {
+ 		unsigned int i;
++		bool backlog = false;
+ 		mutex_lock(&sb_lock);
+ 		for (i = 0; i < nr_sandboxes; i++) {
+ 			struct sandbox *sb = sandboxes[i];
+@@ -1348,6 +1419,8 @@
+ 			if (!sb->cgroup)
+ 				continue;
+ 			task_cputime_adjusted(current, &user_before, &system_before);
++			if (!sandbox_sample_batch || started - sb->maintenance_ns >= sandbox_period_ms * SB_NS_MS ||
++			    sb->maintenance_phase_seq != sb->phase_seq) {
+ 			sb_discover(sb);
+ 			list_for_each_entry(target, &sb->tasks, link) {
+ 				bool enable = sb->phase != 0;
+@@ -1362,14 +1435,21 @@
+ 					}
+ 				target->enabled = enable;
+ 			}
++			sb->maintenance_ns = started;
++			sb->maintenance_phase_seq = sb->phase_seq;
++			}
+ 			sb_samples(sb);
+-			sb_decide(sb, ktime_get_ns());
++			backlog |= sb->sample_backlog;
++			if (!sandbox_sample_batch || !sb->decision_ns ||
++			    ktime_get_ns() - sb->decision_ns >= sandbox_period_ms * SB_NS_MS)
++				sb_decide(sb, ktime_get_ns());
+ 			sb->worker_ns += ktime_get_ns() - started;
+ 			task_cputime_adjusted(current, &user_after, &system_after);
+ 			sb->worker_cpu_ns += user_after + system_after - user_before - system_before;
+ 		}
+ 		mutex_unlock(&sb_lock);
+-		schedule_timeout_interruptible(msecs_to_jiffies(sandbox_period_ms));
++		schedule_timeout_interruptible(backlog && sandbox_sample_batch ? 1 :
++			msecs_to_jiffies(sandbox_period_ms));
+ 	}
+ 	return 0;
+ }
+@@ -1384,6 +1464,9 @@
+ 		space->refs = 1; /* Censored teardown must not train the lifetime prior. */
+ 		sb_space_drop(sb, space);
+ 	}
++	irq_work_sync(&sb->sample_wake);
++	demeter_alloc_unregister(sb->alloc_rule);
++	sb->alloc_rule = NULL;
+ 	if (sb->cgroup) {
+ 		cgroup_put(sb->cgroup);
+ 		sb->cgroup = NULL;
+@@ -1446,6 +1529,10 @@
+ 		}
+ 	}
+ 	sb_reset(sb);
++	if (group && sandbox_allocation_enabled) {
++		sb->alloc_rule = demeter_alloc_register(group, FMEM_NID, SMEM_NID);
++		if (!sb->alloc_rule) { err = -ENOMEM; goto out; }
++	}
+ 	sb->cgroup = group;
+ 	group = NULL;
+ 	sb->phase = 0;
+@@ -1477,6 +1564,7 @@
+ 		list_for_each_entry(space, &sb->spaces, link)
+ 			sb_note_kind(space, phase, kind);
+ 	}
++	demeter_alloc_update(sb->alloc_rule, sb->quota_pages, sb->fast_pages, phase, true);
+ 	sb->phase_seq++;
+ 	sb->phase_start_ns = ktime_get_ns();
+ 	sb->deadline_ns = sb->phase_start_ns + horizon_ms * SB_NS_MS;
+@@ -1518,6 +1606,8 @@
+ 		mutex_unlock(&sb_lock);
+ 		return -ENOSPC;
+ 	}
++	demeter_alloc_update(SB_FROM_KOBJ(kobj)->alloc_rule, quota,
++		SB_FROM_KOBJ(kobj)->fast_pages, SB_FROM_KOBJ(kobj)->phase, false);
+ 	SB_FROM_KOBJ(kobj)->quota_pages = quota;
+ 	if (sb_worker) wake_up_process(sb_worker);
+ 	mutex_unlock(&sb_lock);
+@@ -1533,6 +1623,7 @@
+ 	mutex_lock(&sb_lock);
+ 	sb->fast_pages = fast;
+ 	sb->slow_pages = slow;
++	demeter_alloc_update(sb->alloc_rule, sb->quota_pages, fast, sb->phase, false);
+ 	sb->feedback_ns = ktime_get_ns();
+ 	mutex_unlock(&sb_lock);
+ 	return count;
+@@ -1580,10 +1671,19 @@
+ 	ret += sysfs_emit_at(buf, ret,
+ 		"sample_record_bytes %zu\nsample_ring_bytes %u\nsample_format_errors %llu\n",
+ 		sb_sample_bytes(), SB_RING_BYTES, s->sample_format_errors);
++	ret += sysfs_emit_at(buf, ret, "sample_batch_enabled %u\nsamples_received %llu\nsample_cache_hits %llu\nsample_drain_ns %llu\nsample_budget_hits %llu\nsample_max_age_ns %llu\n",
++		sandbox_sample_batch, s->samples_received, s->sample_cache_hits, s->sample_drain_ns, s->sample_budget_hits, s->sample_max_age_ns);
++	ret += sysfs_emit_at(buf, ret, "sample_wakeup_enabled %u\nsample_wakeups %lld\n", sandbox_sample_wakeup, atomic64_read(&s->sample_wakeups));
+ 	ret += sysfs_emit_at(buf, ret, "phase_seq %llu\nphase_start_ns %llu\ndeadline_ns %llu\n",
+ 		s->phase_seq, s->phase_start_ns, s->deadline_ns);
+ 	ret += sysfs_emit_at(buf, ret, "load_sample_period %lu\nbackoff_entries %u\nbackoff_limited %llu\n",
+ 		sandbox_load_sample_period, s->nr_backoff, s->backoff_limited);
++	{
++		struct demeter_alloc_stats a;
++		demeter_alloc_stats(s->alloc_rule, &a);
++		ret += sysfs_emit_at(buf, ret, "allocation_enabled %u\nallocation_fast %llu\nallocation_slow %llu\nallocation_failed %llu\nallocation_fallback %llu\nallocation_remaining %lu\n",
++			sandbox_allocation_enabled, a.fast, a.slow, a.failed, a.fallback, a.remaining);
++	}
+ 	mutex_unlock(&sb_lock);
+ 	return ret;
+ }
+@@ -1675,6 +1775,7 @@
+ 		sb->phase_start_ns = ktime_get_ns();
+ 		INIT_LIST_HEAD(&sb->tasks);
+ 		INIT_LIST_HEAD(&sb->spaces);
++		init_irq_work(&sb->sample_wake, sb_sample_wake);
+ 		sb->samples = mpsc_new(SB_RING_BYTES);
+ 		if (!sb->samples) {
+    vfree(sb->diag);
+@@ -1770,8 +1871,13 @@
+ 	if (sb_root)
+ 		sysfs_remove_file(sb_root, &sb_nr.attr);
+ 	mutex_lock(&sb_lock);
+-	worker = sb_worker;
+-	sb_worker = NULL;
++	{
++		unsigned long flags;
++		spin_lock_irqsave(&sb_wake_lock, flags);
++		worker = sb_worker;
++		sb_worker = NULL;
++		spin_unlock_irqrestore(&sb_wake_lock, flags);
++	}
+ 	mutex_unlock(&sb_lock);
+ 	if (worker)
+ 		kthread_stop(worker);
+@@ -1786,3 +1892,5 @@
+ 	if (sb_root)
+ 		kobject_put(sb_root);
+ }
++
++MODULE_IMPORT_NS(DEMETER);
+--- /dev/null
++++ b/include/linux/PhaseTieing_alloc.h
+@@ -0,0 +1,20 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++#ifndef _LINUX_DEMETER_ALLOC_H
++#define _LINUX_DEMETER_ALLOC_H
++#include <linux/types.h>
++struct cgroup;
++struct page;
++struct vm_area_struct;
++struct demeter_alloc_rule;
++struct demeter_alloc_stats {
++	u64 fast, slow, failed, fallback;
++	unsigned long remaining;
++};
++struct demeter_alloc_rule *demeter_alloc_register(struct cgroup *, int, int);
++void demeter_alloc_unregister(struct demeter_alloc_rule *);
++void demeter_alloc_update(struct demeter_alloc_rule *, unsigned long,
++		unsigned long, bool, bool);
++bool demeter_alloc_take(struct demeter_alloc_rule *);
++void demeter_alloc_stats(struct demeter_alloc_rule *, struct demeter_alloc_stats *);
++bool demeter_alloc_vma(gfp_t, unsigned int, struct vm_area_struct *, struct page **);
++#endif
+--- /dev/null
++++ b/mm/PhaseTieing_alloc.c
+@@ -0,0 +1,157 @@
++// SPDX-License-Identifier: GPL-2.0
++/* A finite anonymous-allocation allowance shared by a Sandbox subtree.
++ * Residency feedback can clamp but never refill a live phase's allowance.
++ * This deliberately trades unused capacity for avoiding repeated credit.
++ * Private file COW also creates anonymous pages here. File cache, explicit
++ * VMA policy and non-order-0 allocations are excluded.
++ */
++#include <linux/cgroup.h>
++#include <linux/cpuset.h>
++#include <linux/PhaseTieing_alloc.h>
++#include <linux/export.h>
++#include <linux/kref.h>
++#include <linux/mempolicy.h>
++#include <linux/mm.h>
++#include <linux/rculist.h>
++#include <linux/slab.h>
++#include <linux/spinlock.h>
++#include "internal.h"
++
++struct demeter_alloc_rule {
++	struct list_head link;
++	struct kref refs;
++	struct cgroup *group;
++	spinlock_t lock;
++	int fast_node, slow_node;
++	unsigned long quota, remaining;
++	bool active;
++	u64 fast, slow, failed, fallback;
++};
++static LIST_HEAD(alloc_rules);
++static DEFINE_MUTEX(alloc_rules_lock);
++
++static void rule_release(struct kref *refs)
++{
++	struct demeter_alloc_rule *r = container_of(refs, struct demeter_alloc_rule, refs);
++	cgroup_put(r->group);
++	kfree(r);
++}
++
++struct demeter_alloc_rule *demeter_alloc_register(struct cgroup *group, int fast, int slow)
++{
++	struct demeter_alloc_rule *r = kzalloc(sizeof(*r), GFP_KERNEL);
++	if (!r) return NULL;
++	kref_init(&r->refs);
++	spin_lock_init(&r->lock);
++	cgroup_get(group);
++	r->group = group;
++	r->fast_node = fast;
++	r->slow_node = slow;
++	mutex_lock(&alloc_rules_lock);
++	list_add_tail_rcu(&r->link, &alloc_rules);
++	mutex_unlock(&alloc_rules_lock);
++	return r;
++}
++EXPORT_SYMBOL_NS_GPL(demeter_alloc_register, DEMETER);
++
++void demeter_alloc_unregister(struct demeter_alloc_rule *r)
++{
++	if (!r) return;
++	mutex_lock(&alloc_rules_lock);
++	list_del_rcu(&r->link);
++	mutex_unlock(&alloc_rules_lock);
++	synchronize_rcu();
++	kref_put(&r->refs, rule_release);
++}
++EXPORT_SYMBOL_NS_GPL(demeter_alloc_unregister, DEMETER);
++
++void demeter_alloc_update(struct demeter_alloc_rule *r, unsigned long quota,
++		unsigned long resident, bool active, bool new_phase)
++{
++	unsigned long flags, spare;
++	if (!r) return;
++	/* Small memcg changes can lag in rstat; retain 512 KiB headroom. This
++	 * is a placement target, not a hard cap on all memcg/Guest allocations. */
++	spare = quota > resident + 128 ? quota - resident - 128 : 0;
++	spin_lock_irqsave(&r->lock, flags);
++	if (!active) r->remaining = 0;
++	else if (new_phase) r->remaining = spare;
++	else if (quota > r->quota)
++		r->remaining = min(spare, r->remaining + quota - r->quota);
++	else r->remaining = min(spare, r->remaining - min(r->remaining, r->quota - quota));
++	r->quota = quota;
++	r->active = active;
++	spin_unlock_irqrestore(&r->lock, flags);
++}
++EXPORT_SYMBOL_NS_GPL(demeter_alloc_update, DEMETER);
++
++bool demeter_alloc_take(struct demeter_alloc_rule *r)
++{
++	unsigned long flags;
++	bool take;
++	if (!r) return true; /* allocation ablation keeps existing promotion */
++	spin_lock_irqsave(&r->lock, flags);
++	take = r->active && r->remaining;
++	if (take) r->remaining--;
++	spin_unlock_irqrestore(&r->lock, flags);
++	return take;
++}
++EXPORT_SYMBOL_NS_GPL(demeter_alloc_take, DEMETER);
++
++void demeter_alloc_stats(struct demeter_alloc_rule *r, struct demeter_alloc_stats *s)
++{
++	unsigned long flags;
++	memset(s, 0, sizeof(*s));
++	if (!r) return;
++	spin_lock_irqsave(&r->lock, flags);
++	s->fast = r->fast; s->slow = r->slow;
++	s->failed = r->failed; s->fallback = r->fallback;
++	s->remaining = r->remaining;
++	spin_unlock_irqrestore(&r->lock, flags);
++}
++EXPORT_SYMBOL_NS_GPL(demeter_alloc_stats, DEMETER);
++
++bool demeter_alloc_vma(gfp_t gfp, unsigned int order, struct vm_area_struct *vma,
++		struct page **page)
++{
++	struct demeter_alloc_rule *r, *found = NULL;
++	struct mempolicy *pol = current->mempolicy;
++	nodemask_t mask;
++	unsigned long flags;
++	bool fast;
++	int nid;
++	if (order || (vma->vm_flags & VM_SHARED) ||
++	    vma->vm_mm != current->mm || vma->vm_policy ||
++	    (pol && pol->mode != MPOL_DEFAULT && pol->mode != MPOL_PREFERRED))
++		return false;
++	rcu_read_lock();
++	list_for_each_entry_rcu(r, &alloc_rules, link)
++		if (cgroup_is_descendant(task_dfl_cgroup(current), r->group)) {
++			kref_get(&r->refs); found = r; break;
++		}
++	rcu_read_unlock();
++	if (!found) return false;
++	r = found;
++	mask = cpuset_current_mems_allowed;
++	if (!node_isset(r->fast_node, mask) || !node_isset(r->slow_node, mask)) {
++		kref_put(&r->refs, rule_release);
++		return false;
++	}
++	fast = demeter_alloc_take(r);
++	nid = fast ? r->fast_node : r->slow_node;
++	nodes_clear(mask); node_set(nid, mask);
++	*page = __alloc_pages_noprof(gfp | __GFP_NORETRY, 0, nid, &mask);
++	if (!*page && fast) {
++		nid = r->slow_node;
++		nodes_clear(mask); node_set(nid, mask);
++		*page = __alloc_pages_noprof(gfp, 0, nid, &mask);
++	}
++	spin_lock_irqsave(&r->lock, flags);
++	if (!*page) r->failed++;
++	else if (page_to_nid(*page) == r->fast_node) r->fast++;
++	else { r->slow++; if (fast) r->fallback++; }
++	/* Failed reservations are not refunded into a possibly new phase. */
++	spin_unlock_irqrestore(&r->lock, flags);
++	kref_put(&r->refs, rule_release);
++	return true;
++}

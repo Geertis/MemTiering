@@ -1,0 +1,70 @@
+--- a/mm/page_reporting.c
++++ b/mm/page_reporting.c
+@@ -19,6 +19,7 @@
+ static bool page_reporting_paused;
+ static unsigned long long page_reporting_runs;
+ static unsigned long long page_reporting_batches;
++static unsigned long long page_reporting_fine_batches;
+ static unsigned long long page_reporting_pause_wait_ns;
+ 
+ static int page_reporting_pause_set(const char *val,
+@@ -69,6 +70,10 @@
+ 		"Pause reporting and drain in-flight work before acknowledging");
+ module_param_named(page_reporting_runs, page_reporting_runs, ullong, 0444);
+ module_param_named(page_reporting_batches, page_reporting_batches, ullong, 0444);
++module_param_named(page_reporting_fine_batches,
++		   page_reporting_fine_batches, ullong, 0444);
++MODULE_PARM_DESC(page_reporting_fine_batches,
++		"Submitted batches containing a block smaller than order5");
+ module_param_named(page_reporting_pause_wait_ns,
+ 		   page_reporting_pause_wait_ns, ullong, 0444);
+ 
+@@ -203,6 +208,26 @@
+ 
+ 	/* reinitialize scatterlist now that it is empty */
+ 	sg_init_table(sgl, nents);
++}
++
++static int page_reporting_submit(struct page_reporting_dev_info *prdev,
++				 struct scatterlist *sgl, unsigned int nents)
++{
++	struct scatterlist *sg;
++	unsigned int i;
++	bool fine = false;
++
++	for_each_sg(sgl, sg, nents, i) {
++		if (sg->length < (PAGE_SIZE << 5)) {
++			fine = true;
++			break;
++		}
++	}
++	WRITE_ONCE(page_reporting_batches, READ_ONCE(page_reporting_batches) + 1);
++	if (fine)
++		WRITE_ONCE(page_reporting_fine_batches,
++			   READ_ONCE(page_reporting_fine_batches) + 1);
++	return prdev->report(prdev, sgl, nents);
+ }
+ 
+ /*
+@@ -297,9 +322,7 @@
+ 		spin_unlock_irq(&zone->lock);
+ 
+ 		/* begin processing pages in local list */
+-		WRITE_ONCE(page_reporting_batches,
+-			   READ_ONCE(page_reporting_batches) + 1);
+-		err = prdev->report(prdev, sgl, PAGE_REPORTING_CAPACITY);
++		err = page_reporting_submit(prdev, sgl, PAGE_REPORTING_CAPACITY);
+ 
+ 		/* reset offset since the full list was reported */
+ 		*offset = PAGE_REPORTING_CAPACITY;
+@@ -374,9 +397,7 @@
+ 	leftover = PAGE_REPORTING_CAPACITY - offset;
+ 	if (leftover) {
+ 		sgl = &sgl[offset];
+-		WRITE_ONCE(page_reporting_batches,
+-			   READ_ONCE(page_reporting_batches) + 1);
+-		err = prdev->report(prdev, sgl, leftover);
++		err = page_reporting_submit(prdev, sgl, leftover);
+ 
+ 		/* flush any remaining pages out from the last report */
+ 		spin_lock_irq(&zone->lock);

@@ -1,0 +1,273 @@
+--- a/mm/PhaseTieing/sandbox.c
++++ b/mm/PhaseTieing/sandbox.c
+@@ -50,6 +50,11 @@
+ module_param(sandbox_latency_delta_ns, uint, 0644);
+ static unsigned int sandbox_criticality_permille = 250;
+ module_param(sandbox_criticality_permille, uint, 0644);
++/* Bounded one-second access window, with a half-second startup prior.
++ * This avoids extrapolating a single PEBS overflow over a 50 ms tick.
++ */
++static bool sandbox_smoothed_heat = true;
++module_param(sandbox_smoothed_heat, bool, 0644);
+ static unsigned long sandbox_initial_copy_ns = 20000;
+ module_param(sandbox_initial_copy_ns, ulong, 0644);
+ 
+@@ -84,6 +89,7 @@
+ 	/* rate/history are accesses per millisecond, independent of wake cadence. */
+ 	u64 accesses, rate, history[4], last_sample_ns, moved_ns;
+ 	u64 phase_seq;
++	u64 heat[8], heat_stamp[8];
+ 	unsigned int kind;
+ };
+ struct sb_mm {
+@@ -130,7 +136,7 @@
+ 	u64 sequence, phase_seq, phase_start_ns, deadline_ns;
+ 	unsigned int phase, kind;
+ 	unsigned long quota_pages, fast_pages, slow_pages;
+-	u64 feedback_ns, decision_ns, copy_ns;
++	u64 feedback_ns, decision_ns, copy_ns, exchange_cost_ns, placement_ns;
+ 	struct sb_lifetime lifetimes[SB_PROFILE_MAX];
+ 	struct sb_candidate hot[SB_POOL_MAX], cold[SB_POOL_MAX];
+ 	u64 sampled, stale, overflow, registrations, perf_errors, capacity_misses;
+@@ -475,7 +481,18 @@
+ 		if (r->phase_seq != sb->phase_seq) {
+ 			r->accesses = 0;
+ 			r->rate = 0;
++			memset(r->heat, 0, sizeof(r->heat));
++			memset(r->heat_stamp, 0, sizeof(r->heat_stamp));
+ 			r->phase_seq = sb->phase_seq;
++		}
++		{
++			u64 bucket = div64_u64(sample.time_ns, 125 * SB_NS_MS);
++			unsigned int slot = bucket % ARRAY_SIZE(r->heat);
++			if (r->heat_stamp[slot] != bucket) {
++				r->heat_stamp[slot] = bucket;
++				r->heat[slot] = 0;
++			}
++			r->heat[slot] = min(r->heat[slot] + sample.accesses, 1000000000ULL);
+ 		}
+ 		r->accesses = min(r->accesses + sample.accesses, 1000000000ULL);
+ 		r->last_addr = sample.addr & PAGE_MASK;
+@@ -539,7 +556,7 @@
+ 		horizon = min(horizon, 500 * SB_NS_MS);
+ 	horizon = min(horizon, 5000 * SB_NS_MS);
+ 	rate = r->rate;
+-	if (r->phase_seq != sb->phase_seq || now - r->last_sample_ns > 200 * SB_NS_MS)
++	if (r->phase_seq != sb->phase_seq || now - r->last_sample_ns > (sandbox_smoothed_heat ? 1000 : 200) * SB_NS_MS)
+ 		rate = r->history[sb->kind] / 4;
+ 	accesses = min(div64_u64(rate * horizon, SB_NS_MS) /
+ 		       SB_REGION_PAGES, 1000000000ULL);
+@@ -630,7 +647,16 @@
+ 			if (sb->phase && r->phase_seq == sb->phase_seq) {
+ 				u64 per_ms = div64_u64(r->accesses * SB_NS_MS,
+ 						     max(elapsed, SB_NS_MS));
+-				r->rate = (r->rate + per_ms) / 2;
++				if (sandbox_smoothed_heat) {
++					u64 bucket = div64_u64(now, 125 * SB_NS_MS), total = 0;
++					u64 observation = clamp_t(u64, now - sb->phase_start_ns,
++								500 * SB_NS_MS, 1000 * SB_NS_MS);
++					for (unsigned int j = 0; j < ARRAY_SIZE(r->heat); j++)
++						if (bucket >= r->heat_stamp[j] && bucket - r->heat_stamp[j] < 8)
++							total += r->heat[j];
++					r->rate = div64_u64(total * SB_NS_MS, observation);
++				} else
++					r->rate = (r->rate + per_ms) / 2;
+ 				r->accesses = 0;
+ 				if (r->rate)
+ 					r->history[sb->kind] = (3 * r->history[sb->kind] + r->rate) / 4;
+@@ -642,7 +668,7 @@
+ 			space->hot_cursor = index + 1;
+ 			if (!benefit) { info[6]++; continue; }
+ 			info[13] = max(info[13], benefit);
+-			if (benefit <= sb->copy_ns) { info[7]++; continue; }
++			if (benefit <= min(sb->copy_ns, sb->exchange_cost_ns)) { info[7]++; continue; }
+ 			if (!hot_left) { space->hot_cursor = index; break; }
+ 			sampled = sb_resolve(space, r->last_addr, SB_R_SAMPLE);
+ 			hot_left--;
+@@ -650,6 +676,7 @@
+ 			if (r->last_pfn && r->pfn_addr == r->last_addr &&
+ 			    r->last_pfn != folio_pfn(sampled)) {
+ 				r->rate = r->accesses = 0;
++				memset(r->heat, 0, sizeof(r->heat));
+ 				memset(r->history, 0, sizeof(r->history));
+ 				benefit = 0;
+ 			}
+@@ -767,19 +794,15 @@
+ 
+ static int sb_move(struct sandbox *sb, struct sb_candidate *c, bool up, u64 now)
+ {
++	u64 started = ktime_get_ns(), core, cost;
+ 	struct folio *folio = sb_validate(sb, c, up ? SMEM_NID : FMEM_NID);
+-	u64 started;
+-	int err;
+-	if (!folio) {
+-  SB_DIAG(sb, c->space, NULL, SB_D_MOVE, up, (u64)(s64)-ENOENT, 0, c->benefit_ns, sb->copy_ns);
+-  return -ENOENT;
+- }
+- started = ktime_get_ns();
++	int err = -ENOENT;
++	if (!folio) goto done;
++	core = ktime_get_ns();
+ 	/* The helper consumes the FOLL_GET reference, including error paths. */
+ 	err = demeter_migrate_folio_to_node(folio, up ? FMEM_NID : SMEM_NID);
+-	sb->migration_ns += ktime_get_ns() - started;
++	sb->migration_ns += ktime_get_ns() - core;
+ 	if (!err) {
+-		sb->copy_ns = (7 * sb->copy_ns + ktime_get_ns() - started) / 8;
+ 		if (up) {
+ 			sb->promotions++;
+ 			sb->fast_pages++;
+@@ -789,15 +812,17 @@
+ 			sb->fast_pages -= min(sb->fast_pages, 1UL);
+ 			sb->slow_pages++;
+ 		}
+-		sb_mark_moved(c, now);
+-	} else {
+-		sb->failed++;
+-		/* Back off failed ranges too; retrying every tick cannot repay. */
+-		sb_mark_moved(c, now);
+-	}
+- SB_DIAG(sb, c->space, NULL, SB_D_MOVE, up, (u64)(s64)err, 1,
+-         c->benefit_ns, sb->copy_ns);
+- return err;
++	} else sb->failed++;
++	sb_mark_moved(c, now);
++done:
++	cost = ktime_get_ns() - started;
++	sb->placement_ns += cost;
++	/* Include validation, allocation and migration; failures consume time too. */
++	if (!err) sb->copy_ns = (7 * sb->copy_ns + cost) / 8;
++	else sb->copy_ns = max(sb->copy_ns, cost);
++	SB_DIAG(sb, c->space, NULL, SB_D_MOVE, up, (u64)(s64)err,
++		folio ? 1 : 0, c->benefit_ns, sb->copy_ns, cost);
++	return err;
+ }
+ 
+ static bool sb_isolate(struct folio *folio)
+@@ -821,44 +846,38 @@
+ static int sb_exchange(struct sandbox *sb, struct sb_candidate *hot,
+ 			struct sb_candidate *cold, u64 now)
+ {
++	u64 started = ktime_get_ns(), core, cost;
+ 	struct folio *p = sb_validate(sb, hot, SMEM_NID), *d;
+-	u64 started;
+-	int err;
+-	if (!p) {
+-  SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)-ENOENT, 0, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
+-  return -ENOENT;
+- }
++	int err = -ENOENT, stage = 0;
++	if (!p) goto done;
++	stage = 1;
+ 	d = sb_validate(sb, cold, FMEM_NID);
+-	if (!d) {
+-		folio_put(p);
+-  SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)-ENOENT, 1, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
+-  return -ENOENT;
+-	}
+-	if (!sb_isolate(p)) {
+-		folio_put(d);
+-  SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)-EBUSY, 2, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
+-  return -EBUSY;
+-	}
+-	if (!sb_isolate(d)) {
+-		sb_putback(p);
+-  SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)-EBUSY, 3, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
+-  return -EBUSY;
+-	}
+-	started = ktime_get_ns();
++	if (!d) { folio_put(p); goto done; }
++	err = -EBUSY; stage = 2;
++	if (!sb_isolate(p)) { folio_put(d); goto done; }
++	stage = 3;
++	if (!sb_isolate(d)) { sb_putback(p); goto done; }
++	stage = 4;
++	core = ktime_get_ns();
+ 	err = folio_exchange_isolated(p, d, MIGRATE_ASYNC);
+-	sb->migration_ns += ktime_get_ns() - started;
++	sb->migration_ns += ktime_get_ns() - core;
+ 	if (!err) {
+ 		sb->exchanges++;
+ 		sb->cross_mm_exchanges += hot->space != cold->space;
+-		sb->copy_ns = (7 * sb->copy_ns + (ktime_get_ns() - started) / 2) / 8;
+-	} else
+-		sb->failed++;
++	} else sb->failed++;
+ 	sb_putback(p);
+ 	sb_putback(d);
+ 	sb_mark_moved(hot, now);
+ 	sb_mark_moved(cold, now);
+- SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)err, 4, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
+- return err;
++done:
++	cost = ktime_get_ns() - started;
++	sb->placement_ns += cost;
++	/* Exchange is a distinct operation; do not estimate it as two copies. */
++	if (!err) sb->exchange_cost_ns = (7 * sb->exchange_cost_ns + cost) / 8;
++	else sb->exchange_cost_ns = max(sb->exchange_cost_ns, cost);
++	SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)err,
++		stage, hot->benefit_ns, cold->benefit_ns, sb->exchange_cost_ns, cost);
++	return err;
+ }
+ 
+ /* Unmapped, clean, unreferenced order-0 inactive file cache is not reachable
+@@ -968,7 +987,7 @@
+ 		for (unsigned int ci = 0; ci < nc; ci++) {
+ 			struct sb_candidate *h = &sb->hot[hi], *c = &sb->cold[ci];
+ 			bool cross = h->space != c->space;
+-			bool profit = h->benefit_ns > c->benefit_ns + 2 * sb->copy_ns;
++			bool profit = h->benefit_ns > c->benefit_ns + sb->exchange_cost_ns;
+ 			if (sandbox_diagnostics && cross) {
+ 				info[16]++; info[17] += profit;
+ 			}
+@@ -1005,10 +1024,11 @@
+ 	for (unsigned int hi = 0; hi < nh && budget; hi++) {
+ 		struct sb_candidate *hot = &sb->hot[hi], *cold = NULL;
+ 		unsigned int ci;
+-		if (sb->fast_pages < sb->quota_pages) {
+-			if (hot->benefit_ns > sb->copy_ns) {
+-				info[6]++; sb_move(sb, hot, true, now); budget--;
+-			}
++		/* A swap can be cheaper than allocating a destination folio. Keep
++		 * that positive-gain alternative even when DRAM has spare quota.
++		 */
++		if (sb->fast_pages < sb->quota_pages && hot->benefit_ns > sb->copy_ns) {
++			info[6]++; sb_move(sb, hot, true, now); budget--;
+ 			continue;
+ 		}
+ 		if (budget < 2) break;
+@@ -1018,7 +1038,7 @@
+ 			}
+ 		if (!cold) { info[12]++; continue; }
+ 		info[15]++;
+-		if (hot->benefit_ns <= cold->benefit_ns + 2 * sb->copy_ns) {
++		if (hot->benefit_ns <= cold->benefit_ns + sb->exchange_cost_ns) {
+ 			sb->rejected_benefit++; info[11]++;
+ 			/* A rejected pairing never consumes the cold descriptor. */
+ 			continue;
+@@ -1026,7 +1046,7 @@
+ 		if (hot->space == cold->space && sandbox_diagnostics)
+ 			for (unsigned int j = 0; j < nc; j++)
+ 				if (!used[j] && hot->space != sb->cold[j].space &&
+-				    hot->benefit_ns > sb->cold[j].benefit_ns + 2 * sb->copy_ns) {
++				    hot->benefit_ns > sb->cold[j].benefit_ns + sb->exchange_cost_ns) {
+ 					info[10]++; break;
+ 				}
+ 		info[8]++; info[9] += hot->space != cold->space;
+@@ -1253,6 +1273,8 @@
+ 		atomic64_read(&s->captured_store), atomic64_read(&s->rejected_tid), sandbox_cross_mm, sandbox_file_demotion, s->old_gate_profitable_pairs,
+ 		s->old_gate_cross_pairs, s->relative_exchanges, s->file_demotions,
+ 		s->file_failed, s->file_scanned, s->file_eligible, s->file_skipped);
++	ret += sysfs_emit_at(buf, ret, "exchange_cost_ns %llu\nplacement_ns %llu\nsmoothed_heat %u\n",
++		s->exchange_cost_ns, s->placement_ns, sandbox_smoothed_heat);
+ 	mutex_unlock(&sb_lock);
+ 	return ret;
+ }
+@@ -1339,6 +1361,7 @@
+   }
+   sb->id = i;
+   sb->copy_ns = sandbox_initial_copy_ns;
++  sb->exchange_cost_ns = 2 * sandbox_initial_copy_ns;
+ 		sb->phase_start_ns = ktime_get_ns();
+ 		INIT_LIST_HEAD(&sb->tasks);
+ 		INIT_LIST_HEAD(&sb->spaces);

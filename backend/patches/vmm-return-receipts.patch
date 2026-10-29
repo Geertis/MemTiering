@@ -1,0 +1,303 @@
+--- a/virtio-devices/src/balloon.rs
++++ b/virtio-devices/src/balloon.rs
+@@ -163,9 +163,72 @@
+     kill_evt: EventFd,
+     pause_evt: EventFd,
+     counters: Arc<BalloonCounters>,
++    observe_reporting_returns: bool,
+ }
+ 
+ impl BalloonEpollHandler {
++    // Reporting buffers remain isolated in the Guest until add_used/ACK.
++    // Count resident -> absent transitions, rather than advertised bytes:
++    // repeat reports of an already punched hole must return zero credit.
++    fn resident_bitmap(
++        memory: &GuestMemoryMmap,
++        base: GuestAddress,
++        len: usize,
++    ) -> result::Result<Vec<u8>, Error> {
++        let page = get_page_size() as usize;
++        let region = memory.find_region(base).ok_or(Error::InvalidRequest)?;
++        let offset = base.0 - region.start_addr().0;
++        if len == 0
++            || base.0 % page as u64 != 0
++            || len % page != 0
++            || offset
++                .checked_add(len as u64)
++                .ok_or(Error::InvalidRequest)?
++                > region.len()
++        {
++            return Err(Error::InvalidRequest);
++        }
++        let hva = memory.get_host_address(base).map_err(Error::GuestMemory)?;
++        let mut present = vec![0u8; len / page];
++        // SAFETY: the complete, page-aligned range belongs to the mapping;
++        // mincore only observes and does not fault the range into memory.
++        let rc = unsafe { libc::mincore(hva.cast(), len, present.as_mut_ptr()) };
++        if rc != 0 {
++            return Err(Error::MadviseFail(io::Error::last_os_error()));
++        }
++        Ok(present)
++    }
++
++    fn observed_release(
++        memory: &GuestMemoryMmap,
++        base: GuestAddress,
++        len: usize,
++    ) -> result::Result<(u64, u64, u64), Error> {
++        let before = Self::resident_bitmap(memory, base, len)?;
++        Self::release_memory_range(memory, base, len)?;
++        let after = Self::resident_bitmap(memory, base, len)?;
++        let page = get_page_size() as u64;
++        Ok((
++            before.iter().filter(|b| **b & 1 != 0).count() as u64 * page,
++            after.iter().filter(|b| **b & 1 != 0).count() as u64 * page,
++            before
++                .iter()
++                .zip(after.iter())
++                .filter(|(b, a)| **b & 1 != 0 && **a & 1 == 0)
++                .count() as u64
++                * page,
++        ))
++    }
++
++    fn clock_ns(clock: libc::clockid_t) -> u64 {
++        let mut t: libc::timespec = unsafe { std::mem::zeroed() };
++        // SAFETY: clock_gettime initializes the local timespec.
++        if unsafe { libc::clock_gettime(clock, &mut t) } != 0 {
++            return 0;
++        }
++        t.tv_sec as u64 * 1_000_000_000 + t.tv_nsec as u64
++    }
++
+     fn signal(&self, int_type: VirtioInterruptType) -> result::Result<(), Error> {
+         self.interrupt_cb.trigger(int_type).map_err(|e| {
+             error!("Failed to signal used queue: {:?}", e);
+@@ -363,14 +426,62 @@
+             self.queues[queue_index].pop_descriptor_chain(self.mem.memory())
+         {
+             let mut descs_len = 0;
++            let mut before_bytes = 0;
++            let mut after_bytes = 0;
++            let mut returned_bytes = 0;
++            let wall = Self::clock_ns(libc::CLOCK_MONOTONIC);
++            let cpu = Self::clock_ns(libc::CLOCK_THREAD_CPUTIME_ID);
+             while let Some(desc) = desc_chain.next() {
+                 descs_len += desc.len();
+-                Self::release_memory_range(desc_chain.memory(), desc.addr(), desc.len() as usize)?;
++                if self.observe_reporting_returns {
++                    let (before, after, returned) = Self::observed_release(
++                        desc_chain.memory(),
++                        desc.addr(),
++                        desc.len() as usize,
++                    )?;
++                    before_bytes += before;
++                    after_bytes += after;
++                    returned_bytes += returned;
++                } else {
++                    Self::release_memory_range(
++                        desc_chain.memory(),
++                        desc.addr(),
++                        desc.len() as usize,
++                    )?;
++                }
+             }
+ 
+             self.queues[queue_index]
+                 .add_used(desc_chain.memory(), desc_chain.head_index(), descs_len)
+                 .map_err(Error::QueueAddUsed)?;
++            // Publish only after release succeeded and the chain was ACKed.
++            // Cumulative returns are lifecycle events, never a reusable pool:
++            // a Guest can refault a reported page immediately after this ACK.
++            self.counters.reporting_seq.fetch_add(1, Ordering::AcqRel);
++            self.counters
++                .reporting_acked_bytes
++                .fetch_add(descs_len as u64, Ordering::Relaxed);
++            self.counters
++                .reporting_before_bytes
++                .fetch_add(before_bytes, Ordering::Relaxed);
++            self.counters
++                .reporting_after_bytes
++                .fetch_add(after_bytes, Ordering::Relaxed);
++            self.counters
++                .reporting_returned_bytes
++                .fetch_add(returned_bytes, Ordering::Relaxed);
++            self.counters
++                .reporting_batches
++                .fetch_add(1, Ordering::Relaxed);
++            self.counters.reporting_wall_ns.fetch_add(
++                Self::clock_ns(libc::CLOCK_MONOTONIC).saturating_sub(wall),
++                Ordering::Relaxed,
++            );
++            self.counters.reporting_cpu_ns.fetch_add(
++                Self::clock_ns(libc::CLOCK_THREAD_CPUTIME_ID).saturating_sub(cpu),
++                Ordering::Relaxed,
++            );
++            self.counters.reporting_seq.fetch_add(1, Ordering::Release);
+             used_descs = true;
+         }
+ 
+@@ -842,7 +953,12 @@
+             kill_evt,
+             pause_evt,
+             counters: self.counters.clone(),
++            observe_reporting_returns: std::env::var("DEMETER_REPORTING_RECEIPTS").as_deref()
++                == Ok("1"),
+         };
++        self.counters
++            .reporting_observed
++            .store(handler.observe_reporting_returns as u64, Ordering::Relaxed);
+ 
+         let paused = self.common.paused.clone();
+         let paused_sync = self.common.paused_sync.clone();
+@@ -880,6 +996,41 @@
+             .collect();
+         map.insert("actual", Wrapping(self.get_actual()));
+         map.insert("hetero_actual", Wrapping(self.get_hetero_actual()));
++        loop {
++            let seq = self.counters.reporting_seq.load(Ordering::Acquire);
++            if seq & 1 != 0 {
++                std::hint::spin_loop();
++                continue;
++            }
++            for (name, counter) in [
++                ("reporting_observed", &self.counters.reporting_observed),
++                (
++                    "reporting_acked_bytes",
++                    &self.counters.reporting_acked_bytes,
++                ),
++                (
++                    "reporting_before_bytes",
++                    &self.counters.reporting_before_bytes,
++                ),
++                (
++                    "reporting_after_bytes",
++                    &self.counters.reporting_after_bytes,
++                ),
++                (
++                    "reporting_returned_bytes",
++                    &self.counters.reporting_returned_bytes,
++                ),
++                ("reporting_batches", &self.counters.reporting_batches),
++                ("reporting_wall_ns", &self.counters.reporting_wall_ns),
++                ("reporting_cpu_ns", &self.counters.reporting_cpu_ns),
++            ] {
++                map.insert(name, Wrapping(counter.load(Ordering::Relaxed)));
++            }
++            std::sync::atomic::fence(Ordering::Acquire);
++            if self.counters.reporting_seq.load(Ordering::Relaxed) == seq {
++                break;
++            }
++        }
+         Some(map)
+     }
+ }
+@@ -908,6 +1059,15 @@
+ 
+ #[derive(Debug, Default)]
+ pub struct BalloonCounters {
++    reporting_seq: AtomicU64,
++    reporting_observed: AtomicU64,
++    reporting_acked_bytes: AtomicU64,
++    reporting_before_bytes: AtomicU64,
++    reporting_after_bytes: AtomicU64,
++    reporting_returned_bytes: AtomicU64,
++    reporting_batches: AtomicU64,
++    reporting_wall_ns: AtomicU64,
++    reporting_cpu_ns: AtomicU64,
+     swap_in: AtomicU64,
+     swap_out: AtomicU64,
+     major_faults: AtomicU64,
+@@ -978,3 +1138,70 @@
+         })
+     }
+ }
++
++#[cfg(test)]
++mod reporting_receipt_tests {
++    use super::*;
++    use std::fs::File;
++    use std::os::unix::io::FromRawFd;
++    use vm_memory::FileOffset;
++
++    fn shared_memory(pages: usize) -> GuestMemoryMmap {
++        // SAFETY: static terminated name and checked descriptor ownership.
++        let fd =
++            unsafe { libc::memfd_create(b"receipt-test\0".as_ptr().cast(), libc::MFD_CLOEXEC) };
++        assert!(fd >= 0);
++        let file = unsafe { File::from_raw_fd(fd) };
++        let len = pages * get_page_size() as usize;
++        file.set_len(len as u64).unwrap();
++        GuestMemoryMmap::from_ranges_with_files(&[(
++            GuestAddress(0),
++            len,
++            Some(FileOffset::new(file, 0)),
++        )])
++        .unwrap()
++    }
++
++    #[test]
++    fn reporting_receipt_counts_resident_returns_and_repeat_holes() {
++        let memory = shared_memory(16);
++        let page = get_page_size() as usize;
++        for i in [0, 2, 5, 8, 11, 12, 15] {
++            memory
++                .write_obj(42u8, GuestAddress((i * page) as u64))
++                .unwrap();
++        }
++        assert_eq!(
++            BalloonEpollHandler::observed_release(&memory, GuestAddress(0), 16 * page).unwrap(),
++            (7 * page as u64, 0, 7 * page as u64)
++        );
++        assert_eq!(
++            BalloonEpollHandler::observed_release(&memory, GuestAddress(0), 16 * page).unwrap(),
++            (0, 0, 0)
++        );
++        // Refaults create a fresh lifecycle; returned bytes are not a reserve.
++        for i in [1, 2, 9] {
++            memory
++                .write_obj(43u8, GuestAddress((i * page) as u64))
++                .unwrap();
++        }
++        assert_eq!(
++            BalloonEpollHandler::observed_release(&memory, GuestAddress(0), 16 * page).unwrap(),
++            (3 * page as u64, 0, 3 * page as u64)
++        );
++    }
++
++    #[test]
++    fn reporting_receipt_rejects_unaligned_or_cross_region_ranges() {
++        let memory = shared_memory(2);
++        let page = get_page_size() as usize;
++        memory.write_obj(41u8, GuestAddress(0)).unwrap();
++        for (base, len) in [(0, 0), (1, page), (0, page + 1), (page, 2 * page)] {
++            assert!(
++                BalloonEpollHandler::observed_release(&memory, GuestAddress(base as u64), len)
++                    .is_err()
++            );
++        }
++        assert_eq!(memory.read_obj::<u8>(GuestAddress(0)).unwrap(), 41);
++    }
++}
+--- a/virtio-devices/src/seccomp_filters.rs
++++ b/virtio-devices/src/seccomp_filters.rs
+@@ -78,6 +78,7 @@
+ fn virtio_balloon_thread_rules() -> Vec<(i64, Vec<SeccompRule>)> {
+     vec![
+         (libc::SYS_fallocate, vec![]),
++        (libc::SYS_mincore, vec![]),
+         (libc::SYS_timerfd_settime, vec![]),
+     ]
+ }
+--- a/vmm/src/seccomp_filters.rs
++++ b/vmm/src/seccomp_filters.rs
+@@ -566,6 +566,9 @@
+         (libc::SYS_lseek, vec![]),
+         (libc::SYS_madvise, vec![]),
+         (libc::SYS_mbind, vec![]),
++        // Virtio workers inherit the VMM thread filter before installing
++        // their own narrower filter. Reporting observations need both.
++        (libc::SYS_mincore, vec![]),
+         (libc::SYS_memfd_create, vec![]),
+         (libc::SYS_mmap, vec![]),
+         (libc::SYS_mprotect, vec![]),

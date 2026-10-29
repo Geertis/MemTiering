@@ -1,0 +1,285 @@
+--- a/mm/PhaseTieing/sandbox.c
++++ b/mm/PhaseTieing/sandbox.c
+@@ -31,6 +31,17 @@
+ 
+ static bool sandbox_allocation_enabled = true;
+ module_param(sandbox_allocation_enabled, bool, 0444);
++/* Allocation-only policy need not create PEBS events or scan address spaces. */
++static bool sandbox_sampling_enabled = true;
++module_param(sandbox_sampling_enabled, bool, 0444);
++/* Physical tier order need not match the Guest's boot memory-node order. */
++static int sandbox_fast_node = -1;
++module_param(sandbox_fast_node, int, 0444);
++static int sandbox_slow_node = -1;
++module_param(sandbox_slow_node, int, 0444);
++/* Matched heat-only ablation keeps quotas, sampling and placement budgets. */
++static bool sandbox_future_benefit = true;
++module_param(sandbox_future_benefit, bool, 0444);
+ static bool sandbox_sample_wakeup = true;
+ module_param(sandbox_sample_wakeup, bool, 0444);
+ static unsigned int sandbox_sample_wake_us = 2000;
+@@ -594,7 +605,7 @@
+ 		space->refs++;
+ 		list_add_tail(&target->link, &sb->tasks);
+ 		sb->nr_tasks++;
+-		for (unsigned int e = 0; e < MAX_EVENTS; e++) {
++		for (unsigned int e = 0; sandbox_sampling_enabled && e < MAX_EVENTS; e++) {
+ 			struct perf_event_attr attr = event_attrs[e];
+ 			struct perf_event *event;
+ 			if (e == EVENT_LOAD) {
+@@ -846,12 +857,14 @@
+ 	struct sb_lifetime *p;
+ 	if (!sb->phase || (r && now - r->moved_ns < sandbox_cooldown_ms * SB_NS_MS))
+ 		return 0;
+-	horizon = sb->deadline_ns > now ? sb->deadline_ns - now : 100 * SB_NS_MS;
++	horizon = sandbox_future_benefit ?
++		(sb->deadline_ns > now ? sb->deadline_ns - now : 100 * SB_NS_MS) :
++		500 * SB_NS_MS;
+ 	/* Unknown processes receive a conservative half-second lifetime prior.
+ 	 * Completed lifetimes share only duration experience, never page heat.
+ 	 */
+ 	p = sb_profile(sb, space, sb->kind, false);
+-	if (p && p->count >= 2) {
++	if (sandbox_future_benefit && p && p->count >= 2) {
+ 		u64 age = now - space->born_ns;
+ 		/* Surviving the old mean is evidence, not an imminent-exit signal. */
+ 		horizon = min(horizon, p->duration_ns > age ? p->duration_ns - age : 500 * SB_NS_MS);
+@@ -861,7 +874,7 @@
+ 	if (!r && !sandbox_page_heat) return 0;
+ 	rate = r ? r->rate : space->mean_rate;
+ 	if (r && (r->phase_seq != sb->phase_seq || now - r->last_sample_ns > (sandbox_smoothed_heat ? 1000 : 200) * SB_NS_MS))
+-		rate = r->history[sb->kind] / 4;
++		rate = sandbox_future_benefit ? r->history[sb->kind] / 4 : 0;
+ 	/* Keep fractional page rates until the final ns conversion. */
+ 	accesses = mul_u64_u64_div_u64(rate, horizon, SB_NS_MS);
+ 	if (!sandbox_page_heat) accesses /= SB_REGION_PAGES;
+@@ -872,13 +885,24 @@
+ 	return benefit;
+ }
+ 
++static u64 sb_copy_gate(struct sandbox *sb)
++{
++	return sandbox_future_benefit ? sb->copy_ns : 0;
++}
++
++static u64 sb_exchange_gate(struct sandbox *sb)
++{
++	return sandbox_future_benefit ? sb->exchange_cost_ns : 0;
++}
++
+ static void sb_space_rate(struct sandbox *sb, struct sb_mm *space, u64 now)
+ {
+ 	u64 total = 0, hits = 0, bucket = div64_u64(now, 125 * SB_NS_MS);
+ 	u64 observation = clamp_t(u64, now - sb->phase_start_ns, 500 * SB_NS_MS, 1000 * SB_NS_MS);
+ 	space->anonymous_pages = max(get_mm_counter(space->mm, MM_ANONPAGES), 1UL);
+ 	if (space->sample_phase_seq != sb->phase_seq) {
+-		space->mean_rate = space->mean_history[sb->kind] / 4;
++		space->mean_rate = sandbox_future_benefit ?
++			space->mean_history[sb->kind] / 4 : 0;
+ 		space->window_hits = 0;
+ 		return;
+ 	}
+@@ -988,7 +1012,7 @@
+ 		if (sandbox_page_heat) {
+ 			sb_space_rate(sb, space, now);
+ 			background_hot |= sb_benefit(sb, space, NULL, now) >
+-				min(sb->copy_ns, sb->exchange_cost_ns);
++				min(sb_copy_gate(sb), sb_exchange_gate(sb));
+ 		}
+ 		mmap_read_lock(space->mm);
+ 		/* Update every tracked region, even when the resolution budget is
+@@ -1027,7 +1051,7 @@
+ 			if (sb_on_cooldown(space, r->base, now)) continue;
+ 			if (!benefit) { info[6]++; continue; }
+ 			info[13] = max(info[13], benefit);
+-			if (benefit <= min(sb->copy_ns, sb->exchange_cost_ns)) { info[7]++; continue; }
++			if (benefit <= min(sb_copy_gate(sb), sb_exchange_gate(sb))) { info[7]++; continue; }
+ 			if (!hot_left) { space->hot_cursor = index; break; }
+ 			sampled = sb_resolve(space, r->last_addr, SB_R_SAMPLE);
+ 			hot_left--;
+@@ -1050,7 +1074,7 @@
+ 				struct folio *folio = sb_resolve(space, addr, SB_R_HOT);
+ 				hot_left--;
+ 				if (!folio) continue;
+-				if (folio_nid(folio) == SMEM_NID) {
++				if (folio_nid(folio) == sandbox_slow_node) {
+ 					struct sb_candidate c = {
+ 						.space = space, .addr = addr, .pfn = folio_pfn(folio),
+ 						.epoch = space->epoch_seen, .benefit_ns = benefit,
+@@ -1104,12 +1128,12 @@
+ 					cold_left--; info[2]++;
+ 					folio = sb_resolve(space, addr, SB_R_COLD);
+ 					if (!folio) { info[5]++; continue; }
+-					if (folio_nid(folio) == FMEM_NID) info[3]++;
+-					if (folio_nid(folio) == SMEM_NID) info[4]++;
++					if (folio_nid(folio) == sandbox_fast_node) info[3]++;
++					if (folio_nid(folio) == sandbox_slow_node) info[4]++;
+ 					r = xa_load(&space->regions, addr >> sb_heat_shift());
+ 					benefit = sb_benefit(sb, space, r, now);
+ 					if (sb_on_cooldown(space, addr, now)) { folio_put(folio); continue; }
+-					if (folio_nid(folio) == FMEM_NID &&
++					if (folio_nid(folio) == sandbox_fast_node &&
+ 					    (!r || now - r->moved_ns >= sandbox_cooldown_ms * SB_NS_MS) &&
+ 					    (wait_settled || sb->phase)) {
+ 						struct sb_candidate c = {
+@@ -1118,8 +1142,8 @@
+ 							.evidence = r ? (sandbox_page_heat ? 1 : 2) : (sandbox_page_heat ? 3 : 0),
+ 						};
+ 						sb_offer(&cold, &c, &sb_cold_heap);
+-					} else if (sandbox_page_heat && !r && folio_nid(folio) == SMEM_NID &&
+-						   benefit > min(sb->copy_ns, sb->exchange_cost_ns)) {
++					} else if (sandbox_page_heat && !r && folio_nid(folio) == sandbox_slow_node &&
++						   benefit > min(sb_copy_gate(sb), sb_exchange_gate(sb))) {
+ 						struct sb_candidate c = {
+ 							.space = space, .addr = addr, .pfn = folio_pfn(folio),
+ 							.epoch = space->epoch_seen, .benefit_ns = benefit,
+@@ -1191,11 +1215,11 @@
+ 	struct folio *folio = NULL;
+ 	int err = -ENOMEM;
+ 	if (!sb_begin_move(c, now)) goto done;
+-	folio = sb_validate(sb, c, up ? SMEM_NID : FMEM_NID); err = -ENOENT;
++	folio = sb_validate(sb, c, up ? sandbox_slow_node : sandbox_fast_node); err = -ENOENT;
+ 	if (!folio) goto done;
+ 	core = ktime_get_ns();
+ 	/* The helper consumes the FOLL_GET reference, including error paths. */
+-	err = demeter_migrate_folio_to_node(folio, up ? FMEM_NID : SMEM_NID);
++	err = demeter_migrate_folio_to_node(folio, up ? sandbox_fast_node : sandbox_slow_node);
+ 	sb->migration_ns += ktime_get_ns() - core;
+ 	if (!err) {
+ 		if (up) {
+@@ -1245,10 +1269,10 @@
+ 	struct folio *p = NULL, *d;
+ 	int err = -ENOMEM, stage = 0;
+ 	if (!sb_begin_move(hot, now) || !sb_begin_move(cold, now)) goto done;
+-	p = sb_validate(sb, hot, SMEM_NID); err = -ENOENT;
++	p = sb_validate(sb, hot, sandbox_slow_node); err = -ENOENT;
+ 	if (!p) goto done;
+ 	stage = 1;
+-	d = sb_validate(sb, cold, FMEM_NID);
++	d = sb_validate(sb, cold, sandbox_fast_node);
+ 	if (!d) { folio_put(p); goto done; }
+ 	err = -EBUSY; stage = 2;
+ 	if (!sb_isolate(p)) { folio_put(d); goto done; }
+@@ -1288,7 +1312,7 @@
+ {
+ 	struct mem_cgroup *memcg;
+ 	bool owned;
+-	if (!folio_test_lru(f) || folio_nid(f) != FMEM_NID ||
++	if (!folio_test_lru(f) || folio_nid(f) != sandbox_fast_node ||
+ 	    !folio_is_file_lru(f) || folio_order(f) || folio_mapped(f) ||
+ 	    folio_test_dirty(f) || folio_test_writeback(f) ||
+ 	    folio_test_unevictable(f) ||
+@@ -1327,7 +1351,7 @@
+ 		if (held) css_put(held);
+ 		held = pos;
+ 		if (!pos) break;
+-		lv = mem_cgroup_lruvec(mem_cgroup_from_css(pos), NODE_DATA(FMEM_NID));
++		lv = mem_cgroup_lruvec(mem_cgroup_from_css(pos), NODE_DATA(sandbox_fast_node));
+ 		spin_lock_irqsave(&lv->lru_lock, flags);
+ 		for (unsigned int lru = LRU_INACTIVE_FILE; lru <= last_lru; lru++) {
+ 			list_for_each_entry_reverse(f, &lv->lists[lru], lru) {
+@@ -1356,7 +1380,7 @@
+ 		}
+ 		attempts++;
+ 		u64 started = ktime_get_ns();
+-		err = demeter_migrate_folio_to_node(f, SMEM_NID);
++		err = demeter_migrate_folio_to_node(f, sandbox_slow_node);
+ 		migration_ns += ktime_get_ns() - started;
+ 		if (!err) {
+ 			sb->file_demotions++; sb->demotions++;
+@@ -1392,7 +1416,7 @@
+ 		for (unsigned int ci = 0; ci < nc; ci++) {
+ 			struct sb_candidate *h = &sb->hot[hi], *c = &sb->cold[ci];
+ 			bool cross = h->space != c->space;
+-			bool profit = h->benefit_ns > c->benefit_ns + sb->exchange_cost_ns;
++			bool profit = h->benefit_ns > c->benefit_ns + sb_exchange_gate(sb);
+ 			if (sandbox_diagnostics && cross) {
+ 				info[16]++; info[17] += profit;
+ 			}
+@@ -1432,7 +1456,7 @@
+ 		/* A swap can be cheaper than allocating a destination folio. Keep
+ 		 * that positive-gain alternative even when DRAM has spare quota.
+ 		 */
+-		if (sb->fast_pages < sb->quota_pages && hot->benefit_ns > sb->copy_ns &&
++		if (sb->fast_pages < sb->quota_pages && hot->benefit_ns > sb_copy_gate(sb) &&
+ 		    demeter_alloc_take(sb->alloc_rule)) {
+ 			info[6]++; sb_move(sb, hot, true, now); budget--;
+ 			continue;
+@@ -1444,7 +1468,7 @@
+ 			}
+ 		if (!cold) { info[12]++; continue; }
+ 		info[15]++;
+-		if (hot->benefit_ns <= cold->benefit_ns + sb->exchange_cost_ns) {
++		if (hot->benefit_ns <= cold->benefit_ns + sb_exchange_gate(sb)) {
+ 			sb->rejected_benefit++; info[11]++;
+ 			/* A rejected pairing never consumes the cold descriptor. */
+ 			continue;
+@@ -1452,7 +1476,7 @@
+ 		if (hot->space == cold->space && sandbox_diagnostics)
+ 			for (unsigned int j = 0; j < nc; j++)
+ 				if (!used[j] && hot->space != sb->cold[j].space &&
+-				    hot->benefit_ns > sb->cold[j].benefit_ns + sb->exchange_cost_ns) {
++				    hot->benefit_ns > sb->cold[j].benefit_ns + sb_exchange_gate(sb)) {
+ 					info[10]++; break;
+ 				}
+ 		info[8]++; info[9] += hot->space != cold->space;
+@@ -1484,6 +1508,8 @@
+ 			u64 started = ktime_get_ns();
+ 			u64 user_before, system_before, user_after, system_after;
+ 			if (!sb->cgroup)
++				continue;
++			if (!sandbox_sampling_enabled && !sandbox_placement_enabled)
+ 				continue;
+ 			task_cputime_adjusted(current, &user_before, &system_before);
+ 			if (lifecycle || !sandbox_sample_batch || started - sb->maintenance_ns >= sandbox_period_ms * SB_NS_MS ||
+@@ -1603,7 +1629,7 @@
+ 	}
+ 	sb_reset(sb);
+ 	if (group && sandbox_allocation_enabled) {
+-		sb->alloc_rule = demeter_alloc_register(group, FMEM_NID, SMEM_NID);
++		sb->alloc_rule = demeter_alloc_register(group, sandbox_fast_node, sandbox_slow_node);
+ 		if (!sb->alloc_rule) { err = -ENOMEM; goto out; }
+ 	}
+ 	sb->cgroup = group;
+@@ -1669,7 +1695,7 @@
+ {
+ 	unsigned long quota;
+ 	unsigned long committed = 0;
+-	if (kstrtoul(buf, 10, &quota) || quota > node_present_pages(FMEM_NID))
++	if (kstrtoul(buf, 10, &quota) || quota > node_present_pages(sandbox_fast_node))
+ 		return -EINVAL;
+ 	mutex_lock(&sb_lock);
+ 	for (unsigned int i = 0; i < nr_sandboxes; i++)
+@@ -1744,6 +1770,9 @@
+ 	ret += sysfs_emit_at(buf, ret,
+ 		"sample_record_bytes %zu\nsample_ring_bytes %u\nsample_format_errors %llu\n",
+ 		sb_sample_bytes(), SB_RING_BYTES, s->sample_format_errors);
++	ret += sysfs_emit_at(buf, ret, "sampling_enabled %u\n", sandbox_sampling_enabled);
++	ret += sysfs_emit_at(buf, ret, "fast_node %d\nslow_node %d\nfuture_benefit %u\n",
++		sandbox_fast_node, sandbox_slow_node, sandbox_future_benefit);
+ 	ret += sysfs_emit_at(buf, ret, "sample_batch_enabled %u\nsamples_received %llu\nsample_cache_hits %llu\nsample_drain_ns %llu\nsample_budget_hits %llu\nsample_max_age_ns %llu\n",
+ 		sandbox_sample_batch, s->samples_received, s->sample_cache_hits, s->sample_drain_ns, s->sample_budget_hits, s->sample_max_age_ns);
+ 	ret += sysfs_emit_at(buf, ret, "sample_wakeup_enabled %u\nsample_wakeups %lld\n", sandbox_sample_wakeup, atomic64_read(&s->sample_wakeups));
+@@ -1890,7 +1919,7 @@
+ 				 const char *buf, size_t count)
+ {
+ 	unsigned long budget, committed = 0;
+-	if (kstrtoul(buf, 10, &budget) || budget > node_present_pages(FMEM_NID))
++	if (kstrtoul(buf, 10, &budget) || budget > node_present_pages(sandbox_fast_node))
+ 		return -EINVAL;
+ 	mutex_lock(&sb_lock);
+ 	for (unsigned int i = 0; i < nr_sandboxes; i++)
+@@ -1908,6 +1937,13 @@
+ int sandbox_sysfs_init(struct kobject *root)
+ {
+ 	int err;
++	if (sandbox_fast_node < 0) sandbox_fast_node = FMEM_NID;
++	if (sandbox_slow_node < 0) sandbox_slow_node = SMEM_NID;
++	if (sandbox_fast_node >= MAX_NUMNODES || sandbox_slow_node >= MAX_NUMNODES ||
++	    sandbox_fast_node == sandbox_slow_node ||
++	    !node_state(sandbox_fast_node, N_MEMORY) ||
++	    !node_state(sandbox_slow_node, N_MEMORY))
++		return -EINVAL;
+ 	if (!sandbox_period_ms || sandbox_period_ms > 1000 ||
+ 	    !sandbox_scan_pages || sandbox_scan_pages > 65536 ||
+ 	    !sandbox_batch_pages || sandbox_batch_pages > SB_POOL_MAX ||

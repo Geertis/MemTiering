@@ -1,0 +1,164 @@
+--- a/mm/page_reporting.c
++++ b/mm/page_reporting.c
+@@ -14,6 +14,64 @@
+ /* Initialize to an unsupported value */
+ unsigned int page_reporting_order = -1;
+ 
++static DEFINE_MUTEX(page_reporting_mutex);
++static struct page_reporting_dev_info __rcu *pr_dev_info __read_mostly;
++static bool page_reporting_paused;
++static unsigned long long page_reporting_runs;
++static unsigned long long page_reporting_batches;
++static unsigned long long page_reporting_pause_wait_ns;
++
++static int page_reporting_pause_set(const char *val,
++				    const struct kernel_param *kp)
++{
++	struct page_reporting_dev_info *prdev;
++	bool pause;
++	u64 started;
++	int err = kstrtobool(val, &pause);
++
++	if (err)
++		return err;
++
++	mutex_lock(&page_reporting_mutex);
++	if (pause == READ_ONCE(page_reporting_paused))
++		goto out;
++
++	WRITE_ONCE(page_reporting_paused, pause);
++	prdev = rcu_dereference_protected(pr_dev_info,
++			lockdep_is_held(&page_reporting_mutex));
++	if (pause && prdev) {
++		started = ktime_get_ns();
++		/* Finish old notification readers before cancelling their work.
++		 * The worker returns all isolated pages before this write ACKs.
++		 */
++		synchronize_rcu_expedited();
++		cancel_delayed_work_sync(&prdev->work);
++		atomic_set(&prdev->state, 0);
++		WRITE_ONCE(page_reporting_pause_wait_ns,
++			READ_ONCE(page_reporting_pause_wait_ns) +
++			ktime_get_ns() - started);
++	} else if (!pause) {
++		/* Previously free blocks may have no new free notification. */
++		__page_reporting_notify();
++	}
++out:
++	mutex_unlock(&page_reporting_mutex);
++	return 0;
++}
++
++static const struct kernel_param_ops page_reporting_pause_ops = {
++	.set = page_reporting_pause_set,
++	.get = param_get_bool,
++};
++module_param_cb(page_reporting_paused, &page_reporting_pause_ops,
++		&page_reporting_paused, 0644);
++MODULE_PARM_DESC(page_reporting_paused,
++		"Pause reporting and drain in-flight work before acknowledging");
++module_param_named(page_reporting_runs, page_reporting_runs, ullong, 0444);
++module_param_named(page_reporting_batches, page_reporting_batches, ullong, 0444);
++module_param_named(page_reporting_pause_wait_ns,
++		   page_reporting_pause_wait_ns, ullong, 0444);
++
+ static int page_order_update_notify(const char *val, const struct kernel_param *kp)
+ {
+ 	unsigned int previous = READ_ONCE(page_reporting_order);
+@@ -56,7 +114,6 @@
+ EXPORT_SYMBOL_GPL(page_reporting_order);
+ 
+ #define PAGE_REPORTING_DELAY	(2 * HZ)
+-static struct page_reporting_dev_info __rcu *pr_dev_info __read_mostly;
+ 
+ enum {
+ 	PAGE_REPORTING_IDLE = 0,
+@@ -69,6 +126,9 @@
+ __page_reporting_request(struct page_reporting_dev_info *prdev)
+ {
+ 	unsigned int state;
++
++	if (READ_ONCE(page_reporting_paused))
++		return;
+ 
+ 	/* Check to see if we are in desired state */
+ 	state = atomic_read(&prdev->state);
+@@ -192,7 +252,8 @@
+ 		/* A resumed tool can raise the floor during a low-order pass.
+ 		 * Finish already isolated pages, but stop taking small blocks.
+ 		 */
+-		if (order < READ_ONCE(page_reporting_order))
++		if (READ_ONCE(page_reporting_paused) ||
++		    order < READ_ONCE(page_reporting_order))
+ 			break;
+ 
+ 		/* We are going to skip over the reported pages. */
+@@ -236,6 +297,8 @@
+ 		spin_unlock_irq(&zone->lock);
+ 
+ 		/* begin processing pages in local list */
++		WRITE_ONCE(page_reporting_batches,
++			   READ_ONCE(page_reporting_batches) + 1);
+ 		err = prdev->report(prdev, sgl, PAGE_REPORTING_CAPACITY);
+ 
+ 		/* reset offset since the full list was reported */
+@@ -293,6 +356,8 @@
+ 	/* Process each free list starting from lowest order/mt */
+ 	for (order = min_order; order < NR_PAGE_ORDERS; order++) {
+ 		for (mt = 0; mt < MIGRATE_TYPES; mt++) {
++			if (READ_ONCE(page_reporting_paused))
++				goto drain_leftover;
+ 			/* We do not pull pages from the isolate free list */
+ 			if (is_migrate_isolate(mt))
+ 				continue;
+@@ -304,10 +369,13 @@
+ 		}
+ 	}
+ 
+-	/* report the leftover pages before going idle */
++drain_leftover:
++	/* Even while pausing, return every already isolated page. */
+ 	leftover = PAGE_REPORTING_CAPACITY - offset;
+ 	if (leftover) {
+ 		sgl = &sgl[offset];
++		WRITE_ONCE(page_reporting_batches,
++			   READ_ONCE(page_reporting_batches) + 1);
+ 		err = prdev->report(prdev, sgl, leftover);
+ 
+ 		/* flush any remaining pages out from the last report */
+@@ -329,6 +397,12 @@
+ 	struct zone *zone;
+ 	unsigned int min_order = READ_ONCE(page_reporting_order);
+ 
++	if (READ_ONCE(page_reporting_paused)) {
++		atomic_set(&prdev->state, PAGE_REPORTING_IDLE);
++		return;
++	}
++	WRITE_ONCE(page_reporting_runs, READ_ONCE(page_reporting_runs) + 1);
++
+ 	/*
+ 	 * Change the state to "Active" so that we can track if there is
+ 	 * anyone requests page reporting after we complete our pass. If
+@@ -345,6 +419,8 @@
+ 	sg_init_table(sgl, PAGE_REPORTING_CAPACITY);
+ 
+ 	for_each_zone(zone) {
++		if (READ_ONCE(page_reporting_paused))
++			break;
+ 		err = page_reporting_process_zone(prdev, sgl, zone, min_order);
+ 		if (err)
+ 			break;
+@@ -358,11 +434,11 @@
+ 	 * more pages to accumulate.
+ 	 */
+ 	state = atomic_cmpxchg(&prdev->state, state, PAGE_REPORTING_IDLE);
+-	if (state == PAGE_REPORTING_REQUESTED)
++	if (state == PAGE_REPORTING_REQUESTED &&
++	    !READ_ONCE(page_reporting_paused))
+ 		schedule_delayed_work(&prdev->work, PAGE_REPORTING_DELAY);
+ }
+ 
+-static DEFINE_MUTEX(page_reporting_mutex);
+ DEFINE_STATIC_KEY_FALSE(page_reporting_enabled);
+ 
+ int page_reporting_register(struct page_reporting_dev_info *prdev)

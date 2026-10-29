@@ -1,0 +1,111 @@
+--- a/mm/PhaseTieing/core.c
++++ b/mm/PhaseTieing/core.c
+@@ -96,7 +96,10 @@
+ 	atomic_long_t stats[MAX_STATS];
+ 	// Should only used by the new() and drop()
+ 	u64 start_time;
+-};
++	u64 trace_id;
++};
++
++static atomic64_t target_trace_seq = ATOMIC64_INIT(0);
+ 
+ // External dependencies
+ extern int folio_exchange_isolated(struct folio *, struct folio *,
+@@ -287,6 +290,7 @@
+ }
+ struct policy_worker {
+ 	pid_t pid;
++	u64 trace_id;
+ 	struct range_tree *rt;
+ 	struct mrange **mrs; // mset > fmem + smem + tset
+ 	mpsc_t samplech, excg_req, excg_rsp, splt_req;
+@@ -370,6 +374,18 @@
+ 		    q->nr_access > 0)
+ 			f -= 1;
+ 	}
++	/* Count both sides independently. The normal demotion isolation below is
++	 * capped by this PID's promotions, so it hides cold fast pages that could
++	 * instead be paired with hot slow pages from another PID in the Sandbox.
++	 * These counts are an upper bound: isolation and exchange can still fail.
++	 */
++	ulong hot_slow_pages = 0, cold_fast_pages = 0;
++	if (candidate_trace) {
++		for (ulong i = f; i < rlen; i++)
++			hot_slow_pages += mrs[i]->in_smem;
++		for (ulong i = 0; i < f; i++)
++			cold_fast_pages += mrs[i]->in_fmem;
++	}
+ 
+ 	pr_info("%s: rank ranges count=%lu smem=[0, %lu) fmem=[%lu, %lu) smem_cap=%luM fmem_cap=%luM smem=%luM fmem=%luM\n",
+ 		__func__, rt->len, s, f, rt->len, smem_cap << PAGE_SHIFT >> 20,
+@@ -403,6 +419,10 @@
+ 				       manage_folio, demo);
+ 		matched += got;
+ 	}
++	if (candidate_trace)
++		pr_info("demeter_candidate id=%llu pid=%d hot_slow=%lu cold_fast=%lu promotion=%lu demotion=%lu rlen=%lu boundary=%lu\n",
++			data->trace_id, data->pid, hot_slow_pages, cold_fast_pages,
++			candidates, matched, rlen, f);
+ 
+ 	// send exchange request
+ 	struct exch_req req = {
+@@ -555,6 +575,7 @@
+ 
+ 	struct policy_worker data = {
+ 		.pid = self->victim->tgid,
++		.trace_id = self->trace_id,
+ 		.rt = &rt,
+ 		.mrs = mrs,
+ 		.samplech = samplech,
+@@ -846,6 +867,9 @@
+ 		perf_event_release_kernel(e);
+ 		self->events[i] = NULL;
+ 	}
++	if (candidate_trace && self->start_time)
++		pr_info("demeter_target id=%llu pid=%d action=stop\n",
++			self->trace_id, self->victim ? self->victim->tgid : -1);
+ 	for (int i = 0; i < MAX_CHANS; i++) {
+ 		mpsc_t ch = self->chans[i];
+ 		!ch ?: mpsc_drop(ch);
+@@ -861,6 +885,7 @@
+ 	struct target *self = kzalloc(sizeof(*self), GFP_KERNEL);
+ 	if (!self)
+ 		return ERR_PTR(-ENOMEM);
++	self->trace_id = atomic64_inc_return(&target_trace_seq);
+ 	self->victim = find_get_task_by_vpid(pid);
+ 	if (!self->victim) {
+ 		target_drop(self);
+@@ -906,5 +931,8 @@
+ 	}
+ 	BUILD_BUG_ON(ARRAY_SIZE(target_stat_name) != MAX_STATS);
+ 	self->start_time = sched_clock();
++	if (candidate_trace)
++		pr_info("demeter_target id=%llu pid=%d action=start\n",
++			self->trace_id, pid);
+ 	return self;
+ }
+--- a/mm/PhaseTieing/module.c
++++ b/mm/PhaseTieing/module.c
+@@ -62,6 +62,11 @@
+ module_param_named(adaptive_range, adaptive_range, bool, 0644);
+ MODULE_PARM_DESC(adaptive_range,
+ 		 "Size initial ranges from the target address-space footprint");
++
++bool candidate_trace;
++module_param_named(candidate_trace, candidate_trace, bool, 0644);
++MODULE_PARM_DESC(candidate_trace,
++		 "Log per-PID hot slow and cold fast candidate counts in pages");
+ 
+ DEFINE_STATIC_KEY_TRUE(should_decay_sketch);
+ struct kmem_cache *list_head_cache;
+--- a/mm/PhaseTieing/module.h
++++ b/mm/PhaseTieing/module.h
+@@ -54,6 +54,7 @@
+ extern ulong rtree_exch_thresh;
+ extern ulong initial_range_size_mb;
+ extern bool adaptive_range;
++extern bool candidate_trace;
+ 
+ extern struct kmem_cache *list_head_cache;
+ 

@@ -1,0 +1,30 @@
+--- a/mm/PhaseTieing_alloc.c
++++ b/mm/PhaseTieing_alloc.c
+@@ -120,6 +120,7 @@
+ 	nodemask_t mask;
+ 	unsigned long flags;
+ 	bool fast;
++	gfp_t tier_gfp;
+ 	int nid;
+ 	if (order || (vma->vm_flags & VM_SHARED) ||
+ 	    vma->vm_mm != current->mm || vma->vm_policy ||
+@@ -140,12 +141,17 @@
+ 	}
+ 	fast = demeter_alloc_take(r);
+ 	nid = fast ? r->fast_node : r->slow_node;
++	/* A soft tier preference must not reclaim/OOM a restricted node for
++	 * every fault while another allowed node can satisfy the request.
++	 * Preserve the original reclaim flags for the native-policy fallback.
++	 */
++	tier_gfp = (gfp | __GFP_NORETRY | __GFP_NOWARN) & ~__GFP_RECLAIM;
+ 	nodes_clear(mask); node_set(nid, mask);
+-	*page = __alloc_pages_noprof(gfp | __GFP_NORETRY, 0, nid, &mask);
++	*page = __alloc_pages_noprof(tier_gfp, 0, nid, &mask);
+ 	if (!*page && fast) {
+ 		nid = r->slow_node;
+ 		nodes_clear(mask); node_set(nid, mask);
+-		*page = __alloc_pages_noprof(gfp, 0, nid, &mask);
++		*page = __alloc_pages_noprof(tier_gfp, 0, nid, &mask);
+ 	}
+ 	spin_lock_irqsave(&r->lock, flags);
+ 	if (!*page) {

@@ -1,0 +1,72 @@
+--- a/mm/page_reporting.c
++++ b/mm/page_reporting.c
+@@ -15,12 +15,45 @@
+ unsigned int page_reporting_order = -1;
+ 
+ static DEFINE_MUTEX(page_reporting_mutex);
++static DEFINE_MUTEX(page_reporting_work_mutex);
+ static struct page_reporting_dev_info __rcu *pr_dev_info __read_mostly;
+ static bool page_reporting_paused;
+ static unsigned long long page_reporting_runs;
+ static unsigned long long page_reporting_batches;
+ static unsigned long long page_reporting_fine_batches;
+ static unsigned long long page_reporting_pause_wait_ns;
++static unsigned long long page_reporting_barrier_wait_ns;
++
++static int page_reporting_barrier_set(const char *val,
++				      const struct kernel_param *kp)
++{
++	bool trigger;
++	u64 started;
++	int err = kstrtobool(val, &trigger);
++
++	if (err || !trigger)
++		return err;
++	started = ktime_get_ns();
++	/* The caller raises the floor first. Existing work must return its
++	 * isolated pages; queued work takes its floor after this lock.
++	 * Do not cancel or postpone coarse backing returns.
++	 */
++	mutex_lock(&page_reporting_work_mutex);
++	WRITE_ONCE(page_reporting_barrier_wait_ns,
++		   READ_ONCE(page_reporting_barrier_wait_ns) +
++		   ktime_get_ns() - started);
++	mutex_unlock(&page_reporting_work_mutex);
++	return 0;
++}
++
++static const struct kernel_param_ops page_reporting_barrier_ops = {
++	.set = page_reporting_barrier_set,
++};
++module_param_cb(page_reporting_barrier, &page_reporting_barrier_ops, NULL, 0200);
++MODULE_PARM_DESC(page_reporting_barrier,
++		"Wait for current reporting work without cancelling queued work");
++module_param_named(page_reporting_barrier_wait_ns,
++		   page_reporting_barrier_wait_ns, ullong, 0444);
+ 
+ static int page_reporting_pause_set(const char *val,
+ 				    const struct kernel_param *kp)
+@@ -416,10 +449,14 @@
+ 	int err = 0, state = PAGE_REPORTING_ACTIVE;
+ 	struct scatterlist *sgl;
+ 	struct zone *zone;
+-	unsigned int min_order = READ_ONCE(page_reporting_order);
++	unsigned int min_order;
++
++	mutex_lock(&page_reporting_work_mutex);
++	min_order = READ_ONCE(page_reporting_order);
+ 
+ 	if (READ_ONCE(page_reporting_paused)) {
+ 		atomic_set(&prdev->state, PAGE_REPORTING_IDLE);
++		mutex_unlock(&page_reporting_work_mutex);
+ 		return;
+ 	}
+ 	WRITE_ONCE(page_reporting_runs, READ_ONCE(page_reporting_runs) + 1);
+@@ -458,6 +495,7 @@
+ 	if (state == PAGE_REPORTING_REQUESTED &&
+ 	    !READ_ONCE(page_reporting_paused))
+ 		schedule_delayed_work(&prdev->work, PAGE_REPORTING_DELAY);
++	mutex_unlock(&page_reporting_work_mutex);
+ }
+ 
+ DEFINE_STATIC_KEY_FALSE(page_reporting_enabled);

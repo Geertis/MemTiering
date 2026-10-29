@@ -1,0 +1,21 @@
+--- a/arch/x86/kvm/pmu.c
++++ b/arch/x86/kvm/pmu.c
+@@ -229,6 +229,18 @@
+ 
+ 	event = perf_event_create_kernel_counter(&attr, -1, current,
+ 						 kvm_perf_overflow, pmc);
++	/* Some Intel CPUs accept per-task load-latency PEBS at precision 2,
++	 * but reject precision 3. A Guest event can otherwise appear enabled
++	 * while no backing Host counter exists. Preserve 3 where supported.
++	 */
++	if (IS_ERR(event) && PTR_ERR(event) == -EINVAL && pebs &&
++	    attr.precise_ip == 3 &&
++	    (attr.config & (ARCH_PERFMON_EVENTSEL_EVENT |
++			   ARCH_PERFMON_EVENTSEL_UMASK)) == 0x01cd) {
++		attr.precise_ip = 2;
++		event = perf_event_create_kernel_counter(&attr, -1, current,
++							 kvm_perf_overflow, pmc);
++	}
+ 	if (IS_ERR(event)) {
+ 		pr_debug_ratelimited("kvm_pmu: event creation failed %ld for pmc->idx = %d\n",
+ 			    PTR_ERR(event), pmc->idx);

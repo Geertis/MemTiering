@@ -1,0 +1,84 @@
+--- a/mm/PhaseTieing/sandbox.c
++++ b/mm/PhaseTieing/sandbox.c
+@@ -227,6 +227,7 @@
+ 	struct sb_lifetime lifetimes[SB_PROFILE_MAX];
+ 	struct sb_candidate hot[SB_POOL_MAX], cold[SB_POOL_MAX];
+ 	u64 sampled, stale, overflow, registrations, perf_errors, capacity_misses;
++	u64 registration_lifecycle_skips, registration_partial_unwinds;
+ 	u64 decisions, hot_candidates, cold_candidates, rejected_benefit;
+ 	u64 promotions, demotions, exchanges, cross_mm_exchanges, failed, invalid;
+ 	u64 worker_ns, worker_cpu_ns, migration_ns;
+@@ -552,6 +553,20 @@
+  return space;
+ }
+ 
++/* A task reference pins task_struct, not its execution or address space.
++ * perf registration can sleep: validate on both sides without holding the
++ * task lock across perf_event_create_kernel_counter(). */
++static bool sb_registration_live(struct sb_task *target)
++{
++	bool live;
++	task_lock(target->task);
++	live = pid_alive(target->task) &&
++		!(target->task->flags & PF_EXITING) &&
++		target->task->mm == target->space->mm;
++	task_unlock(target->task);
++	return live;
++}
++
+ static noinline void sb_discover(struct sandbox *sb)
+ {
+ 	struct task_struct *leader, *task, *found[SB_TASK_MAX];
+@@ -610,6 +625,8 @@
+ 		for (unsigned int e = 0; sandbox_sampling_enabled && e < MAX_EVENTS; e++) {
+ 			struct perf_event_attr attr = event_attrs[e];
+ 			struct perf_event *event;
++			if (!sb_registration_live(target))
++				goto lifecycle_skip;
+ 			if (e == EVENT_LOAD) {
+ 				attr.config = sandbox_load_event;
+ 				attr.sample_period = sandbox_load_sample_period;
+@@ -624,18 +641,33 @@
+ 			event = perf_event_create_kernel_counter(&attr, -1, target->task,
+ 							 sb_overflow, target);
+ 			if (IS_ERR(event)) {
++				/* Only a confirmed exit/exec is a benign lifecycle race.
++				 * ESRCH for a still-live matching task remains an error. */
++				if (PTR_ERR(event) == -ESRCH && !sb_registration_live(target))
++					goto lifecycle_skip;
+ 				sb->perf_errors++;
+ 				pr_warn_ratelimited("demeter_sandbox: PEBS pid=%d event=%u error=%ld\n",
+ 						target->task->pid, e, PTR_ERR(event));
+ 				continue;
+ 			}
+ 			target->events[e] = event;
++			if (!sb_registration_live(target))
++				goto lifecycle_skip;
+ 			if (sb->phase) {
+ 				perf_event_enable(event);
+ 				target->enabled = true;
+ 			}
+ 		}
+ 		sb->registrations++;
++		continue;
++lifecycle_skip:
++		sb->registration_lifecycle_skips++;
++		for (unsigned int e = 0; e < MAX_EVENTS; e++)
++			if (target->events[e]) {
++				sb->registration_partial_unwinds++;
++				break;
++			}
++		sb_task_drop(sb, target);
+ 	}
+ 	list_for_each_entry_safe(target, tmp, &sb->tasks, link)
+ 		if (!target->seen)
+@@ -1796,6 +1828,9 @@
+ 		"sample_record_bytes %zu\nsample_ring_bytes %u\nsample_format_errors %llu\n",
+ 		sb_sample_bytes(), SB_RING_BYTES, s->sample_format_errors);
+ 	ret += sysfs_emit_at(buf, ret, "sampling_enabled %u\n", sandbox_sampling_enabled);
++	ret += sysfs_emit_at(buf, ret,
++		"registration_lifecycle_skips %llu\nregistration_partial_unwinds %llu\n",
++		s->registration_lifecycle_skips, s->registration_partial_unwinds);
+ 	ret += sysfs_emit_at(buf, ret, "fast_node %d\nslow_node %d\nfuture_benefit %u\n",
+ 		sandbox_fast_node, sandbox_slow_node, sandbox_future_benefit);
+ 	ret += sysfs_emit_at(buf, ret, "sample_batch_enabled %u\nsamples_received %llu\nsample_cache_hits %llu\nsample_drain_ns %llu\nsample_budget_hits %llu\nsample_max_age_ns %llu\n",

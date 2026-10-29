@@ -1,0 +1,136 @@
+--- a/mm/PhaseTieing/balloon.c
++++ b/mm/PhaseTieing/balloon.c
+@@ -44,6 +44,16 @@
+ #define VIRTIO_BALLOON_OOM_NR_PAGES 256
+ #define VIRTIO_BALLOON_OOM_NOTIFY_PRIORITY 80
+ 
++/* Successful host acknowledgements, not unique released/reserved pages. */
++static unsigned long reporting_batches, reporting_pages;
++static unsigned long reporting_fast_pages, reporting_slow_pages;
++static unsigned long reporting_failures;
++module_param(reporting_batches, ulong, 0444);
++module_param(reporting_pages, ulong, 0444);
++module_param(reporting_fast_pages, ulong, 0444);
++module_param(reporting_slow_pages, ulong, 0444);
++module_param(reporting_failures, ulong, 0444);
++
+ static const struct virtio_device_id id_table[] = {
+ 	{ VIRTIO_ID_BALLOON, VIRTIO_DEV_ANY_ID },
+ 	{ 0 },
+@@ -128,6 +138,8 @@
+ 	atomic_t should_exit;
+ 	struct notifier_block oom_notification;
+ 	wait_queue_head_t ack;
++	struct page_reporting_dev_info reporting;
++	bool reporting_registered;
+ 	struct virtio_balloon_inner {
+ 		struct mutex lock;
+ 		// The actual size of pages in the balloon
+@@ -259,7 +271,7 @@
+ 	}
+ 	return alloc_pages_node(nid,
+ 				balloon_mapping_gfp_mask() | __GFP_NOMEMALLOC |
+-					__GFP_NORETRY | __GFP_NOWARN,
++					__GFP_NORETRY | __GFP_NOWARN | __GFP_THISNODE,
+ 				0);
+ }
+ 
+@@ -472,12 +484,38 @@
+ 	vb_stats(vb);
+ }
+ 
+-static void vb_work_fn_reporting(struct work_struct *work)
++static int vb_report_free_pages(struct page_reporting_dev_info *reporting,
++				struct scatterlist *sg, unsigned int nents)
+ {
+ 	struct virtio_balloon *vb =
+-		container_of(work, struct virtio_balloon, work[Q_REPORTING]);
+-
+-	// TODO
++		container_of(reporting, struct virtio_balloon, reporting);
++	struct virtqueue *vq = vb->vqs[Q_REPORTING];
++	struct scatterlist *entry;
++	unsigned int unused, i;
++	int err;
++
++	/* The reporting core isolates these free pages until the host ACK.
++	 * Returning early would expose pages still being discarded by the host.
++	 * This queue has one producer: the serialized reporting core worker.
++	 */
++	err = virtqueue_add_inbuf(vq, sg, nents, vb, GFP_NOWAIT | __GFP_NOWARN);
++	if (err) {
++		reporting_failures++;
++		return err;
++	}
++	virtqueue_kick(vq);
++	wait_event(vb->ack, virtqueue_get_buf(vq, &unused));
++	for_each_sg(sg, entry, nents, i) {
++		unsigned long pages = entry->length >> PAGE_SHIFT;
++		int nid = page_to_nid(sg_page(entry));
++		reporting_pages += pages;
++		if (nid == first_node(node_states[N_MEMORY]))
++			reporting_fast_pages += pages;
++		else if (nid == last_node(node_states[N_MEMORY]))
++			reporting_slow_pages += pages;
++	}
++	reporting_batches++;
++	return 0;
+ }
+ 
+ static void vb_work_fn_hetero_inflate(struct work_struct *work)
+@@ -578,7 +616,6 @@
+ 		[Q_INFLATE]   = &vb->work[Q_INFLATE],
+ 		[Q_DEFLATE]   = &vb->work[Q_DEFLATE],
+ 		[Q_STATS]     = vb_acked(vb, F_STATS) ? &vb->work[Q_STATS] : NULL,
+-		[Q_REPORTING] = vb_acked(vb, F_REPORT) ? &vb->work[Q_REPORTING] : NULL,
+ 		[Q_HETERO_INFLATE] = vb_acked(vb, F_HETERO) ? &vb->work[Q_HETERO_INFLATE] : NULL,
+ 		[Q_HETERO_DEFLATE] = vb_acked(vb, F_HETERO) ? &vb->work[Q_HETERO_DEFLATE] : NULL,
+ 	};
+@@ -586,7 +623,6 @@
+ 		[Q_INFLATE]   = vb_work_fn_inflate,
+ 		[Q_DEFLATE]   = vb_work_fn_deflate,
+ 		[Q_STATS]     = vb_acked(vb, F_STATS) ? vb_work_fn_stats : NULL,
+-		[Q_REPORTING] = vb_acked(vb, F_REPORT) ? vb_work_fn_reporting : NULL,
+ 		[Q_HETERO_INFLATE] = vb_acked(vb, F_HETERO) ? vb_work_fn_hetero_inflate : NULL,
+ 		[Q_HETERO_DEFLATE] = vb_acked(vb, F_HETERO) ? vb_work_fn_hetero_deflate : NULL,
+ 	};
+@@ -677,6 +713,18 @@
+ 		page_tracker_init(&inner->tracking);
+ 	}
+ 	virtio_device_ready(vdev);
++	if (vb_acked(vb, F_REPORT)) {
++		if (virtqueue_get_vring_size(vb->vqs[Q_REPORTING]) <
++		    PAGE_REPORTING_CAPACITY) {
++			err = -ENOSPC;
++			goto err_reporting;
++		}
++		vb->reporting.report = vb_report_free_pages;
++		err = page_reporting_register(&vb->reporting);
++		if (err)
++			goto err_reporting;
++		vb->reporting_registered = true;
++	}
+ 	dev_info(&vdev->dev, "virtio-balloon device registered\n");
+ 	// stats queue require an initial stat item to kick-start
+ 	vb_stats_initial(vb);
+@@ -686,6 +734,8 @@
+ 	dev_info(&vb->vdev->dev, "%s done\n", __func__);
+ 	return 0;
+ 
++err_reporting:
++	virtio_reset_device(vdev);
+ err_oom:
+ 	if (vb_acked(vb, F_OOM))
+ 		unregister_oom_notifier(&vb->oom_notification);
+@@ -696,8 +746,9 @@
+ 
+ static void vb_stop(struct virtio_balloon *vb)
+ {
+-	if (vb_acked(vb, F_REPORT)) {
+-		// TODO: page_reporting_unregister()
++	if (vb->reporting_registered) {
++		page_reporting_unregister(&vb->reporting);
++		vb->reporting_registered = false;
+ 	}
+ 	if (vb_acked(vb, F_OOM)) {
+ 		unregister_oom_notifier(&vb->oom_notification);

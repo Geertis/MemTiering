@@ -1,0 +1,513 @@
+--- a/mm/PhaseTieing/sandbox.c
++++ b/mm/PhaseTieing/sandbox.c
+@@ -18,6 +18,7 @@
+ #include <linux/sched/cputime.h>
+ #include <linux/sort.h>
+ #include <linux/xarray.h>
++#include <linux/vmalloc.h>
+ #include <../internal.h>
+ #include "module.h"
+ #include "mpsc.h"
+@@ -51,6 +52,25 @@
+ static unsigned long sandbox_initial_copy_ns = 20000;
+ module_param(sandbox_initial_copy_ns, ulong, 0644);
+ 
++/* Diagnostics are opt-in, bounded and observational: policy is unchanged. */
++static bool sandbox_diagnostics;
++module_param(sandbox_diagnostics, bool, 0444);
++#define SB_DIAG_MAX 4096
++#define SB_DIAG_FIELDS 24
++#define SB_RESOLVE_ROLES 4
++#define SB_RESOLVE_REASONS 8
++struct sb_diag_record {
++ u64 time_ns, serial, decision, phase_seq, generation, peer_generation;
++ unsigned int phase, kind, event, n;
++ char comm[TASK_COMM_LEN], peer_comm[TASK_COMM_LEN];
++ u64 values[SB_DIAG_FIELDS];
++};
++enum { SB_D_CREATE=1, SB_D_DROP, SB_D_CANDIDATES, SB_D_DECISION,
++       SB_D_MOVE, SB_D_EXCHANGE, SB_D_CLEAR };
++enum { SB_R_SAMPLE, SB_R_HOT, SB_R_COLD, SB_R_VALIDATE };
++enum { SB_R_VMA, SB_R_ABSENT, SB_R_FILE, SB_R_LARGE, SB_R_SHARED,
++       SB_R_KSM, SB_R_FOREIGN, SB_R_OK };
++
+ struct sb_region {
+ 	unsigned long base, last_addr, last_pfn, pfn_addr;
+ 	/* rate/history are accesses per millisecond, independent of wake cadence. */
+@@ -64,7 +84,7 @@
+ 	struct sandbox *sandbox;
+ 	struct mmu_notifier notifier;
+ 	atomic64_t mapping_epoch;
+-	u64 epoch_seen, generation, born_ns;
++	u64 epoch_seen, generation, born_ns, diag_samples;
+ 	struct xarray regions;
+ 	unsigned int nr_regions, refs, kind;
+ 	unsigned long cursor;
+@@ -109,6 +129,10 @@
+ 	u64 promotions, demotions, exchanges, cross_mm_exchanges, failed, invalid;
+ 	u64 worker_ns, worker_cpu_ns, migration_ns;
+ 	atomic64_t sampling_ns;
++ struct sb_diag_record *diag;
++ unsigned int diag_head, diag_tail;
++ u64 diag_serial, diag_dropped;
++ u64 resolve[SB_RESOLVE_ROLES][SB_RESOLVE_REASONS];
+ };
+ static DEFINE_MUTEX(sb_lock);
+ static struct kobject *sb_root;
+@@ -123,6 +147,33 @@
+ extern bool folio_isolate_lru(struct folio *);
+ extern void folio_putback_lru(struct folio *);
+ 
++static void sb_diag_emit(struct sandbox *sb, struct sb_mm *space,
++ struct sb_mm *peer, unsigned int event, const u64 *values, unsigned int n)
++{
++ struct sb_diag_record *r;
++ if (!sb->diag)
++  return;
++ if (sb->diag_head - sb->diag_tail == SB_DIAG_MAX) {
++  sb->diag_dropped++;
++  sb->diag_tail++;
++ }
++ r = &sb->diag[sb->diag_head++ % SB_DIAG_MAX];
++ memset(r, 0, sizeof(*r));
++ r->time_ns = ktime_get_ns(); r->serial = ++sb->diag_serial;
++ r->decision = sb->decisions; r->phase_seq = sb->phase_seq;
++ r->phase = sb->phase; r->kind = sb->kind; r->event = event;
++ if (space) { r->generation = space->generation; memcpy(r->comm, space->comm, TASK_COMM_LEN); }
++ if (peer) { r->peer_generation = peer->generation; memcpy(r->peer_comm, peer->comm, TASK_COMM_LEN); }
++ r->n = min(n, (unsigned int)SB_DIAG_FIELDS);
++ memcpy(r->values, values, r->n * sizeof(u64));
++}
++#define SB_DIAG(sb, space, peer, event, ...) do { \
++ if (sandbox_diagnostics) { \
++  const u64 _args[] = { __VA_ARGS__ }; \
++  sb_diag_emit(sb, space, peer, event, _args, ARRAY_SIZE(_args)); \
++ } \
++} while (0)
++
+ bool sandbox_enabled(void)
+ {
+ 	return READ_ONCE(nr_sandboxes) != 0;
+@@ -147,7 +198,10 @@
+ static void sb_clear_regions(struct sandbox *sb, struct sb_mm *space)
+ {
+ 	unsigned long index;
+-	struct sb_region *region;
++ struct sb_region *region;
++ if (space->nr_regions)
++  SB_DIAG(sb, space, NULL, SB_D_CLEAR, space->nr_regions,
++          space->epoch_seen, atomic64_read(&space->mapping_epoch));
+ 	xa_for_each(&space->regions, index, region)
+ 		kfree(region);
+ 	xa_destroy(&space->regions);
+@@ -181,6 +235,8 @@
+ static void sb_space_drop(struct sandbox *sb, struct sb_mm *space)
+ {
+ 	struct sb_lifetime *p = sb_profile(sb, space, space->kind, true);
++ SB_DIAG(sb, space, NULL, SB_D_DROP, ktime_get_ns() - space->born_ns,
++         space->nr_regions, space->refs, space->diag_samples);
+ 	/* Only complete mm lifetimes are observations. Controller teardown must
+ 	 * not train the duration predictor with censored observations.
+ 	 */
+@@ -265,7 +321,8 @@
+ 		return NULL;
+ 	}
+ 	list_add_tail(&space->link, &sb->spaces);
+-	return space;
++ SB_DIAG(sb, space, NULL, SB_D_CREATE, task->pid, space->kind);
++ return space;
+ }
+ 
+ static void sb_discover(struct sandbox *sb)
+@@ -406,43 +463,42 @@
+ 		r->last_sample_ns = sample.time_ns;
+ 		r->kind = sb->kind;
+ 		sb->sampled++;
++  if (sandbox_diagnostics) match->diag_samples++;
+ 	}
+ }
+ 
+ /* Caller holds mmap_read_lock. FOLL_GET references never escape candidate
+  * generation. Only private, writable, order-0 anonymous folios are supported.
+  */
+-static struct folio *sb_resolve(struct sb_mm *space, unsigned long addr)
+-{
+-	struct vm_area_struct *vma = vma_lookup(space->mm, addr);
+-	struct page *page;
+-	struct folio *folio;
+-	struct mem_cgroup *memcg;
+-	bool owned;
+-	if (!vma || !(vma->vm_flags & VM_WRITE) || (vma->vm_flags & (VM_SHARED | VM_LOCKED)))
+-		return NULL;
+-	page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP);
+-	if (IS_ERR_OR_NULL(page))
+-		return NULL;
+-	folio = page_folio(page);
+-	if (!folio_test_anon(folio) || folio_order(folio) ||
+-	    folio_mapcount(folio) != 1 || folio_test_ksm(folio)) {
+-		folio_put(folio);
+-		return NULL;
+-	}
+-	/* A task can retain pages charged before joining the Sandbox, or share
+-	 * its mm with a task in another cgroup. Those pages cannot fund this
+-	 * Sandbox's quota ledger and must not be managed by this executor.
+-	 */
+-	rcu_read_lock();
+-	memcg = folio_memcg(folio);
+-	owned = memcg && cgroup_is_descendant(memcg->css.cgroup, space->sandbox->cgroup);
+-	rcu_read_unlock();
+-	if (!owned) {
+-		folio_put(folio);
+-		return NULL;
+-	}
+-	return folio;
++static struct folio *sb_resolve(struct sb_mm *space, unsigned long addr, unsigned int role)
++{
++ struct vm_area_struct *vma = vma_lookup(space->mm, addr);
++ struct page *page;
++ struct folio *folio = NULL;
++ struct mem_cgroup *memcg;
++ unsigned int reason;
++ bool owned;
++ if (!vma || !(vma->vm_flags & VM_WRITE) || (vma->vm_flags & (VM_SHARED | VM_LOCKED))) {
++  reason = SB_R_VMA; goto reject;
++ }
++ page = follow_page(vma, addr, FOLL_GET | FOLL_DUMP);
++ if (IS_ERR_OR_NULL(page)) { reason = SB_R_ABSENT; goto reject; }
++ folio = page_folio(page);
++ if (!folio_test_anon(folio)) { reason = SB_R_FILE; goto reject; }
++ if (folio_order(folio)) { reason = SB_R_LARGE; goto reject; }
++ if (folio_mapcount(folio) != 1) { reason = SB_R_SHARED; goto reject; }
++ if (folio_test_ksm(folio)) { reason = SB_R_KSM; goto reject; }
++ rcu_read_lock();
++ memcg = folio_memcg(folio);
++ owned = memcg && cgroup_is_descendant(memcg->css.cgroup, space->sandbox->cgroup);
++ rcu_read_unlock();
++ if (!owned) { reason = SB_R_FOREIGN; goto reject; }
++ if (sandbox_diagnostics) space->sandbox->resolve[role][SB_R_OK]++;
++ return folio;
++reject:
++ if (sandbox_diagnostics) space->sandbox->resolve[role][reason]++;
++ if (folio) folio_put(folio);
++ return NULL;
+ }
+ 
+ static u64 sb_benefit(struct sandbox *sb, struct sb_mm *space,
+@@ -496,7 +552,9 @@
+ 		spaces++;
+ 	list_for_each_entry(space, &sb->spaces, link) {
+ 		struct sb_region *r;
+-		unsigned long index;
++  u64 info[14] = {0};
++  unsigned int hot_before = *hot_count, cold_before = *cold_count;
++  unsigned long index;
+ 		unsigned int per_mm = max(1U, sandbox_scan_pages / max(spaces, 1U));
+ 		unsigned int hot_limit = min(SB_POOL_MAX, *hot_count +
+ 					      max(1U, SB_POOL_MAX / max(spaces, 1U)));
+@@ -518,12 +576,14 @@
+ 					r->history[sb->kind] = (3 * r->history[sb->kind] + r->rate) / 4;
+ 			}
+ 			benefit = sb_benefit(sb, space, r, now);
+-			if (!benefit || *hot_count == hot_limit)
+-				continue;
++			if (!benefit || *hot_count == hot_limit) {
++    if (!benefit) info[6]++;
++    continue;
++   }
++   info[13] = max(info[13], benefit);
+ 			/* Detect COW/PFN replacement at the sampled address. */
+-			sampled = sb_resolve(space, r->last_addr);
+-			if (!sampled)
+-				continue;
++			sampled = sb_resolve(space, r->last_addr, SB_R_SAMPLE);
++			if (!sampled) { info[8]++; continue; }
+ 			if (r->last_pfn && r->pfn_addr == r->last_addr &&
+ 			    r->last_pfn != folio_pfn(sampled)) {
+ 				r->rate = r->accesses = 0;
+@@ -535,12 +595,13 @@
+ 			folio_put(sampled);
+ 			if (benefit <= sb->copy_ns) {
+ 				sb->rejected_benefit++;
+-				continue;
++    info[7]++;
++    continue;
+ 			}
+ 			for (unsigned long addr = r->base;
+ 			     addr < r->base + (1UL << SB_REGION_SHIFT) && *hot_count < hot_limit;
+ 			     addr += PAGE_SIZE) {
+-				struct folio *folio = sb_resolve(space, addr);
++				struct folio *folio = sb_resolve(space, addr, SB_R_HOT);
+ 				if (!folio)
+ 					continue;
+ 				if (folio_nid(folio) == SMEM_NID)
+@@ -576,9 +637,11 @@
+ 					}
+ 					scan_left--;
+ 					per_mm--;
+-					folio = sb_resolve(space, addr);
+-					if (!folio)
+-						continue;
++					info[2]++;
++     folio = sb_resolve(space, addr, SB_R_COLD);
++     if (!folio) { info[5]++; continue; }
++     if (folio_nid(folio) == FMEM_NID) info[3]++;
++     if (folio_nid(folio) == SMEM_NID) info[4]++;
+ 					r = xa_load(&space->regions, addr >> SB_REGION_SHIFT);
+ 					benefit = r ? sb_benefit(sb, space, r, now) : 0;
+ 					if (folio_nid(folio) == FMEM_NID &&
+@@ -597,8 +660,12 @@
+ 				space->cursor = 0;
+ 		}
+ 		mmap_read_unlock(space->mm);
+-	}
+-	sort(sb->hot, *hot_count, sizeof(sb->hot[0]), sb_hot_cmp, NULL);
++  info[0] = *hot_count - hot_before; info[1] = *cold_count - cold_before;
++  info[9] = space->nr_regions; info[10] = now - space->born_ns;
++  info[11] = space->refs; info[12] = space->diag_samples;
++  if (sandbox_diagnostics) sb_diag_emit(sb, space, NULL, SB_D_CANDIDATES, info, ARRAY_SIZE(info));
++ }
++ sort(sb->hot, *hot_count, sizeof(sb->hot[0]), sb_hot_cmp, NULL);
+ 	sort(sb->cold, *cold_count, sizeof(sb->cold[0]), sb_cold_cmp, NULL);
+ 	sb->hot_candidates += *hot_count;
+ 	sb->cold_candidates += *cold_count;
+@@ -610,7 +677,7 @@
+ 	if (!c->space->refs || c->epoch != atomic64_read(&c->space->mapping_epoch))
+ 		goto invalid;
+ 	mmap_read_lock(c->space->mm);
+-	folio = sb_resolve(c->space, c->addr);
++	folio = sb_resolve(c->space, c->addr, SB_R_VALIDATE);
+ 	mmap_read_unlock(c->space->mm);
+ 	if (!folio)
+ 		goto invalid;
+@@ -639,9 +706,11 @@
+ 	struct folio *folio = sb_validate(sb, c, up ? SMEM_NID : FMEM_NID);
+ 	u64 started;
+ 	int err;
+-	if (!folio)
+-		return -ENOENT;
+-	started = ktime_get_ns();
++	if (!folio) {
++  SB_DIAG(sb, c->space, NULL, SB_D_MOVE, up, (u64)(s64)-ENOENT, 0, c->benefit_ns, sb->copy_ns);
++  return -ENOENT;
++ }
++ started = ktime_get_ns();
+ 	/* The helper consumes the FOLL_GET reference, including error paths. */
+ 	err = demeter_migrate_folio_to_node(folio, up ? FMEM_NID : SMEM_NID);
+ 	sb->migration_ns += ktime_get_ns() - started;
+@@ -662,7 +731,9 @@
+ 		/* Back off failed ranges too; retrying every tick cannot repay. */
+ 		sb_mark_moved(c, now);
+ 	}
+-	return err;
++ SB_DIAG(sb, c->space, NULL, SB_D_MOVE, up, (u64)(s64)err, 1,
++         c->benefit_ns, sb->copy_ns);
++ return err;
+ }
+ 
+ static bool sb_isolate(struct folio *folio)
+@@ -689,20 +760,25 @@
+ 	struct folio *p = sb_validate(sb, hot, SMEM_NID), *d;
+ 	u64 started;
+ 	int err;
+-	if (!p)
+-		return -ENOENT;
++	if (!p) {
++  SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)-ENOENT, 0, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
++  return -ENOENT;
++ }
+ 	d = sb_validate(sb, cold, FMEM_NID);
+ 	if (!d) {
+ 		folio_put(p);
+-		return -ENOENT;
++  SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)-ENOENT, 1, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
++  return -ENOENT;
+ 	}
+ 	if (!sb_isolate(p)) {
+ 		folio_put(d);
+-		return -EBUSY;
++  SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)-EBUSY, 2, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
++  return -EBUSY;
+ 	}
+ 	if (!sb_isolate(d)) {
+ 		sb_putback(p);
+-		return -EBUSY;
++  SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)-EBUSY, 3, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
++  return -EBUSY;
+ 	}
+ 	started = ktime_get_ns();
+ 	err = folio_exchange_isolated(p, d, MIGRATE_ASYNC);
+@@ -717,7 +793,8 @@
+ 	sb_putback(d);
+ 	sb_mark_moved(hot, now);
+ 	sb_mark_moved(cold, now);
+-	return err;
++ SB_DIAG(sb, hot->space, cold->space, SB_D_EXCHANGE, (u64)(s64)err, 4, hot->benefit_ns, cold->benefit_ns, sb->copy_ns);
++ return err;
+ }
+ 
+ static void sb_decide(struct sandbox *sb, u64 now)
+@@ -725,37 +802,66 @@
+ 	unsigned int nh, nc, h = 0, c = 0, budget = sandbox_batch_pages;
+ 	u64 elapsed = sb->decision_ns ? now - sb->decision_ns : sandbox_period_ms * SB_NS_MS;
+ 	sb->decision_ns = now;
+-	sb->decisions++;
+-	sb_candidates(sb, now, elapsed, &nh, &nc);
++	u64 info[20] = {sb->fast_pages, sb->quota_pages, 0, 0, sb->copy_ns};
++ struct sb_mm *space;
++ sb->decisions++;
++ list_for_each_entry(space, &sb->spaces, link) info[5]++;
++ sb_candidates(sb, now, elapsed, &nh, &nc);
+ 	/* Missing telemetry suspends actions. A stale quota may remain reserved,
+ 	 * but no unaccounted promotion or speculative freeing is permitted.
+ 	 */
+-	if (now - sb->feedback_ns > 500 * SB_NS_MS)
+-		return;
++	info[2] = nh; info[3] = nc;
++ if (sandbox_diagnostics)
++  for (unsigned int hi=0; hi<nh; hi++)
++   for (unsigned int ci=0; ci<nc; ci++)
++    if (sb->hot[hi].space != sb->cold[ci].space) {
++     info[16]++;
++     if (sb->hot[hi].benefit_ns > sb->cold[ci].benefit_ns + 2 * sb->copy_ns) info[17]++;
++    }
++ if (now - sb->feedback_ns > 500 * SB_NS_MS) {
++  info[14] = 1; goto diag_done;
++ }
+ 	while (budget && c < nc && sb->fast_pages > sb->quota_pages) {
+-		sb_move(sb, &sb->cold[c++], false, now);
++		info[7]++;
++  sb_move(sb, &sb->cold[c++], false, now);
+ 		budget--;
+ 	}
+ 	if (!sb->phase)
+-		return;
+-	while (budget && h < nh) {
++  goto diag_done;
++ while (budget && h < nh) {
+ 		struct sb_candidate *hot = &sb->hot[h++];
+ 		if (sb->fast_pages < sb->quota_pages) {
+-			if (hot->benefit_ns > sb->copy_ns)
+-				sb_move(sb, hot, true, now);
++			if (hot->benefit_ns > sb->copy_ns) {
++    info[6]++;
++    sb_move(sb, hot, true, now);
++   }
+ 			else
+ 				sb->rejected_benefit++;
+ 		} else if (c < nc && budget >= 2) {
+ 			struct sb_candidate *cold = &sb->cold[c++];
++   info[15]++;
++   if (sandbox_diagnostics && hot->space == cold->space)
++    for (unsigned int ci=c; ci<nc; ci++)
++     if (hot->space != sb->cold[ci].space &&
++         hot->benefit_ns > sb->cold[ci].benefit_ns + 2 * sb->copy_ns) { info[10]++; break; }
+ 			if (hot->benefit_ns > cold->benefit_ns + 2 * sb->copy_ns) {
+-				sb_exchange(sb, hot, cold, now);
++				info[8]++;
++    info[9] += hot->space != cold->space;
++    sb_exchange(sb, hot, cold, now);
+ 				budget--;
+-			} else
+-				sb->rejected_benefit++;
+-		} else
+-			break;
+-		budget--;
+-	}
++			} else {
++    sb->rejected_benefit++;
++    info[11]++;
++   }
++  } else {
++   if (c >= nc) info[12]++;
++   break;
++  }
++  budget--;
++ }
++diag_done:
++ info[13] = budget == 0; info[18] = sb->fast_pages; info[19] = sb->copy_ns;
++ if (sandbox_diagnostics) sb_diag_emit(sb, NULL, NULL, SB_D_DECISION, info, ARRAY_SIZE(info));
+ }
+ 
+ static int sb_work(void *unused)
+@@ -820,7 +926,8 @@
+ 	mutex_unlock(&sb_lock);
+ 	if (sb->samples)
+ 		mpsc_drop(sb->samples);
+-	kfree(sb);
++	vfree(sb->diag);
++ kfree(sb);
+ }
+ #define SB_FROM_KOBJ(k) container_of(k, struct sandbox, kobj)
+ static ssize_t cgroup_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+@@ -963,13 +1070,47 @@
+ 	mutex_unlock(&sb_lock);
+ 	return ret;
+ }
++/* One consumer drains the bounded FIFO. Task names are hexadecimal so the
++ * CSV cannot be corrupted by commas/newlines in user-chosen comm strings. */
++static ssize_t events_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++ struct sandbox *sb = SB_FROM_KOBJ(kobj);
++ int n = 0;
++ mutex_lock(&sb_lock);
++ while (sb->diag && sb->diag_tail != sb->diag_head && PAGE_SIZE - n >= 768) {
++  struct sb_diag_record *r = &sb->diag[sb->diag_tail++ % SB_DIAG_MAX];
++  n += sysfs_emit_at(buf, n, "%llu,%llu,%llu,%llu,%u,%u,%u,%llu,%llu,%*phN,%*phN",
++   r->time_ns, r->serial, r->decision, r->phase_seq, r->phase, r->kind,
++   r->event, r->generation, r->peer_generation, TASK_COMM_LEN, r->comm,
++   TASK_COMM_LEN, r->peer_comm);
++  for (unsigned int i=0; i<r->n; i++) n += sysfs_emit_at(buf, n, ",%llu", r->values[i]);
++  n += sysfs_emit_at(buf, n, "\n");
++ }
++ mutex_unlock(&sb_lock);
++ return n;
++}
++static ssize_t diagnostics_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
++{
++ struct sandbox *sb = SB_FROM_KOBJ(kobj);
++ int n;
++ mutex_lock(&sb_lock);
++ n = sysfs_emit(buf, "enabled %u\nevents %llu\ndropped %llu\npending %u\n",
++   sandbox_diagnostics, sb->diag_serial, sb->diag_dropped, sb->diag_head-sb->diag_tail);
++ for (unsigned int r=0; r<SB_RESOLVE_ROLES; r++)
++  for (unsigned int why=0; why<SB_RESOLVE_REASONS; why++)
++   n += sysfs_emit_at(buf,n,"resolve_%u_%u %llu\n",r,why,sb->resolve[r][why]);
++ mutex_unlock(&sb_lock);
++ return n;
++}
++static struct kobj_attribute sb_events = __ATTR(events, 0400, events_show, NULL);
++static struct kobj_attribute sb_diagnostics = __ATTR_RO(diagnostics);
+ static struct kobj_attribute sb_cgroup = __ATTR_RW_MODE(cgroup, 0600);
+ static struct kobj_attribute sb_phase = __ATTR_RW_MODE(phase, 0600);
+ static struct kobj_attribute sb_quota = __ATTR_RW_MODE(quota_pages, 0600);
+ static struct kobj_attribute sb_residency = __ATTR(residency, 0200, NULL, residency_store);
+ static struct kobj_attribute sb_stats = __ATTR_RO(stats);
+ static struct attribute *sb_attrs[] = {
+-	&sb_cgroup.attr, &sb_phase.attr, &sb_quota.attr, &sb_residency.attr, &sb_stats.attr, NULL,
++	&sb_cgroup.attr, &sb_phase.attr, &sb_quota.attr, &sb_residency.attr, &sb_stats.attr, &sb_events.attr, &sb_diagnostics.attr, NULL,
+ };
+ ATTRIBUTE_GROUPS(sb);
+ static const struct kobj_type sb_ktype = {
+@@ -1006,14 +1147,19 @@
+ 			err = -ENOMEM;
+ 			break;
+ 		}
+-		sb->id = i;
+-		sb->copy_ns = sandbox_initial_copy_ns;
++		if (sandbox_diagnostics) {
++   sb->diag = vzalloc(sizeof(*sb->diag) * SB_DIAG_MAX);
++   if (!sb->diag) { kfree(sb); err = -ENOMEM; break; }
++  }
++  sb->id = i;
++  sb->copy_ns = sandbox_initial_copy_ns;
+ 		sb->phase_start_ns = ktime_get_ns();
+ 		INIT_LIST_HEAD(&sb->tasks);
+ 		INIT_LIST_HEAD(&sb->spaces);
+ 		sb->samples = mpsc_new(SB_RING_BYTES);
+ 		if (!sb->samples) {
+-			kfree(sb);
++   vfree(sb->diag);
++   kfree(sb);
+ 			err = -ENOMEM;
+ 			break;
+ 		}
