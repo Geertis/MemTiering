@@ -1,0 +1,118 @@
+{
+  "classification": "startup-resource-admission-blocked",
+  "label": "v9-ssd-P-d6-n8-r1",
+  "strategy": "P",
+  "medium": "ssd",
+  "n": 8,
+  "repetition": 1,
+  "driver_result": "driver-error",
+  "correctness_valid": 0,
+  "valid": false,
+  "minimum_live_vmms": 0,
+  "maximum_live_vmms": 8,
+  "l1_oom": false,
+  "l1_swap_peak_bytes": 0,
+  "parent_charge_peak_mib": 5362.75390625,
+  "minimum_available_mib": 314.375,
+  "observation_points": 4723,
+  "reference": null,
+  "latency": null,
+  "business_failure": false,
+  "diagnosis": "Fixed 1GiB software reserve, not L1 OOM, prevented workload admission after READY.",
+  "rows": [
+    {
+      "slot": 0,
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 1,
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 2,
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 3,
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 4,
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 5,
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 6,
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 7,
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    }
+  ],
+  "mechanism": {
+    "pool_ticks": 3645,
+    "budget_mib": 0,
+    "budget_ceiling_mib": null,
+    "minimum_budget_mib": 0,
+    "minimum_physical_headroom_mib": 501.66796875,
+    "total_grants_within_budget": true,
+    "guest_global_grant_acknowledgements": 0,
+    "distinct_effective_targets_mib": [],
+    "distinct_grants_mib": [],
+    "per_slot_cold_rss_peak_bytes": 0,
+    "per_slot_swap_peak_bytes": 0,
+    "actual_cold_tier_used": false
+  },
+  "evidence_hashes": {
+    "audit.json": "f20c505bd71f6fcf0abaf48d87ac63b71e93c3efc4916dc7fcb8361660ec6cf5",
+    "status.json": "72e2e144982ac185eb91fca439ea048012402183e80727dcd0fcdd2a91703d21",
+    "l1-resources.jsonl.gz": "f6c88ea856ec647be25a8a1a5ea5fec0807c7c73a772d67c95bcc4092bca3559",
+    "global-pool.jsonl.gz": "26e8740254857337c49a2bbb0975ebbc5b6c68865363611f64e6f78d345aa834",
+    "l1-dmesg.log": "82d1ce17dcdaf0b8abd737b11e38ae57f50c2c6701e182c0e9db2b17e98ab4b3"
+  },
+  "source_manifest_sha256": "7e63e2c20a5d100a0f930f83dff57e0b1e1b1e677d2212f4b1b59a429356b325"
+}

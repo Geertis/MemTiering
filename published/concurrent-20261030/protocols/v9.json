@@ -1,0 +1,42 @@
+{
+  "version": "v9-startup-admission",
+  "created_epoch": 1793363588.5521128,
+  "authorization": "Existing instruction to diagnose any failure and optimize system problems immediately.",
+  "initial": {
+    "n": 8,
+    "vcpus": 36,
+    "dram_gib": 6,
+    "cxl_gib": 0,
+    "aggregate_ssd_swap_gib": 64,
+    "guest_vcpus": 4,
+    "guest_nominal_gib": 12
+  },
+  "treatments": [
+    "PhaseTieing-CXL",
+    "same-budget static-CXL",
+    "PhaseTieing-SSD",
+    "same-budget static-SSD"
+  ],
+  "cold_resources": "64GiB shared per cohort, never per VM; CXL adds real physical RAM; SSD is storage",
+  "global_quota": "existing waterfill + settle_grants, guest grants delivered over existing telemetry channel; credit comes from actual controlled DRAM residency",
+  "pressure": "per-node fast memory use, controlled residency, PSI, reclaim; compare same medium/capacity/layout",
+  "no_timeouts": true,
+  "stop_on_anomaly": true,
+  "known_limit": "nested PEBS unsupported; no claim of sampled promotion/exchange unless measured",
+  "old_baseline": "v3 completed cohorts retained only as correctness and performance references",
+  "scan_dram_gib": [
+    6
+  ],
+  "scan_repetitions": 1,
+  "scope": "SSD P/F only, N8 6GiB startup-admission regression; fixed 1GiB reserve and identical replay/cold capacity.",
+  "comparison": "P/F share committed ceiling, identical fixed 1GiB safety reserve and matched arrivals.",
+  "known_measurement_limit": "Replay result serialization remains in workload cgroup; report natural trace E2E separately from driver completion and diagnose post-replay overhead",
+  "previous_completed": "v8 CXL P/F both 8/8; v8 SSD P rejected during startup before release without OOM.",
+  "regression": "8GiB CXL OOM fixed by adaptive managed-capacity guard in v6; v7 increases pressure",
+  "common_guard": "managed fast capacity, runtime nonpayload occupancy, 1GiB reserve; shrink immediately, grow only on observed physical headroom; settle physical credit for both policies",
+  "control_label": "F: phase-blind equal share under same common host reserve guard; not the immutable-v5 static-quota treatment",
+  "previous_version": "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/results/PhaseTieing-concurrent-20261030-v8-pressure-6g",
+  "numerator_definition": "DRAM-only denominator; CXL/SSD capacity ratios separate; offline host numerator still under profiling review",
+  "code_delta": "Defer initial ceiling until all READY + physical budget >= N*16MiB. Zero startup observation emits provisional zero grants, does not throw or freeze a zero ceiling. Trace release waits for admission.",
+  "operational_stop_policy": "No automatic workflow cutoff. The v7 F/SSD severe timeout is explicitly user-directed, right-censored, and a control performance result rather than a PhaseTieing P failure."
+}

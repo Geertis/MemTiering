@@ -1,33 +1,37 @@
-version,label,dram_gib,n,medium,strategy,repetition,outcome,correct_instances,l1_oom,minimum_live_vmms,batch_s,trace_makespan_s,service_sum_s,budget_ceiling_mib,minimum_budget_mib,grant_acknowledgements,actual_cold_tier_used,control_definition,observed_duration_s,user_directed_stop
-v4,v4-cxl-P-d12-n8-r1,12,8,cxl,P,1,passed,8,False,8,999.4989576339722,993.2496935140001,1712.5076105330002,7088,7088,8,True,immutable uniform upper quota,,
-v4,v4-cxl-F-d12-n8-r1,12,8,cxl,F,1,passed,8,False,8,987.1493678092957,980.660339875,1667.9054110630004,7088,7088,8,True,immutable uniform upper quota,,
-v4,v4-ssd-P-d12-n8-r1,12,8,ssd,P,1,passed,8,False,8,1138.5664427280426,1054.805836405,1950.7309697910011,6080,6080,8,True,immutable uniform upper quota,,
-v4,v4-ssd-F-d12-n8-r1,12,8,ssd,F,1,passed,8,False,8,1005.9396965503693,1000.2708093,2025.3459007690008,6080,6080,8,True,immutable uniform upper quota,,
-v4,v4-cxl-P-d12-n8-r2,12,8,cxl,P,2,passed,8,False,8,998.6887593269348,992.565686975,1692.6422928319994,7088,7088,8,True,immutable uniform upper quota,,
-v4,v4-cxl-F-d12-n8-r2,12,8,cxl,F,2,passed,8,False,8,987.259489774704,980.982147799,1657.5396505500003,7088,7088,8,True,immutable uniform upper quota,,
-v4,v4-ssd-P-d12-n8-r2,12,8,ssd,P,2,passed,8,False,8,1141.8048686981201,1056.7106675769999,1945.6413921439994,6080,6080,8,True,immutable uniform upper quota,,
-v4,v4-ssd-F-d12-n8-r2,12,8,ssd,F,2,passed,8,False,8,1004.7831654548645,999.355391512,2009.0536334380004,6080,6080,8,True,immutable uniform upper quota,,
-v4,v4-cxl-P-d12-n8-r3,12,8,cxl,P,3,passed,8,False,8,997.5314316749573,991.197487389,1688.4766607060008,7088,7088,8,True,immutable uniform upper quota,,
-v4,v4-cxl-F-d12-n8-r3,12,8,cxl,F,3,passed,8,False,8,989.5955023765564,983.2371837540001,1681.7522521420012,7088,7088,8,True,immutable uniform upper quota,,
-v4,v4-ssd-P-d12-n8-r3,12,8,ssd,P,3,passed,8,False,8,1143.6334435939789,1057.0609347719999,1961.3104665679996,6080,6080,8,True,immutable uniform upper quota,,
-v4,v4-ssd-F-d12-n8-r3,12,8,ssd,F,3,passed,8,False,8,1003.6040284633636,998.648801323,2016.7927481329998,6080,6080,8,True,immutable uniform upper quota,,
-v5,v5-cxl-P-d10-n8-r1,10,8,cxl,P,1,passed,8,False,8,1000.3564856052399,994.09066019,1708.1204079629986,5040,5040,8,True,immutable uniform upper quota,,
-v5,v5-cxl-F-d10-n8-r1,10,8,cxl,F,1,passed,8,False,8,988.9214150905609,982.5327201780001,1668.9021244160003,5040,5040,8,True,immutable uniform upper quota,,
-v5,v5-ssd-P-d10-n8-r1,10,8,ssd,P,1,passed,8,False,8,1152.023845911026,1069.223929345,2096.928844173001,3984,3984,8,True,immutable uniform upper quota,,
-v5,v5-ssd-F-d10-n8-r1,10,8,ssd,F,1,passed,8,False,8,1040.651386499405,1034.481835418,2051.076931786001,3984,3984,8,True,immutable uniform upper quota,,
-v5,v5-cxl-P-d8-n8-r1,8,8,cxl,P,1,resource-failure,0,True,,,,,2992,2992,0,True,immutable uniform upper quota,,
-v5,v5-cxl-F-d8-n8-r1,8,8,cxl,F,1,not-run,,,,,,,,,,,immutable uniform upper quota,,
-v5,v5-ssd-P-d8-n8-r1,8,8,ssd,P,1,not-run,,,,,,,,,,,immutable uniform upper quota,,
-v5,v5-ssd-F-d8-n8-r1,8,8,ssd,F,1,not-run,,,,,,,,,,,immutable uniform upper quota,,
-v6,v6-cxl-P-d8-n8-r1,8,8,cxl,P,1,passed,8,False,8,1003.4626867771149,996.5289261410002,1718.5830481129997,2464,880,8,True,phase-blind equal share with common adaptive reserve,,
-v6,v6-cxl-F-d8-n8-r1,8,8,cxl,F,1,passed,8,False,8,1017.7021491527557,1011.1010024599999,1739.150536038,2464,1472,8,True,phase-blind equal share with common adaptive reserve,,
-v6,v6-ssd-P-d8-n8-r1,8,8,ssd,P,1,passed,8,False,8,1189.3158218860626,1099.4544275520002,2311.764019569001,1552,464,8,True,phase-blind equal share with common adaptive reserve,,
-v6,v6-ssd-F-d8-n8-r1,8,8,ssd,F,1,passed,8,False,8,2337.966246843338,2287.5483871190004,4466.205928717002,1488,816,8,True,phase-blind equal share with common adaptive reserve,,
-v7,v7-cxl-P-d7-n8-r1,7,8,cxl,P,1,passed,8,False,8,1011.2487621307373,1004.86464446,1724.052403608,1456,144,8,True,phase-blind equal share with common adaptive reserve,,
-v7,v7-cxl-F-d7-n8-r1,7,8,cxl,F,1,passed,8,False,8,1023.7450838088989,1017.3349747359999,1737.5998820579991,1456,464,8,True,phase-blind equal share with common adaptive reserve,,
-v7,v7-ssd-P-d7-n8-r1,7,8,ssd,P,1,passed,8,False,8,2301.6772334575653,2079.466787619,4276.383063992,512,0,8,True,phase-blind equal share with common adaptive reserve,,
-v7,v7-ssd-F-d7-n8-r1,7,8,ssd,F,1,severe-timeout,6,False,8,,,,512,0,8,True,phase-blind equal share with common adaptive reserve,11652.709509134293,True
-v8,v8-cxl-P-d6-n8-r1,6,8,cxl,P,1,running,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,
-v8,v8-cxl-F-d6-n8-r1,6,8,cxl,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,
-v8,v8-ssd-P-d6-n8-r1,6,8,ssd,P,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,
-v8,v8-ssd-F-d6-n8-r1,6,8,ssd,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,
+version,label,dram_gib,n,medium,strategy,repetition,outcome,correct_instances,l1_oom,minimum_live_vmms,batch_s,trace_makespan_s,service_sum_s,budget_ceiling_mib,minimum_budget_mib,grant_acknowledgements,actual_cold_tier_used,control_definition,observed_duration_s,user_directed_stop,reserve_policy,physical_reserve_mib
+v4,v4-cxl-P-d12-n8-r1,12,8,cxl,P,1,passed,8,False,8,999.4989576339722,993.2496935140001,1712.5076105330002,7088,7088,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-cxl-F-d12-n8-r1,12,8,cxl,F,1,passed,8,False,8,987.1493678092957,980.660339875,1667.9054110630004,7088,7088,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-ssd-P-d12-n8-r1,12,8,ssd,P,1,passed,8,False,8,1138.5664427280426,1054.805836405,1950.7309697910011,6080,6080,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-ssd-F-d12-n8-r1,12,8,ssd,F,1,passed,8,False,8,1005.9396965503693,1000.2708093,2025.3459007690008,6080,6080,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-cxl-P-d12-n8-r2,12,8,cxl,P,2,passed,8,False,8,998.6887593269348,992.565686975,1692.6422928319994,7088,7088,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-cxl-F-d12-n8-r2,12,8,cxl,F,2,passed,8,False,8,987.259489774704,980.982147799,1657.5396505500003,7088,7088,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-ssd-P-d12-n8-r2,12,8,ssd,P,2,passed,8,False,8,1141.8048686981201,1056.7106675769999,1945.6413921439994,6080,6080,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-ssd-F-d12-n8-r2,12,8,ssd,F,2,passed,8,False,8,1004.7831654548645,999.355391512,2009.0536334380004,6080,6080,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-cxl-P-d12-n8-r3,12,8,cxl,P,3,passed,8,False,8,997.5314316749573,991.197487389,1688.4766607060008,7088,7088,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-cxl-F-d12-n8-r3,12,8,cxl,F,3,passed,8,False,8,989.5955023765564,983.2371837540001,1681.7522521420012,7088,7088,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-ssd-P-d12-n8-r3,12,8,ssd,P,3,passed,8,False,8,1143.6334435939789,1057.0609347719999,1961.3104665679996,6080,6080,8,True,immutable uniform upper quota,,,fixed,1024
+v4,v4-ssd-F-d12-n8-r3,12,8,ssd,F,3,passed,8,False,8,1003.6040284633636,998.648801323,2016.7927481329998,6080,6080,8,True,immutable uniform upper quota,,,fixed,1024
+v5,v5-cxl-P-d10-n8-r1,10,8,cxl,P,1,passed,8,False,8,1000.3564856052399,994.09066019,1708.1204079629986,5040,5040,8,True,immutable uniform upper quota,,,fixed,1024
+v5,v5-cxl-F-d10-n8-r1,10,8,cxl,F,1,passed,8,False,8,988.9214150905609,982.5327201780001,1668.9021244160003,5040,5040,8,True,immutable uniform upper quota,,,fixed,1024
+v5,v5-ssd-P-d10-n8-r1,10,8,ssd,P,1,passed,8,False,8,1152.023845911026,1069.223929345,2096.928844173001,3984,3984,8,True,immutable uniform upper quota,,,fixed,1024
+v5,v5-ssd-F-d10-n8-r1,10,8,ssd,F,1,passed,8,False,8,1040.651386499405,1034.481835418,2051.076931786001,3984,3984,8,True,immutable uniform upper quota,,,fixed,1024
+v5,v5-cxl-P-d8-n8-r1,8,8,cxl,P,1,resource-failure,0,True,,,,,2992,2992,0,True,immutable uniform upper quota,,,fixed,1024
+v5,v5-cxl-F-d8-n8-r1,8,8,cxl,F,1,not-run,,,,,,,,,,,immutable uniform upper quota,,,fixed,
+v5,v5-ssd-P-d8-n8-r1,8,8,ssd,P,1,not-run,,,,,,,,,,,immutable uniform upper quota,,,fixed,
+v5,v5-ssd-F-d8-n8-r1,8,8,ssd,F,1,not-run,,,,,,,,,,,immutable uniform upper quota,,,fixed,
+v6,v6-cxl-P-d8-n8-r1,8,8,cxl,P,1,passed,8,False,8,1003.4626867771149,996.5289261410002,1718.5830481129997,2464,880,8,True,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v6,v6-cxl-F-d8-n8-r1,8,8,cxl,F,1,passed,8,False,8,1017.7021491527557,1011.1010024599999,1739.150536038,2464,1472,8,True,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v6,v6-ssd-P-d8-n8-r1,8,8,ssd,P,1,passed,8,False,8,1189.3158218860626,1099.4544275520002,2311.764019569001,1552,464,8,True,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v6,v6-ssd-F-d8-n8-r1,8,8,ssd,F,1,passed,8,False,8,2337.966246843338,2287.5483871190004,4466.205928717002,1488,816,8,True,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v7,v7-cxl-P-d7-n8-r1,7,8,cxl,P,1,passed,8,False,8,1011.2487621307373,1004.86464446,1724.052403608,1456,144,8,True,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v7,v7-cxl-F-d7-n8-r1,7,8,cxl,F,1,passed,8,False,8,1023.7450838088989,1017.3349747359999,1737.5998820579991,1456,464,8,True,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v7,v7-ssd-P-d7-n8-r1,7,8,ssd,P,1,passed,8,False,8,2301.6772334575653,2079.466787619,4276.383063992,512,0,8,True,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v7,v7-ssd-F-d7-n8-r1,7,8,ssd,F,1,severe-timeout,6,False,8,,,,512,0,8,True,phase-blind equal share with common adaptive reserve,11652.709509134293,True,fixed,1024
+v8,v8-cxl-P-d6-n8-r1,6,8,cxl,P,1,passed,8,False,8,1271.2999393939972,1263.155064242,2095.2124274039993,448,0,8,True,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v8,v8-cxl-F-d6-n8-r1,6,8,cxl,F,1,passed,8,False,8,1038.2364106178284,1031.9626321869998,1773.0267487110002,448,0,8,True,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v8,v8-ssd-P-d6-n8-r1,6,8,ssd,P,1,startup-budget-check-rejected,0,False,0,,,,,,0,False,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v8,v8-ssd-F-d6-n8-r1,6,8,ssd,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,fixed,
+v9,v9-ssd-P-d6-n8-r1,6,8,ssd,P,1,startup-resource-admission-blocked,0,False,0,,,,,0,0,False,phase-blind equal share with common adaptive reserve,,,fixed,1024
+v9,v9-ssd-F-d6-n8-r1,6,8,ssd,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,fixed,
+v10,v10-ssd-P-d6-n8-r1,6,8,ssd,P,1,running,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,
+v10,v10-ssd-F-d6-n8-r1,6,8,ssd,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,

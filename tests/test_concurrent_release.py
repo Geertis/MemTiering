@@ -24,7 +24,7 @@ class ConcurrentReleaseTest(unittest.TestCase):
 
     def test_pairs_share_arrivals_and_have_no_execution_deadline(self):
         c = self.settings()
-        c.update(dram_gib=[7, 8, 10, 12], repetitions=[1, 2, 3])
+        c.update(dram_gib=[7, 8, 10, 12], repetitions=[1, 2, 3],media=['cxl','ssd'])
         matrix = runner.matrix(c)
         self.assertEqual(len(matrix), 48)
         for start in range(0, len(matrix), 4):
@@ -43,8 +43,8 @@ class ConcurrentReleaseTest(unittest.TestCase):
             self.assertFalse((base / 'storage').exists())
             self.assertFalse((root / 'bootstrap-complete.json').exists())
             program = ('import pressure; from environment import environment; '
-                       'assert len(pressure.plans()) == 4; '
-                       'assert pressure.ROOT.name == "PhaseTieing-repro-6g"')
+                       'assert len(pressure.plans()) == 2; '
+                       f'assert pressure.ROOT.name == {c["run_name"]!r}')
             subprocess.run(['python3', '-B', '-c', program], cwd=h, check=True,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             for path in base.rglob('*.py'):

@@ -28,6 +28,8 @@ def render(folder):
         severe=next((v for v in chosen if v['outcome']=='severe-timeout'),None)
         if severe:
             return f"严重超时 ≥{severe['observed_duration_s']/60:.1f} min；{severe.get('correct_instances',0)}/8 已审计"
+        if any(v['outcome'] in ['startup-budget-check-rejected','startup-resource-admission-blocked'] for v in chosen):
+            return '启动预算检查退出；轨迹未释放'
         return '运行中' if any(v['outcome'] == 'running' for v in chosen) else '未运行'
 
     table = ['|版本|DRAM|冷层|每策略重复|P 批次完成|F 批次完成|',
@@ -37,13 +39,14 @@ def render(folder):
     pending = sum(v['outcome'] == 'not-run' for v in rows)
     running = sum(v['outcome'] == 'running' for v in rows)
     severe=sum(v['outcome']=='severe-timeout' for v in rows)
-    failed = sum(v['outcome'] not in ['passed', 'not-run', 'running','severe-timeout'] for v in rows)
+    startup=sum(v['outcome'] in ['startup-budget-check-rejected','startup-resource-admission-blocked'] for v in rows)
+    failed = sum(v['outcome'] not in ['passed', 'not-run', 'running','severe-timeout','startup-budget-check-rejected','startup-resource-admission-blocked'] for v in rows)
     text = f'''固定 8 个并发 Sandbox、每个 4 vCPU / 12 GiB 名义内存，共享 L1 的 36 vCPU、6–12 GiB DRAM 与 64 GiB CXL 或 SSD，以下按实际冻结版本分别给出容量探索结果。
 
 # 并发实验结果快照
 
 截取时间：**{snapshot['as_of']}**。{len(rows)} 个计划点中，**{snapshot['completed_cohorts']} 组通过、{snapshot['complete_instances']} 个轨迹实例正确完成**；
-{failed} 组资源失败，{severe} 组对照严重超时，{running} 组运行中，{pending} 组未运行。
+{failed} 组资源失败，{startup} 组启动预算检查退出，{severe} 组对照严重超时，{running} 组运行中，{pending} 组未运行。
 用户终止的对照中另有 {snapshot.get('additional_complete_instances_in_stopped_cohorts',0)} 条已审计完成轨迹，单列保留，不计为整组通过。
 通过组均无 L1 OOM、8 个 Guest 确认全局配额，且观测到实际使用冷层；运行中不计成功。
 不同版本不合并估计性能；单次探索不作为稳定性或显著性结论。
@@ -65,6 +68,15 @@ ceiling 是受控 payload 的全组上限，不是 L1 DRAM 容量；宿主、VMM
 这项 F 对照的性能退化不登记为 PhaseTieing P 失败，不推断其有限完成时间或 OOM。
 终止决定见 `terminations/`。下一轮 v8 固定 N=8、64 GiB 冷层，将共享 DRAM 降至 6 GiB；
 沿用 v7 策略及配对到达序列，只使用新配置和标签，不把用户终止变成自动工具超时规则。
+
+v8 的 6 GiB CXL P/F 均为 8/8 正确完成、无 L1 OOM。SSD-P 在轨迹释放前，因首个初始化预算为 0 触发驱动异常，
+全组被驱动清理；这不是业务执行失败，也没有观测到 L1 OOM。v9 独立回归 SSD P/F：
+固定 1 GiB 预留不变，先记录零预算并等待；在全部 READY 且真实预算满足入场要求后，才冻结 ceiling 和释放轨迹。
+初始时预算不足是否只是暂态，仍由回归结果判断，不能把等待初始化说成已经成功承载。
+
+v9 全 READY 后仍被固定预留挡住，作为准备阶段诊断保留。独立 v10 将物理预留改为 managed DRAM 的 1/16，
+向下取整至 16 MiB，并限制在 256–1024 MiB；当前 6 GiB 点约 368 MiB。P/F 匹配相同预留和 ceiling。
+硬件配置不变，但预留策略变更，因此不可将 v10 与早期固定预留版本混为相同处理。
 
 ## 12 GiB 三重复：资源节约与时间代价
 

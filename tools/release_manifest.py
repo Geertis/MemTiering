@@ -18,7 +18,7 @@ def main():
         'project': 'PhaseTieing',
         'scope': 'runtime, kernel backend, VMM, evaluation source and report summaries',
         'revisions': {'ssd': 'v66-compact', 'cxl': 'v67-compact', 'linux': '6.10',
-                      'cloud_hypervisor': '36.0.0', 'concurrent': 'v8-pressure-6g-v7-matched-ceiling-policy'},
+                      'cloud_hypervisor': '36.0.0', 'concurrent': 'v10-ready-gated-scaled-reserve'},
         'backend_source_included': True,
         'prebuilt_backend_included': False,
         'files': inventory,

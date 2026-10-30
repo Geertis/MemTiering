@@ -1,6 +1,6 @@
 {
   "lab_root": "/absolute/path/to/owned/PhaseTieing-lab",
-  "run_name": "PhaseTieing-repro-6g",
+  "run_name": "PhaseTieing-repro-scaled-6g",
   "dram_gib": [
     6
   ],
@@ -9,7 +9,6 @@
   ],
   "n": 8,
   "media": [
-    "cxl",
     "ssd"
   ],
   "strategies": [
@@ -82,5 +81,6 @@
       "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1": "/absolute/path/to/frozen-images/pydicom-2065-data-20261009-v1.ext4",
       "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590": "/absolute/path/to/frozen-images/streamlink-3485-compatible.ext4"
     }
-  }
+  },
+  "reserve_policy": "scaled"
 }

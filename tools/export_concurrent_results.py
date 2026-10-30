@@ -15,11 +15,14 @@ CAMPAIGNS={
  'v6':'PhaseTieing-concurrent-20261030-v6-adaptive-reserve',
  'v7':'PhaseTieing-concurrent-20261030-v7-pressure-7g',
  'v8':'PhaseTieing-concurrent-20261030-v8-pressure-6g',
+ 'v9':'PhaseTieing-concurrent-20261030-v9-startup-admission',
+ 'v10':'PhaseTieing-concurrent-20261030-v10-scaled-reserve',
 }
 FIELDS=['version','label','dram_gib','n','medium','strategy','repetition','outcome',
  'correct_instances','l1_oom','minimum_live_vmms','batch_s','trace_makespan_s',
  'service_sum_s','budget_ceiling_mib','minimum_budget_mib','grant_acknowledgements',
- 'actual_cold_tier_used','control_definition','observed_duration_s','user_directed_stop']
+ 'actual_cold_tier_used','control_definition','observed_duration_s','user_directed_stop',
+ 'reserve_policy','physical_reserve_mib']
 
 
 def read(path):return json.loads(Path(path).read_text())
@@ -38,13 +41,14 @@ def export(source,output):
     for version,name in CAMPAIGNS.items():
         root=source/name
         if not (root/'matrix.json').exists():continue
-        state=read(root/'status.json');snapshot[version]={k:state.get(k) for k in ['stage','active','completed','failed','severe_timeouts','updated_epoch']}
+        state=read(root/'status.json');snapshot[version]={k:state.get(k) for k in ['stage','active','completed','failed','startup_blocked','severe_timeouts','updated_epoch']}
         save(output/'protocols'/f'{version}.json',read(root/'protocol.json'))
         save(output/'source-manifests'/f'{version}.json',read(root/'source-manifest.json'))
         for spec in read(root/'matrix.json'):
             folder=root/'cohorts'/spec['label'];ap=folder/'audit.json'
             row={k:spec.get(k) for k in ['label','dram_gib','n','medium','strategy','repetition']}
             row.update(version=version,outcome='running' if state.get('active')==spec['label'] else 'not-run',
+                reserve_policy=spec.get('reserve_policy','fixed'),
                 control_definition='immutable uniform upper quota' if version in ['v4','v5'] else 'phase-blind equal share with common adaptive reserve')
             if ap.exists():
                 audit=read(ap);group=read(folder/'status.json');mp=folder/'mechanism-audit.json';m=read(mp) if mp.exists() else {}
@@ -56,6 +60,9 @@ def export(source,output):
                     minimum_budget_mib=m.get('minimum_budget_mib',m.get('budget_mib')),
                     grant_acknowledgements=m.get('guest_global_grant_acknowledgements'),
                     actual_cold_tier_used=m.get('actual_cold_tier_used'))
+                row['physical_reserve_mib']=m.get('reserve_mib',1024 if spec.get('reserve_policy','fixed')=='fixed' else None)
+                if group.get('result')=='startup-resource-admission-blocked' and not audit['l1_oom']:
+                    row['outcome']='startup-resource-admission-blocked'
                 if 'all_done_epoch' in group:
                     row['batch_s']=group['all_done_epoch']-group['release_epoch']
                 complete=[v for v in audit['rows'] if v.get('complete') and 'e2e_s' in v]

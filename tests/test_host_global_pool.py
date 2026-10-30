@@ -7,12 +7,83 @@ import unittest
 
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'runtime/host'))
-from global_pool import GlobalPool, MIB, physical_guard, policy
+from global_pool import GlobalPool, MIB, physical_guard, physical_reserve, policy
 
 H = Path(__file__).resolve().parents[1] / 'experiments/phase'
 
 
 class GlobalPoolTest(unittest.TestCase):
+    def test_scaled_reserve_admits_observed_small_host_without_inventing_credit(self):
+        point=dict(memory=dict(MemTotal=int(5901.4453125*MIB),MemFree=int(720.03125*MIB),
+            Cached=0,Shmem=0,Buffers=0,SReclaimable=0))
+        samples=[dict(guest=dict(capacity_state=dict(active=False,
+            measurement=dict(fast_bytes=0)))) for _ in range(8)]
+        for strategy in ['P','F']:
+            spec=dict(n=8,medium='ssd',strategy=strategy,dram_gib=6,reserve_policy='scaled')
+            self.assertEqual(physical_reserve(point,spec),368)
+            with tempfile.TemporaryDirectory() as tmp:
+                p=GlobalPool(Path(tmp),spec)
+                p.tick(point,samples)
+                self.assertEqual(p.budget,352)
+                row=json.loads((Path(tmp)/'global-quotas.json').read_text())
+                self.assertEqual(row['reserve_mib'],368)
+                self.assertLessEqual(sum(row['grants_mib'].values()),row['safe_payload_budget_mib'])
+                point['memory']['MemFree']=128*MIB
+                p.next_tick=0;p.tick(point,samples)
+                self.assertEqual(p.budget,0)
+                p.close()
+            point['memory']['MemFree']=int(720.03125*MIB)
+
+    def test_scaled_reserve_bounds_and_explicit_pair_match(self):
+        for capacity,reserve in [(2048,256),(6144,384),(65536,1024)]:
+            point=dict(memory=dict(MemTotal=capacity*MIB))
+            self.assertEqual(physical_reserve(point,dict(medium='ssd',reserve_policy='scaled')),reserve)
+            self.assertEqual(physical_reserve(point,dict(medium='ssd')),1024)
+        point=dict(memory=dict(MemTotal=5901*MIB))
+        self.assertEqual(physical_reserve(point,dict(medium='ssd',reserve_policy='scaled',physical_reserve_mib=384)),384)
+        with self.assertRaises(ValueError):
+            physical_reserve(point,dict(medium='ssd',reserve_policy='scaled',physical_reserve_mib=0))
+
+    def test_zero_startup_budget_waits_for_ready_without_freezing_zero_ceiling(self):
+        point=dict(memory=dict(MemTotal=int(5901.4453125*MIB),MemFree=int(560.375*MIB),Cached=0,Shmem=0,Buffers=0,SReclaimable=0))
+        samples=[dict(guest=dict(capacity_state=dict(active=False,
+            measurement=dict(fast_bytes=0)))) for _ in range(8)]
+        with tempfile.TemporaryDirectory() as tmp:
+            p=GlobalPool(Path(tmp),dict(n=8,medium='ssd',strategy='P',dram_gib=6))
+            p.tick(point,samples,allow_initial_commit=False)
+            self.assertIsNone(p.budget)
+            self.assertIsNone(p.ceiling)
+            row=json.loads((Path(tmp)/'global-quotas.json').read_text())
+            self.assertEqual(row['admission_state'],'bootstrap-wait')
+            self.assertEqual(sum(row['grants_mib'].values()),0)
+            point['memory']['MemFree']=2048*MIB
+            p.next_tick=0
+            p.tick(point,samples,allow_initial_commit=False)
+            self.assertIsNone(p.budget)  # Physical headroom alone is not READY.
+            p.next_tick=0
+            p.tick(point,samples,allow_initial_commit=True)
+            self.assertEqual(p.budget,1024)
+            self.assertEqual(p.ceiling,1024)
+            p.close()
+
+    def test_paired_ceiling_is_preserved_across_zero_budget_boot_observation(self):
+        point=dict(memory=dict(MemTotal=6144*MIB,MemFree=512*MIB,Cached=0,Shmem=0,Buffers=0,SReclaimable=0))
+        samples=[dict(guest=dict(capacity_state=dict(active=False,
+            measurement=dict(fast_bytes=0)))) for _ in range(8)]
+        with tempfile.TemporaryDirectory() as tmp:
+            p=GlobalPool(Path(tmp),dict(n=8,medium='ssd',strategy='F',dram_gib=6,payload_budget_mib=512))
+            p.tick(point,samples)
+            self.assertIsNone(p.budget)
+            point['memory']['MemFree']=2048*MIB
+            p.next_tick=0
+            p.tick(point,samples)
+            self.assertEqual(p.ceiling,512)
+            self.assertEqual(p.budget,512)
+            row=json.loads((Path(tmp)/'global-quotas.json').read_text())
+            self.assertTrue(row['initial_budget_ready'])
+            self.assertEqual(sum(row['grants_mib'].values()),512)
+            p.close()
+
     def test_matched_ceiling_survives_higher_initial_overhead(self):
         point=dict(memory=dict(MemTotal=8192*MIB,MemFree=2048*MIB,
             Cached=0,Shmem=0,Buffers=0,SReclaimable=0))
