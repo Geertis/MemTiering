@@ -14,11 +14,12 @@ CAMPAIGNS={
  'v5':'PhaseTieing-concurrent-20261030-v5-capacity-scan',
  'v6':'PhaseTieing-concurrent-20261030-v6-adaptive-reserve',
  'v7':'PhaseTieing-concurrent-20261030-v7-pressure-7g',
+ 'v8':'PhaseTieing-concurrent-20261030-v8-pressure-6g',
 }
 FIELDS=['version','label','dram_gib','n','medium','strategy','repetition','outcome',
  'correct_instances','l1_oom','minimum_live_vmms','batch_s','trace_makespan_s',
  'service_sum_s','budget_ceiling_mib','minimum_budget_mib','grant_acknowledgements',
- 'actual_cold_tier_used','control_definition']
+ 'actual_cold_tier_used','control_definition','observed_duration_s','user_directed_stop']
 
 
 def read(path):return json.loads(Path(path).read_text())
@@ -36,7 +37,8 @@ def export(source,output):
         'comparison_scope','original_observable_fidelity','signature']
     for version,name in CAMPAIGNS.items():
         root=source/name
-        state=read(root/'status.json');snapshot[version]={k:state.get(k) for k in ['stage','active','completed','failed','updated_epoch']}
+        if not (root/'matrix.json').exists():continue
+        state=read(root/'status.json');snapshot[version]={k:state.get(k) for k in ['stage','active','completed','failed','severe_timeouts','updated_epoch']}
         save(output/'protocols'/f'{version}.json',read(root/'protocol.json'))
         save(output/'source-manifests'/f'{version}.json',read(root/'source-manifest.json'))
         for spec in read(root/'matrix.json'):
@@ -68,6 +70,13 @@ def export(source,output):
                 save(output/'audits'/(spec['label']+'.json'),clean)
                 for v in complete:
                     instances.append(dict(version=version,label=spec['label'],**{k:v[k] for k in row_fields if k in v and k!='signature'}))
+            decision_path=folder/'user-stop.json'
+            if decision_path.exists():
+                decision=read(decision_path)
+                if decision.get('classification')=='severe-timeout' and decision.get('user_directed'):
+                    row.update(outcome='severe-timeout',observed_duration_s=decision['observed_duration_s'],user_directed_stop=True)
+                    row.pop('batch_s',None)
+                    save(output/'terminations'/(spec['label']+'.json'),decision)
             rows.append(row)
     output.mkdir(parents=True,exist_ok=True)
     with (output/'matrix.csv').open('w',newline='') as f:
@@ -78,6 +87,7 @@ def export(source,output):
     save(output/'snapshot.json',dict(as_of=now,campaigns=snapshot,
         completed_cohorts=sum(v['outcome']=='passed' for v in rows),
         complete_instances=sum(v.get('correct_instances',0) for v in rows if v['outcome']=='passed'),
+        additional_complete_instances_in_stopped_cohorts=sum(v.get('correct_instances',0) for v in rows if v['outcome']=='severe-timeout'),
         note='Version-separated snapshot; running and unrun points are not successes. Raw binaries/traces/log streams are external.'))
     bad=source/CAMPAIGNS['v5']/'cohorts/v5-cxl-P-d8-n8-r1/l1-dmesg.log'
     lines=[s for s in bad.read_text().splitlines() if any(k in s for k in ['invoked oom-killer','oom-kill:','Out of memory:'])]
@@ -94,7 +104,7 @@ def export(source,output):
         profile['source_file_sha256']=sha(candidate)
         profile['ratio_note']='DRAM-only denominator; old total-RAM CXL ratio fields omitted as superseded. Numerator remains an unapproved cache-inclusive profiling candidate.'
         profile['candidate_dram_only_ratios']=[dict(dram_gib=d,
-            ratio=profile['n8_candidate_peak_sum_gib']/d) for d in [12,10,8,7]]
+            ratio=profile['n8_candidate_peak_sum_gib']/d) for d in [12,10,8,7,6]]
         save(output/'offline-host-profile-candidate.json',profile)
     from render_concurrent_summary import render
     render(output)

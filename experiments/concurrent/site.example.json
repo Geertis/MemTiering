@@ -1,8 +1,8 @@
 {
   "lab_root": "/absolute/path/to/owned/PhaseTieing-lab",
-  "run_name": "PhaseTieing-repro-7g",
+  "run_name": "PhaseTieing-repro-6g",
   "dram_gib": [
-    7
+    6
   ],
   "repetitions": [
     1

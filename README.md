@@ -23,6 +23,8 @@ Runtime 事件感知资源阶段，在多个 Sandbox 之间分配 DRAM，在每�
 配对 ceiling 修复与无执行时限回放。复现从
 [实验设置与步骤](docs/concurrent-reproduction.md) 开始；
 [结果包](published/concurrent-20261030/README.md) 附逐组矩阵、逐实例指标和 OOM 证据。
+7 GiB SSD 均分对照按用户指示单列为严重超时（6/8 条轨迹完成、无 L1 OOM）；
+下一轮 v8 沿用 v7 策略，开始 6 GiB DRAM / 64 GiB 冷层、N=8 的配对探索。
 
 ## 源码检查
 

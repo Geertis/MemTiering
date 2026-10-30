@@ -1,8 +1,8 @@
-固定 N=8，每个 Sandbox 配置 4 vCPU / 12 GiB 名义内存并回放一条轨迹，整批共享 L1 的 36 vCPU、逐档压缩的 12→10→8→7 GiB DRAM 与 64 GiB CXL 或 SSD 冷层，在相同到达序列下配对比较 PhaseTieing 与均分配额，并以 L1 OOM 判断容量边界。
+固定 N=8，每个 Sandbox 配置 4 vCPU / 12 GiB 名义内存并回放一条轨迹，整批共享 L1 的 36 vCPU、逐档压缩的 12→10→8→7→6 GiB DRAM 与 64 GiB CXL 或 SSD 冷层，在相同到达序列下配对比较 PhaseTieing 与均分配额，并以 L1 OOM 判断容量边界。
 
 # 当前实验设置与复现方法
 
-本文件对应 2026-10-30 的真实冷层容量探索。结果按 v4–v7 分开发布：
+本文件对应 2026-10-30 的真实冷层容量探索。结果按 v4–v8 分开发布：
 12 GiB 已完成三重复；更低 DRAM 档位为单次探索。它们不是同一冻结版本的一条完整容量曲线。
 旧 96 GiB 全 DRAM 测量仅用于回放正确性、执行时间和离线占用参考。
 
@@ -21,7 +21,7 @@ L0 裸金属：真实 DRAM / CXL / NVMe
 | L0 软件 | Linux 6.10 定制内核，QEMU 8.2.2，Python 3.12.3；完整机器读数见 [environment.json](../experiments/concurrent/environment.json) |
 | L1 CPU | 36 vCPU：0–31 用于 L2 执行，32–35 用于控制/观测；36 是 CPU 数，不是 Sandbox 数 |
 | L0 CPU 映射 | L1 0–31→L0 32–63，L1 32–35→L0 24–27；外层 QEMU 辅助线程→L0 28/29 |
-| L1 DRAM | D=12、10、8、7 GiB；只绑定 L0 DRAM node 1，预分配且锁页；含宿主系统和 VMM 开销，不能全部当成 workload quota |
+| L1 DRAM | D=12、10、8、7、6 GiB；只绑定 L0 DRAM node 1，预分配且锁页；含宿主系统和 VMM 开销，不能全部当成 workload quota |
 | CXL 组 | L1 额外映射真实 node 2 的 64 GiB，共享给全体 L2；L1 看到 fast node 0 / cold node 1 |
 | SSD 组 | L1 没有 CXL RAM；NVMe 上共 64 GiB 的 L2 swap，N=8 时每实例 8 GiB；承载文件系统盘为 72 GiB |
 | L1 swap | 两组均关闭，仅在实验新建的私有 L1 中执行 `swapoff` |
@@ -77,9 +77,10 @@ F 不是未经修改的 Linux 或论文原始机制。
 | v5 | 8 GiB | CXL/SSD × P/F | 1 | 4 | CXL-P 发生 L1 OOM，后 3 组未执行 |
 | v6 | 8 GiB | CXL/SSD × P/F | 1 | 4 | 动态安全预留修复后全部完成；SSD P/F ceiling 有轻微差异 |
 | v7 | 7 GiB | CXL/SSD × P/F | 1 | 4 | 匹配 ceiling 修复后的继续加压；最新状态见结果快照 |
+| v8 | 6 GiB | CXL/SSD × P/F | 1 | 4 | 沿用 v7 策略，降低共享 DRAM；独立新配置与标签 |
 
-共 28 个计划点。禁止将未运行点或仍运行点当作成功，也不能跨版本平均成“三重复”。
-最新通用入口使用 v7 策略；以 v7 重跑 12/10/8 GiB 将产生新结果，不会重现旧版本的策略语义。
+共 32 个计划点。禁止将未运行点或仍运行点当作成功，也不能跨版本平均成“三重复”。
+最新通用入口使用 v8 配置与 v7 相同策略；重跑 12/10/8 GiB 将产生新结果，不会重现旧版本的策略语义。
 需要审查旧行为时使用对应 `snapshots/v*/` 和发布协议，不应将旧 OOM 隐藏为最新版本失败。
 
 v6/v7 以 fast 节点实际 managed 容量计算安全预算，扣除运行时非 payload 占用并保留 1 GiB：
@@ -92,6 +93,11 @@ v7 保持 P/F 同一 ceiling，避免 F 的较高启动开销永久压低 ceilin
 现有数据验证的是阶段配额、分配、降层、回收/reporting 和实际容量路径；
 不能据此声称已实证完整的 PEBS 驱动页面未来收益算法，也没有有效的采样原始机制对照。
 源码中的下层设计与这一运行覆盖范围分别看待。
+
+7 GiB SSD-F 按用户明确指示记录为严重超时并停止：观测 11652.7 秒，6 条轨迹到达完成屏障、2 条 Numba 未完成，终止时 8 个 VMM 存活、L1 OOM 计数为 0。
+该结果属于 F 对照的性能退化，不登记为 PhaseTieing P 失败；观察时间是完成时间下界，不能填入已完成组的 `batch_s`。
+`terminations/` 保留用户终止决定；原冻结协议和“不启用自动执行截止”的设置保持原样。
+归档时通过单独 16 GiB 恢复 VM 只读恢复工作盘输出，恢复资源不参与测量，且没有重跑工作负载。
 
 ## 4. 容量、性能和内存口径
 
@@ -107,7 +113,7 @@ L2 OOM、VMM 丢失、业务签名变化、输入/部署问题分别报告；它
 \rho_{DRAM}=\frac{\sum_{j\in\text{全部提交实例}}M^{offline,host}_{j,peak}}{D_{shared,DRAM}}
 \]
 
-CXL 不计入此分母，CXL:DRAM 或 SSD:DRAM 另报；当前 64/D 分别为 5.33、6.40、8.00、9.14。
+CXL 不计入此分母，CXL:DRAM 或 SSD:DRAM 另报；当前 64/D 分别为 5.33、6.40、8.00、9.14、10.67。
 N=8 时提交数和驻留数相同；以后有队列时分子包括全部提交实例，而非只算正在驻留的实例。
 17.492 GiB 是八实例 **VMM RSS 峰值之和**，只可给出诊断需求比 1.458、1.749、2.187、2.499，
 不能直接命名为完整宿主口径的正式超售比。8×12/D 只是名义内存配置比，也不是正式超售比。
@@ -196,8 +202,8 @@ python3 tools/concurrent.py bootstrap --config .state/site.json
 python3 tools/concurrent.py run --config .state/site.json
 ```
 
-`dram_gib` 可设 `[12,10,8,7]`、`repetitions` 可设 `[1,2,3]`，生成 v7 的 48 个配对点；
-当前样例只设 7 GiB、一重复 4 点。三重复不能挪用旧 v4 的结果填入。
+`dram_gib` 可设 `[12,10,8,7,6]`、`repetitions` 可设 `[1,2,3]`，生成当前策略的 60 个配对点；
+当前样例只设 6 GiB、一重复 4 点。三重复不能挪用旧 v4 的结果填入。
 更改 N 或加入同步恢复要重新定义 CPU 池、输入副本数、64 GiB 冷层分配与到达协议；当前入口会拒绝 N≠8。
 自动运行不会用墙钟超时判 workload 失败；若人工终止需记录 censored 原因，不能直接重启覆盖标签。
 

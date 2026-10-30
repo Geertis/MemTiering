@@ -1,9 +1,10 @@
-固定 8 个并发 Sandbox、每个 4 vCPU / 12 GiB 名义内存，共享 L1 的 36 vCPU、7–12 GiB DRAM 与 64 GiB CXL 或 SSD，以下按实际冻结版本分别给出容量探索结果。
+固定 8 个并发 Sandbox、每个 4 vCPU / 12 GiB 名义内存，共享 L1 的 36 vCPU、6–12 GiB DRAM 与 64 GiB CXL 或 SSD，以下按实际冻结版本分别给出容量探索结果。
 
 # 并发实验结果快照
 
-截取时间：**2026-10-30T17:53:32.306430+08:00**。28 个计划点中，**23 组通过、184 个轨迹实例正确完成**；
-1 组资源失败，1 组运行中，3 组未运行。
+截取时间：**2026-10-30T19:29:31.049725+08:00**。32 个计划点中，**23 组通过、184 个轨迹实例正确完成**；
+1 组资源失败，1 组对照严重超时，1 组运行中，6 组未运行。
+用户终止的对照中另有 6 条已审计完成轨迹，单列保留，不计为整组通过。
 通过组均无 L1 OOM、8 个 Guest 确认全局配额，且观测到实际使用冷层；运行中不计成功。
 不同版本不合并估计性能；单次探索不作为稳定性或显著性结论。
 
@@ -25,11 +26,18 @@ P=PhaseTieing；F=同介质均分对照。v4/v5 的 F 是不可变均分额度�
 |v6|8 GiB|CXL|1|1003.5 s；8/8 正确|1017.7 s；8/8 正确|
 |v6|8 GiB|SSD|1|1189.3 s；8/8 正确|2338.0 s；8/8 正确|
 |v7|7 GiB|CXL|1|1011.2 s；8/8 正确|1023.7 s；8/8 正确|
-|v7|7 GiB|SSD|1|2301.7 s；8/8 正确|运行中|
+|v7|7 GiB|SSD|1|2301.7 s；8/8 正确|严重超时 ≥194.2 min；6/8 已审计|
+|v8|6 GiB|CXL|1|运行中|未运行|
+|v8|6 GiB|SSD|1|未运行|未运行|
 
 v6 SSD P/F 的 ceiling 分别为 1552/1488 MiB，存在 64 MiB 差异，不能将全部时间差归因于阶段策略。
-v7 修复配对 ceiling：CXL 为 1456/1456 MiB，SSD 首个 P ceiling 为 512 MiB；F 的实测值以完成后回执为准。
+v7 修复配对 ceiling：CXL 为 1456/1456 MiB，SSD P/F ceiling 为 512 MiB。
 ceiling 是受控 payload 的全组上限，不是 L1 DRAM 容量；宿主、VMM 和其他开销另外占用 DRAM。
+
+7 GiB SSD-F 按用户指示单列为严重超时，保留实际观测时长下界与部分完成轨迹；
+这项 F 对照的性能退化不登记为 PhaseTieing P 失败，不推断其有限完成时间或 OOM。
+终止决定见 `terminations/`。下一轮 v8 固定 N=8、64 GiB 冷层，将共享 DRAM 降至 6 GiB；
+沿用 v7 策略及配对到达序列，只使用新配置和标签，不把用户终止变成自动工具超时规则。
 
 ## 12 GiB 三重复：资源节约与时间代价
 
@@ -70,8 +78,8 @@ v7 再修复配对 ceiling 后探索 7 GiB。通过低 DRAM 点证明本输入�
 ## 数据与复现
 
 - [设置与执行步骤](../../docs/concurrent-reproduction.md)：L0/L1/L2、输入、构建、配对与计量规则。
-- [matrix.csv](matrix.csv) / [matrix.json](matrix.json)：28 点的版本、资源、策略、状态、正确性、时长、额度和冷层回执。
-- [instances.json](instances.json)：已完整实例的 E2E、工具服务时间、DRAM/冷层/交换等；不含仍运行实例的部分结果。
+- [matrix.csv](matrix.csv) / [matrix.json](matrix.json)：逐点版本、资源、策略、状态、正确性、时长、额度和冷层回执；严重超时单列观测下界。
+- [instances.json](instances.json)：已完整实例的 E2E、工具服务时间、DRAM/冷层/交换等；包括用户终止组内已完整实例，按 label 区分；不含未完成轨迹的伪造完成时间。
 - `audits/`：逐组业务签名、资源审计、机制证据；`evidence_hashes` 指向原测量文件的 SHA256。
 - `protocols/`、`source-manifests/`：原冻结协议、原机路径及源文件哈希；发布源码另见仓库 `release-manifest.json`。
 - [snapshot.json](snapshot.json)：版本状态与截取时间，优先于旧报告中的静态待办描述。

@@ -44,7 +44,7 @@ class ConcurrentReleaseTest(unittest.TestCase):
             self.assertFalse((root / 'bootstrap-complete.json').exists())
             program = ('import pressure; from environment import environment; '
                        'assert len(pressure.plans()) == 4; '
-                       'assert pressure.ROOT.name == "PhaseTieing-repro-7g"')
+                       'assert pressure.ROOT.name == "PhaseTieing-repro-6g"')
             subprocess.run(['python3', '-B', '-c', program], cwd=h, check=True,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             for path in base.rglob('*.py'):

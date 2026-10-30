@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-30T17:53:32.306430+08:00",
+  "as_of": "2026-10-30T19:29:31.049725+08:00",
   "campaigns": {
     "v4": {
       "stage": "tiered-pressure-pairs-complete",
@@ -19,6 +19,7 @@
         "v4-ssd-F-d12-n8-r3"
       ],
       "failed": [],
+      "severe_timeouts": null,
       "updated_epoch": 1793308081.9903257
     },
     "v5": {
@@ -33,6 +34,7 @@
       "failed": [
         "v5-cxl-P-d8-n8-r1"
       ],
+      "severe_timeouts": null,
       "updated_epoch": 1793324093.3838632
     },
     "v6": {
@@ -45,21 +47,34 @@
         "v6-ssd-F-d8-n8-r1"
       ],
       "failed": [],
+      "severe_timeouts": null,
       "updated_epoch": 1793340806.5741582
     },
     "v7": {
-      "stage": "running-cohort",
-      "active": "v7-ssd-F-d7-n8-r1",
+      "stage": "control-severe-timeout-recorded",
+      "active": null,
       "completed": [
         "v7-cxl-P-d7-n8-r1",
         "v7-cxl-F-d7-n8-r1",
         "v7-ssd-P-d7-n8-r1"
       ],
       "failed": [],
-      "updated_epoch": 1793346833.9598246
+      "severe_timeouts": [
+        "v7-ssd-F-d7-n8-r1"
+      ],
+      "updated_epoch": 1793359628.34602
+    },
+    "v8": {
+      "stage": "running-cohort",
+      "active": "v8-cxl-P-d6-n8-r1",
+      "completed": [],
+      "failed": [],
+      "severe_timeouts": null,
+      "updated_epoch": 1793359687.057559
     }
   },
   "completed_cohorts": 23,
   "complete_instances": 184,
+  "additional_complete_instances_in_stopped_cohorts": 6,
   "note": "Version-separated snapshot; running and unrun points are not successes. Raw binaries/traces/log streams are external."
 }

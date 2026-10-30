@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan and stage the measured v7 experiment in an owned, site-configured lab.
+"""Plan and stage the measured v8 experiment in an owned, site-configured lab.
 
 Staging never starts a VM. bootstrap/run are explicit operations on that lab.
 Large assets and SSH credentials stay outside the source release.
@@ -18,7 +18,7 @@ import sys
 REPO = Path(__file__).resolve().parents[1]
 SOURCE = REPO / 'experiments/concurrent'
 OLD = '/r0/home/geerties/HW/Demeter'
-OLD_RUN = 'PhaseTieing-concurrent-20261030-v7-pressure-7g'
+OLD_RUN = 'PhaseTieing-concurrent-20261030-v8-pressure-6g'
 VARIANTS = ['vmm-v66-ssd-compact', 'vmm-v66-ssd-compact-readguard',
             'vmm-v67-compact-cxl', 'vmm-v67-compact-cxl-readguard']
 
@@ -92,7 +92,7 @@ def matrix(c):
 def layout(c):
     base = Path(c['lab_root'])
     w = base / 'experiments/agentcgroup-PhaseTieing'
-    h = w / 'phase/PhaseTieing_concurrent_v7'
+    h = w / 'phase/PhaseTieing_concurrent_v8'
     root = w / 'results' / c['run_name']
     return base, w, h, root
 
@@ -141,13 +141,13 @@ def prepare(c):
         raise FileExistsError('refusing to overwrite a lab; choose a new lab_root: ' + str(base))
     base.mkdir(parents=True, mode=0o700)
     save(base / 'site.json', c)
-    text_tree(SOURCE / 'snapshots/v7', h, c)
+    text_tree(SOURCE / 'snapshots/v8', h, c)
     for name in ['all_traces_v67', 'ssd_placement_v54', 'cold_media', 'three_modes']:
         text_tree(REPO / 'experiments/phase' / name, w / 'phase' / name, c)
     for name in VARIANTS:
         target = h / 'artifacts' / name
         text_tree(REPO / 'experiments/phase/artifacts' / name, target, c)
-        (target / 'start-vm.sh').write_text(render((SOURCE / 'snapshots/v7' / ('start-' + name + '.sh')).read_text(), c))
+        (target / 'start-vm.sh').write_text(render((SOURCE / 'snapshots/v8' / ('start-' + name + '.sh')).read_text(), c))
     replace_assignments(h / 'outer.py', {
         'BASE': 'Path(' + repr(c['assets']['l1_base']) + ')',
         'KEY': 'Path(' + repr(c['assets']['outer_ssh_key']) + ')',
@@ -194,8 +194,8 @@ def prepare(c):
         cases.append(dict(case, golden=str(w / 'inputs/golden' / case['golden_filename']),
                           trace=str(w / 'inputs/traces' / case['name'])))
     save(root / 'inputs/cases.json', cases)
-    save(root / 'protocol.json', dict(read(REPO / 'published/concurrent-20261030/protocols/v7.json'),
-         version='v7-configured-reproduction', site=c, note='Configured port of measured v7; validate on destination hardware.'))
+    save(root / 'protocol.json', dict(read(REPO / 'published/concurrent-20261030/protocols/v8.json'),
+         version='v8-configured-reproduction', site=c, note='Configured port of measured v8; validate on destination hardware.'))
     for name in ['plans', 'cohorts', '_input_blobs']:
         (root / name).mkdir()
     (base / 'experiments/swebench/swesmith').mkdir(parents=True)

@@ -541,7 +541,60 @@
     "strategy": "F",
     "repetition": 1,
     "version": "v7",
+    "outcome": "severe-timeout",
+    "control_definition": "phase-blind equal share with common adaptive reserve",
+    "correct_instances": 6,
+    "l1_oom": false,
+    "minimum_live_vmms": 8,
+    "budget_ceiling_mib": 512,
+    "minimum_budget_mib": 0,
+    "grant_acknowledgements": 8,
+    "actual_cold_tier_used": true,
+    "observed_duration_s": 11652.709509134293,
+    "user_directed_stop": true
+  },
+  {
+    "label": "v8-cxl-P-d6-n8-r1",
+    "dram_gib": 6,
+    "n": 8,
+    "medium": "cxl",
+    "strategy": "P",
+    "repetition": 1,
+    "version": "v8",
     "outcome": "running",
+    "control_definition": "phase-blind equal share with common adaptive reserve"
+  },
+  {
+    "label": "v8-cxl-F-d6-n8-r1",
+    "dram_gib": 6,
+    "n": 8,
+    "medium": "cxl",
+    "strategy": "F",
+    "repetition": 1,
+    "version": "v8",
+    "outcome": "not-run",
+    "control_definition": "phase-blind equal share with common adaptive reserve"
+  },
+  {
+    "label": "v8-ssd-P-d6-n8-r1",
+    "dram_gib": 6,
+    "n": 8,
+    "medium": "ssd",
+    "strategy": "P",
+    "repetition": 1,
+    "version": "v8",
+    "outcome": "not-run",
+    "control_definition": "phase-blind equal share with common adaptive reserve"
+  },
+  {
+    "label": "v8-ssd-F-d6-n8-r1",
+    "dram_gib": 6,
+    "n": 8,
+    "medium": "ssd",
+    "strategy": "F",
+    "repetition": 1,
+    "version": "v8",
+    "outcome": "not-run",
     "control_definition": "phase-blind equal share with common adaptive reserve"
   }
 ]

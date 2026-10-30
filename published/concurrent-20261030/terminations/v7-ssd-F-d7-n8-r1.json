@@ -1,0 +1,63 @@
+{
+  "label": "v7-ssd-F-d7-n8-r1",
+  "classification": "severe-timeout",
+  "strategy": "F",
+  "medium": "ssd",
+  "user_directed": true,
+  "automatic_execution_timeout": false,
+  "requested_epoch": 1793358606.0357673,
+  "reason": "User requested recording the SSD equal-share control as severe timeout and proceeding to the next pressure round.",
+  "attribution": "Observed performance degradation of the F control; not a PhaseTieing P failure.",
+  "note": "Right-censored by explicit user instruction; no finite completion time or OOM inferred.",
+  "stop_epoch": 1793358622.5966318,
+  "observed_duration_s": 11652.709509134293,
+  "cohort_pid": 2035,
+  "completed_lanes": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+  ],
+  "stopped_lanes": [
+    0,
+    5
+  ],
+  "capture_receipts": [
+    {
+      "lane": 0,
+      "error": "TimeoutExpired(['ssh', '-i', '/r0/home/geerties/HW/Demeter/experiments/physical-smoke/id_ed25519', '-o', 'StrictHostKeyChecking=no', '-o', 'ConnectTimeout=3', 'clear@192.168.92.100', \"sudo sh -c 'dmesg > /mnt/workload/out/user-stop-dmesg.log; cat /proc/meminfo > /mnt/workload/out/user-stop-meminfo; cat /sys/fs/cgroup/agent-workload/memory.events > /mnt/workload/out/user-stop-memory-events; cat /sys/fs/cgroup/agent-workload/memory.pressure > /mnt/workload/out/user-stop-memory-pressure; ps -eo pid,ppid,pcpu,comm > /mnt/workload/out/user-stop-processes; tar -C /mnt/workload -cf - out'\"], 59.99716827099837)"
+    },
+    {
+      "lane": 1,
+      "rc": 255
+    },
+    {
+      "lane": 2,
+      "error": "TimeoutExpired(['ssh', '-i', '/r0/home/geerties/HW/Demeter/experiments/physical-smoke/id_ed25519', '-o', 'StrictHostKeyChecking=no', '-o', 'ConnectTimeout=3', 'clear@192.168.94.100', \"sudo sh -c 'dmesg > /mnt/workload/out/user-stop-dmesg.log; cat /proc/meminfo > /mnt/workload/out/user-stop-meminfo; cat /sys/fs/cgroup/agent-workload/memory.events > /mnt/workload/out/user-stop-memory-events; cat /sys/fs/cgroup/agent-workload/memory.pressure > /mnt/workload/out/user-stop-memory-pressure; ps -eo pid,ppid,pcpu,comm > /mnt/workload/out/user-stop-processes; tar -C /mnt/workload -cf - out'\"], 59.99613207600123)"
+    },
+    {
+      "lane": 3,
+      "rc": 1
+    },
+    {
+      "lane": 4,
+      "rc": 1
+    },
+    {
+      "lane": 5,
+      "rc": 1
+    },
+    {
+      "lane": 6,
+      "rc": 1
+    },
+    {
+      "lane": 7,
+      "rc": 1
+    }
+  ],
+  "l1_oom_kill_at_stop": 0,
+  "live_vmms_at_stop": 8
+}
