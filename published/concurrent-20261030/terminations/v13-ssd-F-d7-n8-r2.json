@@ -1,0 +1,20 @@
+{
+  "classification": "control-relative-timeout",
+  "factor": 2,
+  "reference_label": "v13-ssd-P-d7-n8-r2",
+  "reference_batch_s": 1262.5102713108063,
+  "limit_s": 2525.0205426216125,
+  "scope": "F cohort only",
+  "stop_epoch": 1793385197.2567756,
+  "observed_duration_s": 2525.030644849,
+  "stop_monotonic_ns": 2712178989809,
+  "adopted_after_start": false,
+  "completed_lanes": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    7
+  ]
+}

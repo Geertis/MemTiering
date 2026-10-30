@@ -27,7 +27,8 @@ Runtime 事件感知资源阶段，在多个 Sandbox 之间分配 DRAM，在每�
 6 GiB CXL 两组均 8/8 通过；SSD 的启动入场受限和 v10 控制器故障分别保留，后者的策略性能无效。
 v11 修复 DAMON 生命周期和控制器健康监督后，在 6 GiB SSD 点记录到真实 L1 OOM。
 v12 的 7 GiB SSD-P 首重复在 21.6 分钟完成；F 在新规则采用后于 55.1 分钟停止，6/8 完成、无 L1 OOM。
-当前 v13 沿用该内存实现，先在 36 vCPU / 7 GiB DRAM / 64 GiB SSD、N=8 完成三个 P/F 配对，再复测 6 GiB。
+v13 在 36 vCPU / 7 GiB DRAM / 64 GiB SSD、N=8 下，P 三次均 8/8 正确，F 三次均达两倍性能截止。
+6 GiB 首 P 因 slot-0 VMM 打印 seccomp/SIGSYS 信息后退出，本次无 L1 OOM；未计通过，独立诊断不纳入正式性能。
 F 达同重复 P 批次时间两倍仍未完成则记性能超时、强制停止并继续；P 和单工具无限时。
 两策略匹配预留和 ceiling，当前实现与测量限制见复现文档。
 

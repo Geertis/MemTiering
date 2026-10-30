@@ -69,6 +69,12 @@ def export(source,output):
                     row['outcome']='startup-resource-admission-blocked'
                 if group.get('result') in ['controller-exited','controller-heartbeat-stalled'] and not audit['l1_oom']:
                     row['outcome']='infrastructure-'+group['result']
+                diagnosis_path=folder/'operational-diagnosis.json'
+                if diagnosis_path.exists():
+                    diagnosis=read(diagnosis_path)
+                    if diagnosis.get('classification')=='infrastructure-vmm-sigsys' and not audit['l1_oom']:
+                        row['outcome']='infrastructure-vmm-sigsys'
+                    save(output/'diagnoses'/(spec['label']+'.json'),diagnosis)
                 if 'all_done_epoch' in group:
                     row['batch_s']=group['all_done_epoch']-group['release_epoch']
                 complete=[v for v in audit['rows'] if v.get('complete') and 'e2e_s' in v]

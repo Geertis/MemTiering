@@ -1,0 +1,136 @@
+{
+  "classification": "censored-or-incomplete",
+  "label": "v13-ssd-P-d6-n8-r1",
+  "strategy": "P",
+  "medium": "ssd",
+  "n": 8,
+  "repetition": 1,
+  "driver_result": "vmm-loss",
+  "correctness_valid": 0,
+  "valid": false,
+  "minimum_live_vmms": 7,
+  "maximum_live_vmms": 8,
+  "l1_oom": false,
+  "l1_swap_peak_bytes": 0,
+  "parent_charge_peak_mib": 5535.828125,
+  "minimum_available_mib": 139.375,
+  "observation_points": 5675,
+  "reference": null,
+  "latency": null,
+  "operational_classification": "infrastructure-vmm-sigsys",
+  "rows": [
+    {
+      "slot": 0,
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 1,
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 2,
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 3,
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 4,
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 5,
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 6,
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 7,
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    }
+  ],
+  "mechanism": {
+    "pool_ticks": 4774,
+    "budget_mib": 0,
+    "reserve_mib": 368,
+    "budget_ceiling_mib": 272,
+    "minimum_budget_mib": 0,
+    "minimum_physical_headroom_mib": 91.171875,
+    "total_grants_within_budget": true,
+    "guest_global_grant_acknowledgements": 7,
+    "distinct_effective_targets_mib": [
+      0,
+      2,
+      4,
+      6,
+      8,
+      9,
+      10,
+      12
+    ],
+    "distinct_grants_mib": [
+      0,
+      2,
+      4,
+      6,
+      8,
+      9,
+      10,
+      12
+    ],
+    "per_slot_cold_rss_peak_bytes": 0,
+    "per_slot_swap_peak_bytes": 4355911680,
+    "actual_cold_tier_used": true
+  },
+  "evidence_hashes": {
+    "audit.json": "68fab9a4788fe13ac1152406a5f0ac457b12aed9575d2c07ce88bae368db8493",
+    "status.json": "dda6fd088eddf50db29f4ed4ddeea9b3fcc8288941033fa18e4bb7d5eec3c507",
+    "l1-resources.jsonl.gz": "dae94dc43eadca8debd47620a700d0ce6ef336f1d4200e73d106fdf5a56a648c",
+    "global-pool.jsonl.gz": "a42f58adc64cad447e89aed3b0520d7c3f84e27a46352d1ce68f556826c424bb",
+    "l1-dmesg.log": "f84e7ef2491ea6183bd7047ab2f3c8da2bcad45db78e0376ac415f31cb5ee35e"
+  },
+  "source_manifest_sha256": "2da932e90c8e8957233c97732bff66dc11018331fe4a662276f8f8bd22f91693"
+}

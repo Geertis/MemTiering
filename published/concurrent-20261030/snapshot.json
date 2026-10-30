@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-31T00:14:46.298853+08:00",
+  "as_of": "2026-10-31T04:16:00.919311+08:00",
   "campaigns": {
     "v4": {
       "stage": "tiered-pressure-pairs-complete",
@@ -147,21 +147,31 @@
       "updated_epoch": 1793376026.2215552
     },
     "v13": {
-      "stage": "running-cohort",
-      "active": "v13-ssd-P-d7-n8-r1",
-      "completed": [],
-      "failed": [],
+      "stage": "failure-needs-immediate-diagnosis",
+      "active": null,
+      "completed": [
+        "v13-ssd-P-d7-n8-r1",
+        "v13-ssd-P-d7-n8-r2",
+        "v13-ssd-P-d7-n8-r3"
+      ],
+      "failed": [
+        "v13-ssd-P-d6-n8-r1"
+      ],
       "startup_blocked": null,
       "infrastructure_failed": null,
       "severe_timeouts": null,
-      "relative_timeouts": [],
-      "updated_epoch": 1793376686.1388223
+      "relative_timeouts": [
+        "v13-ssd-F-d7-n8-r1",
+        "v13-ssd-F-d7-n8-r2",
+        "v13-ssd-F-d7-n8-r3"
+      ],
+      "updated_epoch": 1793390528.3141422
     }
   },
-  "completed_cohorts": 26,
-  "complete_instances": 208,
+  "completed_cohorts": 29,
+  "complete_instances": 232,
   "additional_complete_instances_in_stopped_cohorts": 6,
-  "additional_complete_instances_in_relative_timeout_cohorts": 6,
+  "additional_complete_instances_in_relative_timeout_cohorts": 24,
   "additional_complete_instances_in_invalid_controller_cohorts": 6,
   "note": "Version-separated snapshot; running and unrun points are not successes. Raw binaries/traces/log streams are external."
 }

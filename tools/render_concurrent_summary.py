@@ -34,6 +34,8 @@ def render(folder):
         if any(v['outcome'] in ['startup-budget-check-rejected','startup-resource-admission-blocked'] for v in chosen):
             return '启动预算检查退出；轨迹未释放'
         if any(v['outcome'].startswith('infrastructure-') for v in chosen):
+            if any(v['outcome']=='infrastructure-vmm-sigsys' for v in chosen):
+                return 'VMM SIGSYS 退出；本次无 L1 OOM'
             return '控制器故障，策略结果无效'
         if passed:
             suffix='其余运行中/未运行' if any(v['outcome']=='running' for v in chosen) else '其余未运行'
@@ -56,7 +58,7 @@ def render(folder):
 # 并发实验结果快照
 
 截取时间：**{snapshot['as_of']}**。{len(rows)} 个计划点中，**{snapshot['completed_cohorts']} 组通过、{snapshot['complete_instances']} 个轨迹实例正确完成**；
-{failed} 组资源失败，{startup} 组启动预算检查退出，{infrastructure} 组控制器故障，{severe} 组人工严重超时，{relative} 组 P×2 对照性能超时，{running} 组运行中，{pending} 组未运行。
+{failed} 组资源失败，{startup} 组启动预算检查退出，{infrastructure} 组基础设施故障，{severe} 组人工严重超时，{relative} 组 P×2 对照性能超时，{running} 组运行中，{pending} 组未运行。
 用户终止的对照中另有 {snapshot.get('additional_complete_instances_in_stopped_cohorts',0)} 条已审计完成轨迹，单列保留，不计为整组通过。
 控制器故障组另有 {snapshot.get('additional_complete_instances_in_invalid_controller_cohorts',0)} 条完整业务结果；其策略性能无效，不与健康运行比较。
 P×2 对照超时组另有 {snapshot.get('additional_complete_instances_in_relative_timeout_cohorts',0)} 条完整业务结果，未完成轨迹不填有限完成时长。
@@ -109,6 +111,14 @@ v13 固定相同内存策略，正式实现 F-only P×2 批次截止：P 和单�
 只有同介质、同 DRAM、N、seed、到达序列和重复编号且已通过审计的 P 可作参考。
 先运行 7 GiB 三个 P/F 配对，再复测 6 GiB 三个配对；F 性能超时继续，真实资源/控制器/语义错误停止诊断。
 此前 v11 的 6 GiB 真实 OOM 继续保留。未完成 F 的时间按右删失处理，不计为 P 系统失败。
+
+v13 的 7 GiB P 三重复均 8/8 正确、无 L1 OOM，批次分别为 1280.80、1262.51、1262.07 秒。
+三个 F 均在各自 P×2 阈值处停止，各有 6/8 正确；健康和取证审计通过，均无 L1 OOM。
+6 GiB 首 P 在释放 728.095 秒后 slot-0 VMM 消失，存活数降至 7；slot-0 日志打印
+`Possible seccomp violation`，L1 OOM 计数为 0，原内核日志也未见 OOM。
+该点归为 `infrastructure-vmm-sigsys`，不能计为成功容量点或本次已证实的 OOM 边界。
+被拦截系统调用尚未确认，原工作盘已隔离保留；独立 v14 的 strace 诊断保持 seccomp 开启，不纳入正式矩阵或性能比较。
+当前 SSD 经过三重复验证的最低 DRAM 为 7 GiB；尚未测得最终承载边界。
 
 ## 12 GiB 三重复：资源节约与时间代价
 

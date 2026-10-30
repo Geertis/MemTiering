@@ -1,0 +1,24 @@
+{
+  "label": "v13-ssd-P-d6-n8-r1",
+  "classification": "infrastructure-vmm-sigsys",
+  "recorded_epoch": 1793391332.055222,
+  "driver_result": "vmm-loss",
+  "release_to_first_failure_s": 728.0951147079468,
+  "failure_lane": 0,
+  "failure_trace": "Numba #9636",
+  "failure_tool_index": 25,
+  "l1_oom_observed": false,
+  "l1_oom_kill_counter": 0,
+  "minimum_live_vmms": 7,
+  "maximum_live_vmms": 8,
+  "evidence": {
+    "vm_log": "slot-0/vm.log",
+    "literal": "Possible seccomp violation",
+    "vm_log_sha256": "ac177776d6a61bd0b97fcc6f8f83b8df5b33550ea5e8b514ca6d5fb368712770",
+    "l1_kernel_log": "l1-dmesg.log",
+    "l1_kernel_log_sha256": "f84e7ef2491ea6183bd7047ab2f3c8da2bcad45db78e0376ac415f31cb5ee35e"
+  },
+  "interpretation": "The Cloud Hypervisor SIGSYS handler printed the diagnostic then the VMM disappeared. No L1 OOM was observed. This is an unsuccessful run, not proof that 6GiB is an OOM capacity limit.",
+  "unknown": "Blocked syscall and causal error path have not yet been captured; generic SIGSYS message alone does not identify a filter fix.",
+  "action": "Owned workdisks retained; dedicated v14 P6/r1/N8 diagnostic with lane0 strace, seccomp unchanged, excluded from formal performance."
+}
