@@ -1,0 +1,13 @@
+{
+  "label": "v5-cxl-P-d8-n8-r1",
+  "lines": [
+    "[  396.863344] vcpu3 invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0",
+    "[  396.863983] oom-kill:constraint=CONSTRAINT_MEMORY_POLICY,nodemask=0,cpuset=/,mems_allowed=0-1,global_oom,task_memcg=/PhaseTieing-formal/slot-3,task=cloud-hyperviso,pid=2577,uid=0",
+    "[  396.864121] Out of memory: Killed process 2577 (cloud-hyperviso) total-vm:12620036kB, anon-rss:3456kB, file-rss:672kB, shmem-rss:2093056kB, UID:0 pgtables:4424kB oom_score_adj:0",
+    "[  397.184435] _net2_qp0 invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=0",
+    "[  397.185340] oom-kill:constraint=CONSTRAINT_MEMORY_POLICY,nodemask=0,cpuset=/,mems_allowed=0-1,global_oom,task_memcg=/PhaseTieing-formal/slot-6,task=cloud-hyperviso,pid=2767,uid=0",
+    "[  397.185440] Out of memory: Killed process 2767 (cloud-hyperviso) total-vm:12620036kB, anon-rss:3456kB, file-rss:2152kB, shmem-rss:1817440kB, UID:0 pgtables:3800kB oom_score_adj:0"
+  ],
+  "raw_sha256": "912ee2a89254581d833d3d59a96ff40944e2d8c5d99135b71e9628f954afd712",
+  "note": "NUMA policy-constrained DRAM-node OOM; incomplete traces are not eight independent semantic failures."
+}

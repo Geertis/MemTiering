@@ -1,0 +1,41 @@
+{
+  "version": "v7-pressure-7g",
+  "created_epoch": 1793341689.9196265,
+  "authorization": "Continue authorized pressure increase after no OOM at 8GiB with adaptive safety guard",
+  "initial": {
+    "n": 8,
+    "vcpus": 36,
+    "dram_gib": 7,
+    "cxl_gib": 64,
+    "aggregate_ssd_swap_gib": 64,
+    "guest_vcpus": 4,
+    "guest_nominal_gib": 12
+  },
+  "treatments": [
+    "PhaseTieing-CXL",
+    "same-budget static-CXL",
+    "PhaseTieing-SSD",
+    "same-budget static-SSD"
+  ],
+  "cold_resources": "64GiB shared per cohort, never per VM; CXL adds real physical RAM; SSD is storage",
+  "global_quota": "existing waterfill + settle_grants, guest grants delivered over existing telemetry channel; credit comes from actual controlled DRAM residency",
+  "pressure": "per-node fast memory use, controlled residency, PSI, reclaim; compare same medium/capacity/layout",
+  "no_timeouts": true,
+  "stop_on_anomaly": true,
+  "known_limit": "nested PEBS unsupported; no claim of sampled promotion/exchange unless measured",
+  "old_baseline": "v3 completed cohorts retained only as correctness and performance references",
+  "scan_dram_gib": [
+    7
+  ],
+  "scan_repetitions": 1,
+  "scope": "7GiB N8 capacity exploration: CXL P/F and SSD P/F, one exploratory repetition; border points confirmed separately",
+  "comparison": "same code and measurement protocol as v4; budgets frozen independently per DRAM/medium pair",
+  "known_measurement_limit": "Replay result serialization remains in workload cgroup; report natural trace E2E separately from driver completion and diagnose post-replay overhead",
+  "previous_completed": "v6: four 8GiB groups; 32/32 traces correct, no L1 OOM",
+  "regression": "8GiB CXL OOM fixed by adaptive managed-capacity guard in v6; v7 increases pressure",
+  "common_guard": "managed fast capacity, runtime nonpayload occupancy, 1GiB reserve; shrink immediately, grow only on observed physical headroom; settle physical credit for both policies",
+  "control_label": "F: phase-blind equal share under same common host reserve guard; not the immutable-v5 static-quota treatment",
+  "previous_version": "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/results/PhaseTieing-concurrent-20261030-v5-capacity-scan",
+  "numerator_definition": "DRAM-only denominator; CXL/SSD capacity ratios separate; offline host numerator still under profiling review",
+  "code_delta": "Preserve the same paired budget ceiling even if initial overhead differs; actual budget always clipped by current physical guard"
+}

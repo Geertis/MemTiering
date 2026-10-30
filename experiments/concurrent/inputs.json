@@ -1,0 +1,74 @@
+{
+  "upstream": "https://github.com/eunomia-bpf/agentcgroup.git",
+  "commit": "551ca1689b7d2d30db6b8a8613414750103cc68b",
+  "cases": [
+    {
+      "name": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "relative_source": "experiments/all_images_local/dask__dask-5510/attempt_1",
+      "image": "swerebench/sweb.eval.x86_64.dask_1776_dask-5510",
+      "golden_sha256": "f81583d399b4c7530ed2c07c5ea591d48a9bd74aee8b2493980e729a115d3b09",
+      "input_hashes": {
+        "tool_calls.json": "ba430b4cda84b34703273ba6efcb1a6d71122e6f1318dca3d9f98b1103cea517",
+        "trace.jsonl": "4226a0071b313ac39ead921daeeab93a61803c611a6d5368cb13d9c08d479a9b"
+      },
+      "guard": false,
+      "pytest_compat": true,
+      "golden_filename": "dask-5510-compatible.ext4",
+      "tool_environment_override": null,
+      "calls": 78,
+      "source_recorded_peak_mb": 1367.0,
+      "note": "Golden filesystem is an external frozen compatible image; a Docker tag alone does not reproduce repairs or filesystem bytes."
+    },
+    {
+      "name": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "relative_source": "experiments/all_images_local/numba__numba-9636/attempt_1",
+      "image": "swerebench/sweb.eval.x86_64.numba_1776_numba-9636",
+      "golden_sha256": "9cb687534789d6eb824e902fcee967294ab48e571998bb90f41d41670757aadc",
+      "input_hashes": {
+        "tool_calls.json": "a74c46cdd96cbdc1fbb1c7a318cd1c70bcd6d992020c6fbf0cbab00e5d343891",
+        "trace.jsonl": "33877cb8f3a14bc9721e9ca18babb4b7df1bf584b55ef136a7f0f8e3023910e9"
+      },
+      "guard": false,
+      "pytest_compat": false,
+      "golden_filename": "numba-9636-compatible.ext4",
+      "tool_environment_override": "image-testbed",
+      "calls": 98,
+      "source_recorded_peak_mb": 830.1,
+      "note": "Golden filesystem is an external frozen compatible image; a Docker tag alone does not reproduce repairs or filesystem bytes."
+    },
+    {
+      "name": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "relative_source": "experiments/all_images_local/pydicom__pydicom-2065/attempt_1",
+      "image": "swerebench/sweb.eval.x86_64.pydicom_1776_pydicom-2065",
+      "golden_sha256": "d2139df4ae5841887d79a28f273d0e98b08b472743dbfdcef1296ab0192c9dd2",
+      "input_hashes": {
+        "tool_calls.json": "cb0320e875f1297624a6603cd912c472060660d9e92f3e0d5dbc34d11de024aa",
+        "trace.jsonl": "b15733b2a043807131550761b875bf4cc96e2995dc66d4d818dafc1b76cebc1c"
+      },
+      "guard": false,
+      "pytest_compat": false,
+      "golden_filename": "pydicom-2065-data-20261009-v1.ext4",
+      "tool_environment_override": null,
+      "calls": 68,
+      "source_recorded_peak_mb": 2041.0,
+      "note": "Golden filesystem is an external frozen compatible image; a Docker tag alone does not reproduce repairs or filesystem bytes."
+    },
+    {
+      "name": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "relative_source": "experiments/all_images_local/streamlink__streamlink-3485/attempt_1",
+      "image": "swerebench/sweb.eval.x86_64.streamlink_1776_streamlink-3485",
+      "golden_sha256": "13a6d6d1140145b7d480ef9c596c3aca5d13578cc37599b72b2fff0047762033",
+      "input_hashes": {
+        "tool_calls.json": "6dca314f8f805dd5bf726d0dcb219b079ae37fad4ea59304972ab3a360ea1c40",
+        "trace.jsonl": "5a1012c1dea2bc074535e222bf3e51a9e33d63f95a81f878ca1f0cee538868eb"
+      },
+      "guard": true,
+      "pytest_compat": false,
+      "golden_filename": "streamlink-3485-compatible.ext4",
+      "tool_environment_override": null,
+      "calls": 59,
+      "source_recorded_peak_mb": 250.3,
+      "note": "Golden filesystem is an external frozen compatible image; a Docker tag alone does not reproduce repairs or filesystem bytes."
+    }
+  ]
+}

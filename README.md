@@ -19,6 +19,12 @@ Runtime 事件感知资源阶段，在多个 Sandbox 之间分配 DRAM，在每�
 完整说明见 [设计与代码对应](docs/architecture.md)、[构建方法](docs/build.md) 和
 [运行接口](docs/backend-requirements.md)。本次整理的检查结果见 [发布验证](docs/verification.md)。
 
+2026-10-30 已同步真实冷层并发实验实现，包括跨 VMM 配额池、运行时安全预留、
+配对 ceiling 修复与无执行时限回放。复现从
+[实验设置与步骤](docs/concurrent-reproduction.md) 开始；
+[结果包](published/concurrent-20261030/README.md) 附逐组矩阵、逐实例指标和 OOM 证据。
+不同冻结版本分别统计；当前嵌套环境的 PEBS 采样未启用，已测路径与限制见结果说明。
+
 ## 源码检查
 
 需要 Python 3.12、Bash。运行既有测试、Python/Bash 语法、文件命名和发布清单检查：
@@ -46,6 +52,8 @@ bin/PhaseTieing-controller coordinator \
 `coordinator` 是具备压力与历史反馈的多 Sandbox 配额控制器。
 `cxl` / `ssd` 入口保留 V67/V66 实验使用的单 Sandbox 固定阶段配额配置；
 ACTIVE 6144 MiB、WAIT 16 MiB 是该实验配置，不代表系统仅支持固定配额。
+跨 VMM 的实测适配位于 `runtime/host/global_pool.py`；配置化实验入口为
+`python3 tools/concurrent.py --help`，详见 `experiments/concurrent/`。
 
 ## 仓库内容
 

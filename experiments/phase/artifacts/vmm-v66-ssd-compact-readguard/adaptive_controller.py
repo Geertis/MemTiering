@@ -126,7 +126,18 @@ class Controller:
 
     @property
     def target_mib(self):
-        return self.policy.target(self.active)
+        target = self.policy.target(self.active)
+        path = Path('/tmp/host-pressure.json')
+        if path.exists():
+            try:
+                control = json.loads(path.read_text())
+                grant = control.get('global_quota_mib')
+                if type(grant) is int and 0 <= grant <= 6144:
+                    self.host_grant_mib = grant
+                    self.host_grant_seq = control['global_quota_seq']
+            except (ValueError, KeyError, OSError):
+                pass
+        return min(target, getattr(self, 'host_grant_mib', target))
 
     def emit(self,event,**kw):
         self.seq+=1
@@ -269,7 +280,7 @@ class Controller:
         if not self.interface:
             self.schedule_ssd(now,m)
         self.emit('capacity_tick',active=self.active,phase_id=self.phase_id,
-            target_mib=self.target_mib,measurement=m,actuator_busy=self.future is not None,
+            target_mib=self.target_mib,global_grant_mib=getattr(self,'host_grant_mib',None),global_grant_seq=getattr(self,'host_grant_seq',None),measurement=m,actuator_busy=self.future is not None,
             applied_high_bytes=self.applied_high,reporting_order=self.reporting.current,
             actual_over_target_bytes=max(0,m['fast_bytes']-self.target_mib*MIB),
             actuator_errors=self.errors)

@@ -1,0 +1,29 @@
+{
+  "note": "Original experiment binary identities; prebuilt bytes are not in git. Rebuilt renamed modules have different hashes and use module_abi=published.",
+  "files": {
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl/vmlinux.bin": "917e285ed53b5718fc7f631681b12ffebfe946ad6c0a82eaa8812fe7d14e6510",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl/demeter_placement.ko": "da7e86008bd65b101fb782b16130ce2bfa9faa5f001eb46df0ee7eaf9434a43a",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl/cloud-hypervisor": "7035986a2d11bce2ed6bfca76eaf7e0e2ea9af13eca955078e073ca83f50bf65",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl/policy_exec": "a923fb6279f62f592371bab0fc87aa397c5be36200567ff3e5fee9f6ac85f291",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl/demeter_balloon.ko": "7cd0bb88d09f960da7d099a057868eed8615dee10e34f51d7cc9ac5280e10cfe",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl/rg": "f401154e2393f9002ac77e419f9ee5521c18f4f8cd3e32293972f493ba06fce7",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact/vmlinux.bin": "917e285ed53b5718fc7f631681b12ffebfe946ad6c0a82eaa8812fe7d14e6510",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact/demeter_placement.ko": "da7e86008bd65b101fb782b16130ce2bfa9faa5f001eb46df0ee7eaf9434a43a",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact/cloud-hypervisor": "7035986a2d11bce2ed6bfca76eaf7e0e2ea9af13eca955078e073ca83f50bf65",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact/policy_exec": "a923fb6279f62f592371bab0fc87aa397c5be36200567ff3e5fee9f6ac85f291",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact/demeter_balloon.ko": "7cd0bb88d09f960da7d099a057868eed8615dee10e34f51d7cc9ac5280e10cfe",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact/rg": "f401154e2393f9002ac77e419f9ee5521c18f4f8cd3e32293972f493ba06fce7",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl-readguard/vmlinux.bin": "917e285ed53b5718fc7f631681b12ffebfe946ad6c0a82eaa8812fe7d14e6510",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl-readguard/demeter_placement.ko": "da7e86008bd65b101fb782b16130ce2bfa9faa5f001eb46df0ee7eaf9434a43a",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl-readguard/cloud-hypervisor": "7035986a2d11bce2ed6bfca76eaf7e0e2ea9af13eca955078e073ca83f50bf65",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl-readguard/policy_exec": "a923fb6279f62f592371bab0fc87aa397c5be36200567ff3e5fee9f6ac85f291",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl-readguard/demeter_balloon.ko": "7cd0bb88d09f960da7d099a057868eed8615dee10e34f51d7cc9ac5280e10cfe",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v67-compact-cxl-readguard/rg": "f401154e2393f9002ac77e419f9ee5521c18f4f8cd3e32293972f493ba06fce7",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact-readguard/vmlinux.bin": "917e285ed53b5718fc7f631681b12ffebfe946ad6c0a82eaa8812fe7d14e6510",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact-readguard/demeter_placement.ko": "da7e86008bd65b101fb782b16130ce2bfa9faa5f001eb46df0ee7eaf9434a43a",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact-readguard/cloud-hypervisor": "7035986a2d11bce2ed6bfca76eaf7e0e2ea9af13eca955078e073ca83f50bf65",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact-readguard/policy_exec": "a923fb6279f62f592371bab0fc87aa397c5be36200567ff3e5fee9f6ac85f291",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact-readguard/demeter_balloon.ko": "7cd0bb88d09f960da7d099a057868eed8615dee10e34f51d7cc9ac5280e10cfe",
+    "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/phase/PhaseTieing_concurrent_v7/artifacts/vmm-v66-ssd-compact-readguard/rg": "f401154e2393f9002ac77e419f9ee5521c18f4f8cd3e32293972f493ba06fce7"
+  }
+}

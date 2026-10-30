@@ -1,0 +1,215 @@
+{
+  "method": "whole-L1 nonfree minus directly reclaimable filesystem cache/slab; guest memfd Shmem retained; walltime integration includes completed VM retention",
+  "rows": [
+    {
+      "label": "v4-cxl-P-d12-n8-r1",
+      "medium": "cxl",
+      "strategy": "P",
+      "repetition": 1,
+      "dram_mean_gib": 5.3140636830647985,
+      "dram_peak_gib": 10.286384582519531,
+      "dram_gib_s": 5311.401111522196,
+      "coverage": 1.0,
+      "batch_s": 999.4989576339722,
+      "replay_makespan_s": 993.2496935140001,
+      "service_sum_s": 1712.5076105330002
+    },
+    {
+      "label": "v4-cxl-F-d12-n8-r1",
+      "medium": "cxl",
+      "strategy": "F",
+      "repetition": 1,
+      "dram_mean_gib": 6.036547310572957,
+      "dram_peak_gib": 8.496456146240234,
+      "dram_gib_s": 5958.973861124836,
+      "coverage": 1.0,
+      "batch_s": 987.1493678092957,
+      "replay_makespan_s": 980.660339875,
+      "service_sum_s": 1667.9054110630004
+    },
+    {
+      "label": "v4-ssd-P-d12-n8-r1",
+      "medium": "ssd",
+      "strategy": "P",
+      "repetition": 1,
+      "dram_mean_gib": 5.657404121159729,
+      "dram_peak_gib": 9.787872314453125,
+      "dram_gib_s": 6441.330485160822,
+      "coverage": 1.0,
+      "batch_s": 1138.5664427280426,
+      "replay_makespan_s": 1054.805836405,
+      "service_sum_s": 1950.7309697910011
+    },
+    {
+      "label": "v4-ssd-F-d12-n8-r1",
+      "medium": "ssd",
+      "strategy": "F",
+      "repetition": 1,
+      "dram_mean_gib": 6.480056851501339,
+      "dram_peak_gib": 8.519031524658203,
+      "dram_gib_s": 6518.5464234646615,
+      "coverage": 1.0,
+      "batch_s": 1005.9396965503693,
+      "replay_makespan_s": 1000.2708093,
+      "service_sum_s": 2025.3459007690008
+    },
+    {
+      "label": "v4-cxl-P-d12-n8-r2",
+      "medium": "cxl",
+      "strategy": "P",
+      "repetition": 2,
+      "dram_mean_gib": 5.309948111678036,
+      "dram_peak_gib": 10.23282241821289,
+      "dram_gib_s": 5302.9854911828925,
+      "coverage": 1.0,
+      "batch_s": 998.6887593269348,
+      "replay_makespan_s": 992.565686975,
+      "service_sum_s": 1692.6422928319994
+    },
+    {
+      "label": "v4-cxl-F-d12-n8-r2",
+      "medium": "cxl",
+      "strategy": "F",
+      "repetition": 2,
+      "dram_mean_gib": 6.022947600974664,
+      "dram_peak_gib": 8.510444641113281,
+      "dram_gib_s": 5946.212175664899,
+      "coverage": 1.0,
+      "batch_s": 987.259489774704,
+      "replay_makespan_s": 980.982147799,
+      "service_sum_s": 1657.5396505500003
+    },
+    {
+      "label": "v4-ssd-P-d12-n8-r2",
+      "medium": "ssd",
+      "strategy": "P",
+      "repetition": 2,
+      "dram_mean_gib": 5.648806078374488,
+      "dram_peak_gib": 10.214786529541016,
+      "dram_gib_s": 6449.834282568295,
+      "coverage": 1.0,
+      "batch_s": 1141.8048686981201,
+      "replay_makespan_s": 1056.7106675769999,
+      "service_sum_s": 1945.6413921439994
+    },
+    {
+      "label": "v4-ssd-F-d12-n8-r2",
+      "medium": "ssd",
+      "strategy": "F",
+      "repetition": 2,
+      "dram_mean_gib": 6.484238983996981,
+      "dram_peak_gib": 8.606624603271484,
+      "dram_gib_s": 6515.254171793817,
+      "coverage": 1.0,
+      "batch_s": 1004.7831654548645,
+      "replay_makespan_s": 999.355391512,
+      "service_sum_s": 2009.0536334380004
+    },
+    {
+      "label": "v4-cxl-P-d12-n8-r3",
+      "medium": "cxl",
+      "strategy": "P",
+      "repetition": 3,
+      "dram_mean_gib": 5.304434785653482,
+      "dram_peak_gib": 10.670490264892578,
+      "dram_gib_s": 5291.340425672951,
+      "coverage": 1.0,
+      "batch_s": 997.5314316749573,
+      "replay_makespan_s": 991.197487389,
+      "service_sum_s": 1688.4766607060008
+    },
+    {
+      "label": "v4-cxl-F-d12-n8-r3",
+      "medium": "cxl",
+      "strategy": "F",
+      "repetition": 3,
+      "dram_mean_gib": 6.029115604775313,
+      "dram_peak_gib": 8.61550521850586,
+      "dram_gib_s": 5966.385685266485,
+      "coverage": 1.0,
+      "batch_s": 989.5955023765564,
+      "replay_makespan_s": 983.2371837540001,
+      "service_sum_s": 1681.7522521420012
+    },
+    {
+      "label": "v4-ssd-P-d12-n8-r3",
+      "medium": "ssd",
+      "strategy": "P",
+      "repetition": 3,
+      "dram_mean_gib": 5.654737679294208,
+      "dram_peak_gib": 9.962688446044922,
+      "dram_gib_s": 6466.947125112974,
+      "coverage": 1.0,
+      "batch_s": 1143.6334435939789,
+      "replay_makespan_s": 1057.0609347719999,
+      "service_sum_s": 1961.3104665679996
+    },
+    {
+      "label": "v4-ssd-F-d12-n8-r3",
+      "medium": "ssd",
+      "strategy": "F",
+      "repetition": 3,
+      "dram_mean_gib": 6.507016433996198,
+      "dram_peak_gib": 8.5556640625,
+      "dram_gib_s": 6530.4679064984,
+      "coverage": 1.0,
+      "batch_s": 1003.6040284633636,
+      "replay_makespan_s": 998.648801323,
+      "service_sum_s": 2016.7927481329998
+    }
+  ],
+  "summary": {
+    "cxl": {
+      "P": {
+        "dram_mean_gib": 5.309482193465439,
+        "dram_peak_gib": 10.396565755208334,
+        "dram_gib_s": 5301.909009459347,
+        "batch_s": 998.5730495452881,
+        "replay_makespan_s": 992.337622626,
+        "service_sum_s": 1697.875521357
+      },
+      "F": {
+        "dram_mean_gib": 6.029536838774312,
+        "dram_peak_gib": 8.540802001953125,
+        "dram_gib_s": 5957.19057401874,
+        "batch_s": 988.0014533201853,
+        "replay_makespan_s": 981.6265571426667,
+        "service_sum_s": 1669.0657712516672
+      },
+      "growth": {
+        "dram_mean_gib": -0.11942121999792699,
+        "dram_peak_gib": 0.21728214198512386,
+        "dram_gib_s": -0.1099984223129089,
+        "batch_s": 0.010699980439883738,
+        "replay_makespan_s": 0.010911548190496445,
+        "service_sum_s": 0.017261003491628513
+      }
+    },
+    "ssd": {
+      "P": {
+        "dram_mean_gib": 5.653649292942808,
+        "dram_peak_gib": 9.988449096679688,
+        "dram_gib_s": 6452.703964280697,
+        "batch_s": 1141.3349183400471,
+        "replay_makespan_s": 1056.1924795846667,
+        "service_sum_s": 1952.5609428343334
+      },
+      "F": {
+        "dram_mean_gib": 6.490437423164839,
+        "dram_peak_gib": 8.560440063476562,
+        "dram_gib_s": 6521.422833918959,
+        "batch_s": 1004.7756301561991,
+        "replay_makespan_s": 999.4250007116667,
+        "service_sum_s": 2017.0640941133336
+      },
+      "growth": {
+        "dram_mean_gib": -0.1289263073757515,
+        "dram_peak_gib": 0.16681490935212295,
+        "dram_gib_s": -0.010537404395992378,
+        "batch_s": 0.1359102311852638,
+        "replay_makespan_s": 0.05680013891245195,
+        "service_sum_s": -0.0319787315967045
+      }
+    }
+  }
+}

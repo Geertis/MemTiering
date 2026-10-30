@@ -1,0 +1,320 @@
+{
+  "as_of": "2026-10-30T08:11:26.178733+08:00",
+  "status": "candidate counter convention, not asserted to reproduce undocumented paper offline-profiler details",
+  "paper": "section 5.4 PDF page10: sum offline-profiled peak footprints of all submitted workflows divided by host memory capacity",
+  "measurement": "max(memory.current+memory.swap.current) of one slot cgroup, within the trace window; max across three repetitions; includes charged file cache and kernel, excludes shared L1 root overhead",
+  "rows": [
+    {
+      "label": "v3-s1-dask-r1",
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "trace_window_peak_bytes": 6450610176,
+      "lifetime_peak_bytes": 6450610176,
+      "vmm_rss_peak_bytes": 1899810816.0,
+      "at_trace_peak": {
+        "current_bytes": 6450610176,
+        "swap_bytes": 0,
+        "epoch": 1793279805.4515893
+      },
+      "memory_stat_at_peak": {
+        "anon": 31645696,
+        "file": 6266171392,
+        "kernel": 151826432,
+        "shmem": 1892773888,
+        "active_file": 0,
+        "inactive_file": 4373262336
+      }
+    },
+    {
+      "label": "v3-s1-dask-r2",
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "trace_window_peak_bytes": 6442917888,
+      "lifetime_peak_bytes": 6442917888,
+      "vmm_rss_peak_bytes": 1892085760.0,
+      "at_trace_peak": {
+        "current_bytes": 6442917888,
+        "swap_bytes": 0,
+        "epoch": 1793284647.1669643
+      },
+      "memory_stat_at_peak": {
+        "anon": 31666176,
+        "file": 6257954816,
+        "kernel": 151928832,
+        "shmem": 1885048832,
+        "active_file": 0,
+        "inactive_file": 4372701184
+      }
+    },
+    {
+      "label": "v3-s1-dask-r3",
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "trace_window_peak_bytes": 6459281408,
+      "lifetime_peak_bytes": 6459281408,
+      "vmm_rss_peak_bytes": 1908645888.0,
+      "at_trace_peak": {
+        "current_bytes": 6459281408,
+        "swap_bytes": 0,
+        "epoch": 1793289482.2493236
+      },
+      "memory_stat_at_peak": {
+        "anon": 31666176,
+        "file": 6274572288,
+        "kernel": 151621632,
+        "shmem": 1901604864,
+        "active_file": 0,
+        "inactive_file": 4372860928
+      }
+    },
+    {
+      "label": "v3-s1-numba-r1",
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "trace_window_peak_bytes": 6564347904,
+      "lifetime_peak_bytes": 6564347904,
+      "vmm_rss_peak_bytes": 1647611904.0,
+      "at_trace_peak": {
+        "current_bytes": 6564347904,
+        "swap_bytes": 0,
+        "epoch": 1793279386.0065331
+      },
+      "memory_stat_at_peak": {
+        "anon": 31657984,
+        "file": 6379905024,
+        "kernel": 151539712,
+        "shmem": 1640583168,
+        "active_file": 10641408,
+        "inactive_file": 4728639488
+      }
+    },
+    {
+      "label": "v3-s1-numba-r2",
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "trace_window_peak_bytes": 6308249600,
+      "lifetime_peak_bytes": 6308249600,
+      "vmm_rss_peak_bytes": 1651175424.0,
+      "at_trace_peak": {
+        "current_bytes": 6308249600,
+        "swap_bytes": 0,
+        "epoch": 1793284229.2878458
+      },
+      "memory_stat_at_peak": {
+        "anon": 31678464,
+        "file": 6135676928,
+        "kernel": 139923456,
+        "shmem": 1644142592,
+        "active_file": 0,
+        "inactive_file": 4491403264
+      }
+    },
+    {
+      "label": "v3-s1-numba-r3",
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "trace_window_peak_bytes": 6161379328,
+      "lifetime_peak_bytes": 6161379328,
+      "vmm_rss_peak_bytes": 1653420032.0,
+      "at_trace_peak": {
+        "current_bytes": 6161379328,
+        "swap_bytes": 0,
+        "epoch": 1793289067.4690878
+      },
+      "memory_stat_at_peak": {
+        "anon": 31686656,
+        "file": 5988974592,
+        "kernel": 139653120,
+        "shmem": 1646391296,
+        "active_file": 0,
+        "inactive_file": 4342476800
+      }
+    },
+    {
+      "label": "v3-s1-pydicom-r1",
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "trace_window_peak_bytes": 9238618112,
+      "lifetime_peak_bytes": 9238618112,
+      "vmm_rss_peak_bytes": 5064396800.0,
+      "at_trace_peak": {
+        "current_bytes": 9238618112,
+        "swap_bytes": 0,
+        "epoch": 1793280102.9430566
+      },
+      "memory_stat_at_peak": {
+        "anon": 31596544,
+        "file": 9051545600,
+        "kernel": 154202112,
+        "shmem": 5057380352,
+        "active_file": 0,
+        "inactive_file": 3994161152
+      }
+    },
+    {
+      "label": "v3-s1-pydicom-r2",
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "trace_window_peak_bytes": 9236291584,
+      "lifetime_peak_bytes": 9236291584,
+      "vmm_rss_peak_bytes": 5063073792.0,
+      "at_trace_peak": {
+        "current_bytes": 9236291584,
+        "swap_bytes": 0,
+        "epoch": 1793284942.7558606
+      },
+      "memory_stat_at_peak": {
+        "anon": 31637504,
+        "file": 9049124864,
+        "kernel": 154169344,
+        "shmem": 5056049152,
+        "active_file": 0,
+        "inactive_file": 3993047040
+      }
+    },
+    {
+      "label": "v3-s1-pydicom-r3",
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "trace_window_peak_bytes": 9235439616,
+      "lifetime_peak_bytes": 9235439616,
+      "vmm_rss_peak_bytes": 5062434816.0,
+      "at_trace_peak": {
+        "current_bytes": 9235439616,
+        "swap_bytes": 0,
+        "epoch": 1793289780.435966
+      },
+      "memory_stat_at_peak": {
+        "anon": 31657984,
+        "file": 9048432640,
+        "kernel": 154152960,
+        "shmem": 5055401984,
+        "active_file": 0,
+        "inactive_file": 3993006080
+      }
+    },
+    {
+      "label": "v3-s1-streamlink-r1",
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "trace_window_peak_bytes": 4576493568,
+      "lifetime_peak_bytes": 4815773696,
+      "vmm_rss_peak_bytes": 760819712.0,
+      "at_trace_peak": {
+        "current_bytes": 4576493568,
+        "swap_bytes": 0,
+        "epoch": 1793280941.1324115
+      },
+      "memory_stat_at_peak": {
+        "anon": 31629312,
+        "file": 4426104832,
+        "kernel": 117620736,
+        "shmem": 753786880,
+        "active_file": 0,
+        "inactive_file": 3672264704
+      }
+    },
+    {
+      "label": "v3-s1-streamlink-r2",
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "trace_window_peak_bytes": 4835217408,
+      "lifetime_peak_bytes": 5100589056,
+      "vmm_rss_peak_bytes": 736141312.0,
+      "at_trace_peak": {
+        "current_bytes": 4835217408,
+        "swap_bytes": 0,
+        "epoch": 1793285944.5340228
+      },
+      "memory_stat_at_peak": {
+        "anon": 31621120,
+        "file": 4684845056,
+        "kernel": 117776384,
+        "shmem": 718815232,
+        "active_file": 0,
+        "inactive_file": 3965947904
+      }
+    },
+    {
+      "label": "v3-s1-streamlink-r3",
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "trace_window_peak_bytes": 4858703872,
+      "lifetime_peak_bytes": 5103112192,
+      "vmm_rss_peak_bytes": 764743680.0,
+      "at_trace_peak": {
+        "current_bytes": 4858703872,
+        "swap_bytes": 0,
+        "epoch": 1793290617.405106
+      },
+      "memory_stat_at_peak": {
+        "anon": 31645696,
+        "file": 4708237312,
+        "kernel": 117788672,
+        "shmem": 756424704,
+        "active_file": 0,
+        "inactive_file": 3951665152
+      }
+    }
+  ],
+  "profiles": [
+    {
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "peak_scope": "one L1 slot cgroup; trace tool execution and recorded waits, excluding workspace preparation before trace",
+      "peak_bytes": 6459281408,
+      "trace_peak_range_gib": [
+        6.000434875488281,
+        6.015674591064453
+      ],
+      "max_source": "v3-s1-dask-r3",
+      "vmm_rss_peak_gib": 1.7775650024414062
+    },
+    {
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "peak_scope": "one L1 slot cgroup; trace tool execution and recorded waits, excluding workspace preparation before trace",
+      "peak_bytes": 6564347904,
+      "trace_peak_range_gib": [
+        5.738231658935547,
+        6.113525390625
+      ],
+      "max_source": "v3-s1-numba-r1",
+      "vmm_rss_peak_gib": 1.5398674011230469
+    },
+    {
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "peak_scope": "one L1 slot cgroup; trace tool execution and recorded waits, excluding workspace preparation before trace",
+      "peak_bytes": 9238618112,
+      "trace_peak_range_gib": [
+        8.601173400878906,
+        8.604133605957031
+      ],
+      "max_source": "v3-s1-pydicom-r1",
+      "vmm_rss_peak_gib": 4.716587066650391
+    },
+    {
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "peak_scope": "one L1 slot cgroup; trace tool execution and recorded waits, excluding workspace preparation before trace",
+      "peak_bytes": 4858703872,
+      "trace_peak_range_gib": [
+        4.2621917724609375,
+        4.525020599365234
+      ],
+      "max_source": "v3-s1-streamlink-r3",
+      "vmm_rss_peak_gib": 0.7122230529785156
+    }
+  ],
+  "n8_candidate_peak_sum_gib": 50.51670837402344,
+  "warnings": [
+    "Recorded cgroup charge includes reclaimable filesystem cache; this ratio does not establish simultaneous irreclaimable memory demand or achievable residency density.",
+    "Paper does not specify the exact offline-profile counter/window; appendix table5 footprint is runtime accounting and is not a complete offline profiling specification.",
+    "Host kernel bookkeeping beyond slot charges is not included in the workload numerator; avoid summing hierarchical parent and child cgroup charges."
+  ],
+  "source_file_sha256": "19b49c0ceee01aafdd042b7c3c05963a538f9b9d268f3b5029485467857e8f29",
+  "ratio_note": "DRAM-only denominator; old total-RAM CXL ratio fields omitted as superseded. Numerator remains an unapproved cache-inclusive profiling candidate.",
+  "candidate_dram_only_ratios": [
+    {
+      "dram_gib": 12,
+      "ratio": 4.209725697835286
+    },
+    {
+      "dram_gib": 10,
+      "ratio": 5.051670837402344
+    },
+    {
+      "dram_gib": 8,
+      "ratio": 6.31458854675293
+    },
+    {
+      "dram_gib": 7,
+      "ratio": 7.216672624860491
+    }
+  ]
+}

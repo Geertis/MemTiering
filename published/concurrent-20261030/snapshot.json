@@ -1,0 +1,65 @@
+{
+  "as_of": "2026-10-30T17:53:32.306430+08:00",
+  "campaigns": {
+    "v4": {
+      "stage": "tiered-pressure-pairs-complete",
+      "active": null,
+      "completed": [
+        "v4-cxl-P-d12-n8-r1",
+        "v4-cxl-F-d12-n8-r1",
+        "v4-ssd-P-d12-n8-r1",
+        "v4-ssd-F-d12-n8-r1",
+        "v4-cxl-P-d12-n8-r2",
+        "v4-cxl-F-d12-n8-r2",
+        "v4-ssd-P-d12-n8-r2",
+        "v4-ssd-F-d12-n8-r2",
+        "v4-cxl-P-d12-n8-r3",
+        "v4-cxl-F-d12-n8-r3",
+        "v4-ssd-P-d12-n8-r3",
+        "v4-ssd-F-d12-n8-r3"
+      ],
+      "failed": [],
+      "updated_epoch": 1793308081.9903257
+    },
+    "v5": {
+      "stage": "failure-needs-immediate-diagnosis",
+      "active": null,
+      "completed": [
+        "v5-cxl-P-d10-n8-r1",
+        "v5-cxl-F-d10-n8-r1",
+        "v5-ssd-P-d10-n8-r1",
+        "v5-ssd-F-d10-n8-r1"
+      ],
+      "failed": [
+        "v5-cxl-P-d8-n8-r1"
+      ],
+      "updated_epoch": 1793324093.3838632
+    },
+    "v6": {
+      "stage": "tiered-pressure-pairs-complete",
+      "active": null,
+      "completed": [
+        "v6-cxl-P-d8-n8-r1",
+        "v6-cxl-F-d8-n8-r1",
+        "v6-ssd-P-d8-n8-r1",
+        "v6-ssd-F-d8-n8-r1"
+      ],
+      "failed": [],
+      "updated_epoch": 1793340806.5741582
+    },
+    "v7": {
+      "stage": "running-cohort",
+      "active": "v7-ssd-F-d7-n8-r1",
+      "completed": [
+        "v7-cxl-P-d7-n8-r1",
+        "v7-cxl-F-d7-n8-r1",
+        "v7-ssd-P-d7-n8-r1"
+      ],
+      "failed": [],
+      "updated_epoch": 1793346833.9598246
+    }
+  },
+  "completed_cohorts": 23,
+  "complete_instances": 184,
+  "note": "Version-separated snapshot; running and unrun points are not successes. Raw binaries/traces/log streams are external."
+}

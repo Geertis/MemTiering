@@ -1,0 +1,26 @@
+{
+  "epoch": 1793334232.1499367,
+  "status": "code optimization in progress; regression not yet run",
+  "event": "DRAM-node constrained OOM; cold capacity still available",
+  "kernel_summary": [
+    "[  396.863344] vcpu3 invoked oom-killer: gfp_mask=0x100cca(GFP_HIGHUSER_MOVABLE), order=0, oom_score_adj=0",
+    "[  396.863983] oom-kill:constraint=CONSTRAINT_MEMORY_POLICY,nodemask=0,cpuset=/,mems_allowed=0-1,global_oom,task_memcg=/PhaseTieing-formal/slot-3,task=cloud-hyperviso,pid=2577,uid=0",
+    "[  396.864121] Out of memory: Killed process 2577 (cloud-hyperviso) total-vm:12620036kB, anon-rss:3456kB, file-rss:672kB, shmem-rss:2093056kB, UID:0 pgtables:4424kB oom_score_adj:0",
+    "[  397.184435] _net2_qp0 invoked oom-killer: gfp_mask=0xcc0(GFP_KERNEL), order=0, oom_score_adj=0",
+    "[  397.185340] oom-kill:constraint=CONSTRAINT_MEMORY_POLICY,nodemask=0,cpuset=/,mems_allowed=0-1,global_oom,task_memcg=/PhaseTieing-formal/slot-6,task=cloud-hyperviso,pid=2767,uid=0",
+    "[  397.185440] Out of memory: Killed process 2767 (cloud-hyperviso) total-vm:12620036kB, anon-rss:3456kB, file-rss:2152kB, shmem-rss:1817440kB, UID:0 pgtables:3800kB oom_score_adj:0"
+  ],
+  "initial_payload_budget_mib": 2992,
+  "initial_nonpayload_mib": 4161.265625,
+  "last_nonpayload_mib": 4929.046875,
+  "fast_managed_mib": 7989.7,
+  "configured_fast_mib": 8192,
+  "last_dram_free_mib": 25.1,
+  "last_cxl_free_mib": 26798.5,
+  "fixes": [
+    "use managed instead of configured capacity",
+    "include nonpayload drift and reserved/slab memory in runtime guard",
+    "gate grant increases with actual physical headroom",
+    "retain 1GiB reserve and physical settlement for both P/F"
+  ]
+}

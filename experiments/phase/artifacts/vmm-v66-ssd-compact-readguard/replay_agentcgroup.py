@@ -521,7 +521,12 @@ class Replayer:
                             }
                         )
                         continue
-                    steps.append(self._run_step(source_index, call))
+                    print("PHASETIEING_START=" + json.dumps(dict(source_index=source_index,
+                        tool=tool, monotonic_s=time.monotonic())), flush=True)
+                    step = self._run_step(source_index, call)
+                    steps.append(step)
+                    print("PHASETIEING_STEP=" + json.dumps({key: step.get(key) for key in
+                        ["source_index", "tool", "status", "expected_error", "outcome_match", "elapsed_s", "error"]}), flush=True)
                 if self.args.timing == "original" and self.calls:
                     original_end = max(
                         parse_timestamp(call.get("end_timestamp") or call["timestamp"])
@@ -562,6 +567,7 @@ class Replayer:
         ]
         return {
             "schema_version": 1,
+            "command_timeouts_disabled": bool(getattr(self.args, "disable_command_timeouts", False)),
             "initial_memory_policy": self.initial_policy,
             "search_backend": self.search_backend,
             "shell_pythonpath": self.shell_env.get("PYTHONPATH"),
@@ -694,7 +700,7 @@ class Replayer:
     def _execute(self, tool: str, values: dict[str, Any]) -> dict[str, Any]:
         if tool == "Bash":
             timeout_ms = int(values.get("timeout", self.args.command_timeout * 1000))
-            timeout = min(timeout_ms / 1000.0, self.args.command_timeout)
+            timeout = None if getattr(self.args, "disable_command_timeouts", False) else min(timeout_ms / 1000.0, self.args.command_timeout)
             completed = subprocess.run(
                 values.get("command", ""),
                 shell=True,
@@ -704,6 +710,8 @@ class Replayer:
                 env=self.shell_env,
             )
             result = command_result(completed)
+            result["recorded_timeout_ms"] = values.get("timeout")
+            result["applied_timeout_s"] = timeout
             result["persisted_exports"] = self._persist_exports(
                 str(values.get("command", ""))
             )
@@ -897,6 +905,7 @@ def main() -> None:
     parser.add_argument("--timing", choices=("original", "gaps", "none"), default="original")
     parser.add_argument("--speed", type=float, default=1.0)
     parser.add_argument("--command-timeout", type=float, default=600.0)
+    parser.add_argument("--disable-command-timeouts", action="store_true", help="Observe natural completion; recorded timeout fields remain metadata")
     parser.add_argument("--cgroup", type=Path)
     parser.add_argument("--join-cgroup", action="store_true")
     parser.add_argument("--static-weighted-interleave", action="store_true")

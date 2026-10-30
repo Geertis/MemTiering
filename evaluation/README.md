@@ -1,5 +1,11 @@
 # 实验源码与结果
 
+2026-10-30 的当前并发容量实验从 [concurrent](../experiments/concurrent/README.md)
+进入：包含 L0/L1/L2 设置、28 点历史矩阵、配置化 v7 入口、固定公开 trace 提取工具、
+逐版结果及失败证据。完整复现步骤见 [concurrent-reproduction](../docs/concurrent-reproduction.md)，
+已探索结果见 [并发结果包](../published/concurrent-20261030/README.md)。
+下文描述此前的串行全量实验，不与当前容量探索混算。
+
 `experiments/phase/all_traces_v67/` 包含当前已测全量实验的调度、隔离、语义检查、
 审计和单次运行入口；其余 `experiments/phase/` 目录提供依赖工具和冻结源码快照。
 `reference/` 保留此前整理的参考副本。正常审阅从 `experiments/` 和 `runtime/` 开始。

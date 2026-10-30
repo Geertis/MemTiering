@@ -1,0 +1,36 @@
+{
+  "version": "v5-capacity-scan",
+  "created_epoch": 1793318546.8635333,
+  "authorization": "Continue authorized pressure experiments after complete 12GiB paired repetitions",
+  "initial": {
+    "n": 8,
+    "vcpus": 36,
+    "dram_gib": 10,
+    "cxl_gib": 64,
+    "aggregate_ssd_swap_gib": 64,
+    "guest_vcpus": 4,
+    "guest_nominal_gib": 12
+  },
+  "treatments": [
+    "PhaseTieing-CXL",
+    "same-budget static-CXL",
+    "PhaseTieing-SSD",
+    "same-budget static-SSD"
+  ],
+  "cold_resources": "64GiB shared per cohort, never per VM; CXL adds real physical RAM; SSD is storage",
+  "global_quota": "existing waterfill + settle_grants, guest grants delivered over existing telemetry channel; credit comes from actual controlled DRAM residency",
+  "pressure": "per-node fast memory use, controlled residency, PSI, reclaim; compare same medium/capacity/layout",
+  "no_timeouts": true,
+  "stop_on_anomaly": true,
+  "known_limit": "nested PEBS unsupported; no claim of sampled promotion/exchange unless measured",
+  "old_baseline": "v3 completed cohorts retained only as correctness and performance references",
+  "scan_dram_gib": [
+    10,
+    8
+  ],
+  "scan_repetitions": 1,
+  "scope": "exploratory capacity points; establish differentiating boundary before three-repeat confirmation",
+  "comparison": "same code and measurement protocol as v4; budgets frozen independently per DRAM/medium pair",
+  "known_measurement_limit": "Replay result serialization remains in workload cgroup; report natural trace E2E separately from driver completion and diagnose post-replay overhead",
+  "previous_completed": "v4: all 12 cohorts and 96 trace instances completed correctly without L1 OOM"
+}

@@ -1,0 +1,86 @@
+{
+  "lab_root": "/absolute/path/to/owned/PhaseTieing-lab",
+  "run_name": "PhaseTieing-repro-7g",
+  "dram_gib": [
+    7
+  ],
+  "repetitions": [
+    1
+  ],
+  "n": 8,
+  "media": [
+    "cxl",
+    "ssd"
+  ],
+  "strategies": [
+    "P",
+    "F"
+  ],
+  "module_abi": "published",
+  "l0": {
+    "dram_node": 1,
+    "cxl_node": 2,
+    "vcpu_cores": [
+      32,
+      33,
+      34,
+      35,
+      36,
+      37,
+      38,
+      39,
+      40,
+      41,
+      42,
+      43,
+      44,
+      45,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      63,
+      24,
+      25,
+      26,
+      27
+    ],
+    "helper_cores": [
+      28,
+      29
+    ],
+    "ssh_port": 22954,
+    "outer_user": "hs"
+  },
+  "assets": {
+    "l1_base": "/absolute/path/to/l1-base-flat.qcow2",
+    "l1_kernel": "/absolute/path/to/l1-vmlinuz",
+    "l1_initrd": "/absolute/path/to/l1-initrd",
+    "outer_ssh_key": "/absolute/path/to/outer-private-key",
+    "guest_ssh_key": "/absolute/path/to/guest-private-key",
+    "guest_base": "/absolute/path/to/l2-base-flat.qcow2",
+    "guest_artifacts": "/absolute/path/to/prebuilt-artifacts",
+    "cloud_hypervisor": "/absolute/path/to/cloud-hypervisor",
+    "randomize_pages": "/absolute/path/to/randomize_pages",
+    "traces": "/absolute/path/to/fetched-traces",
+    "golden": {
+      "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8": "/absolute/path/to/frozen-images/dask-5510-compatible.ext4",
+      "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89": "/absolute/path/to/frozen-images/numba-9636-compatible.ext4",
+      "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1": "/absolute/path/to/frozen-images/pydicom-2065-data-20261009-v1.ext4",
+      "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590": "/absolute/path/to/frozen-images/streamlink-3485-compatible.ext4"
+    }
+  }
+}
