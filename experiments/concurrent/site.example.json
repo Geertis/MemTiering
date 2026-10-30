@@ -1,8 +1,9 @@
 {
   "lab_root": "/absolute/path/to/owned/PhaseTieing-lab",
-  "run_name": "PhaseTieing-repro-ssd7-boundary",
+  "run_name": "PhaseTieing-repro-relative-control",
   "dram_gib": [
-    7
+    7,
+    6
   ],
   "repetitions": [
     1,

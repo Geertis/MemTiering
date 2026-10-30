@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import tarfile
 from types import SimpleNamespace
 import unittest
 
@@ -43,7 +44,7 @@ class ConcurrentReleaseTest(unittest.TestCase):
             self.assertFalse((base / 'storage').exists())
             self.assertFalse((root / 'bootstrap-complete.json').exists())
             program = ('import pressure; from environment import environment; '
-                       'assert len(pressure.plans()) == 6; '
+                       'assert len(pressure.plans()) == 12; '
                        f'assert pressure.ROOT.name == {c["run_name"]!r}')
             subprocess.run(['python3', '-B', '-c', program], cwd=h, check=True,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -70,6 +71,36 @@ class ConcurrentReleaseTest(unittest.TestCase):
             p.write_text(json.dumps(c))
             with self.assertRaisesRegex(ValueError, 'disjoint'):
                 runner.config(p)
+
+    def test_capacity_regression_precedes_boundary_and_control_reference(self):
+        rows = runner.matrix(self.settings())
+        self.assertEqual([r['dram_gib'] for r in rows], [7]*6 + [6]*6)
+        for p, f in zip(rows[::2], rows[1::2]):
+            self.assertEqual((p['strategy'], f['strategy']), ('P', 'F'))
+            self.assertEqual(p['repetition'], f['repetition'])
+            self.assertEqual(p['slots'], f['slots'])
+
+    def test_timeout_evidence_keeps_complete_results_and_bounded_valid_tail(self):
+        path = REPO / 'experiments/concurrent/snapshots/v13/timeout_evidence.py'
+        spec = importlib.util.spec_from_file_location('timeout_evidence_test', path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root/'result.json').write_text('{"steps": [], "complete": true}')
+            (root/'controller.jsonl').write_bytes(
+                (b'{"tick": 1, "payload": "' + b'x'*1000 + b'"}\n')*300 +
+                b'{"tick": 2}\n{"interrupted":')
+            script = module.GUEST.replace("Path('/mnt/workload/out')", f'Path({tmp!r})')
+            script = script.replace("Path('/tmp/controller.err')", f'Path({str(root/"absent")!r})')
+            script = script.replace("subprocess.check_output(['dmesg'])", "b'kernel evidence'")
+            result = subprocess.run(['python3', '-c', script], check=True, capture_output=True)
+            with tarfile.open(fileobj=io.BytesIO(result.stdout)) as archive:
+                self.assertTrue(json.load(archive.extractfile('result.json'))['complete'])
+                tail = archive.extractfile('controller-tail.jsonl').read()
+                self.assertLessEqual(len(tail), 131073)
+                rows = [json.loads(line) for line in tail.splitlines()]
+                self.assertEqual(rows[-1], {'tick': 2})
 
     def test_real_bash_replay_can_outlive_recorded_api_limit(self):
         paths = [REPO / 'experiments/phase/artifacts' / name / 'replay_agentcgroup.py'

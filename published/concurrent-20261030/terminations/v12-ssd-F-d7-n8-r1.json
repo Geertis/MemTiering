@@ -1,0 +1,24 @@
+{
+  "label": "v12-ssd-F-d7-n8-r1",
+  "classification": "control-relative-timeout",
+  "reference_label": "v12-ssd-P-d7-n8-r1",
+  "reference_batch_s": 1296.4343090057373,
+  "factor": 2,
+  "limit_s": 2592.8686180114746,
+  "adopted_epoch": 1793376022.5802348,
+  "adopted_after_start": true,
+  "user_directed": true,
+  "scope": "F cohort only; P and individual tools remain unlimited",
+  "stop_epoch": 1793376022.793163,
+  "observed_duration_s": 3307.9234976768494,
+  "cutoff_was_already_exceeded": true,
+  "completed_lanes": [
+    1,
+    2,
+    3,
+    4,
+    6,
+    7
+  ],
+  "completed_at_decision": false
+}

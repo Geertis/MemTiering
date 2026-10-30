@@ -19,12 +19,14 @@ CAMPAIGNS={
  'v10':'PhaseTieing-concurrent-20261030-v10-scaled-reserve',
  'v11':'PhaseTieing-concurrent-20261030-v11-controller-health',
  'v12':'PhaseTieing-concurrent-20261030-v12-ssd7-boundary',
+ 'v13':'PhaseTieing-concurrent-20261031-v13-relative-control',
 }
 FIELDS=['version','label','dram_gib','n','medium','strategy','repetition','outcome',
  'correct_instances','l1_oom','minimum_live_vmms','batch_s','trace_makespan_s',
  'service_sum_s','budget_ceiling_mib','minimum_budget_mib','grant_acknowledgements',
  'actual_cold_tier_used','control_definition','observed_duration_s','user_directed_stop',
- 'reserve_policy','physical_reserve_mib']
+ 'reserve_policy','physical_reserve_mib','timeout_reference_label',
+ 'timeout_reference_batch_s','timeout_factor','timeout_limit_s','cutoff_adopted_late']
 
 
 def read(path):return json.loads(Path(path).read_text())
@@ -43,7 +45,7 @@ def export(source,output):
     for version,name in CAMPAIGNS.items():
         root=source/name
         if not (root/'matrix.json').exists():continue
-        state=read(root/'status.json');snapshot[version]={k:state.get(k) for k in ['stage','active','completed','failed','startup_blocked','infrastructure_failed','severe_timeouts','updated_epoch']}
+        state=read(root/'status.json');snapshot[version]={k:state.get(k) for k in ['stage','active','completed','failed','startup_blocked','infrastructure_failed','severe_timeouts','relative_timeouts','updated_epoch']}
         save(output/'protocols'/f'{version}.json',read(root/'protocol.json'))
         save(output/'source-manifests'/f'{version}.json',read(root/'source-manifest.json'))
         for spec in read(root/'matrix.json'):
@@ -89,6 +91,18 @@ def export(source,output):
                     row.update(outcome='severe-timeout',observed_duration_s=decision['observed_duration_s'],user_directed_stop=True)
                     row.pop('batch_s',None)
                     save(output/'terminations'/(spec['label']+'.json'),decision)
+            decision_path=folder/'control-timeout.json'
+            if decision_path.exists():
+                decision=read(decision_path)
+                row.update(observed_duration_s=decision['observed_duration_s'],
+                    user_directed_stop=decision.get('user_directed',False),
+                    timeout_reference_label=decision['reference_label'],
+                    timeout_reference_batch_s=decision['reference_batch_s'],
+                    timeout_factor=decision['factor'],timeout_limit_s=decision['limit_s'],
+                    cutoff_adopted_late=decision.get('cutoff_was_already_exceeded',False))
+                # A stop threshold never supplies a finite completion time.
+                row.pop('batch_s',None)
+                save(output/'terminations'/(spec['label']+'.json'),decision)
             rows.append(row)
     output.mkdir(parents=True,exist_ok=True)
     with (output/'matrix.csv').open('w',newline='') as f:
@@ -100,6 +114,7 @@ def export(source,output):
         completed_cohorts=sum(v['outcome']=='passed' for v in rows),
         complete_instances=sum(v.get('correct_instances',0) for v in rows if v['outcome']=='passed'),
         additional_complete_instances_in_stopped_cohorts=sum(v.get('correct_instances',0) for v in rows if v['outcome']=='severe-timeout'),
+        additional_complete_instances_in_relative_timeout_cohorts=sum(v.get('correct_instances',0) for v in rows if v['outcome']=='control-relative-timeout'),
         additional_complete_instances_in_invalid_controller_cohorts=sum(v.get('correct_instances',0) for v in rows if v['outcome']=='infrastructure-controller-exited'),
         note='Version-separated snapshot; running and unrun points are not successes. Raw binaries/traces/log streams are external.'))
     bad=source/CAMPAIGNS['v5']/'cohorts/v5-cxl-P-d8-n8-r1/l1-dmesg.log'

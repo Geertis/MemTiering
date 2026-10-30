@@ -2,7 +2,7 @@
 
 # 当前实验设置与复现方法
 
-本文件对应 2026-10-30 的真实冷层容量探索。结果按 v4–v12 分开发布：
+本文件更新至 2026-10-31 的真实冷层容量探索。结果按 v4–v13 分开发布：
 12 GiB 已完成三重复；更低 DRAM 档位为单次探索。它们不是同一冻结版本的一条完整容量曲线。
 旧 96 GiB 全 DRAM 测量仅用于回放正确性、执行时间和离线占用参考。
 
@@ -55,12 +55,18 @@ CXL/SSD 冷层容量是**全组共享 64 GiB**，不是每 Sandbox 各 64 GiB。
 工具返回非零不自动判失败：轨迹中的预期错误必须按原观测签名核对。
 审计同时检查工具数量、状态/业务输出、代码最终状态与补丁签名、缺失结果、存活 VMM 数、L1/L2 OOM、配额回执及冷层实际使用。
 
-**不设置工具、轨迹或整组执行时限。** `REPLAY_TIMEOUT_S=0`，回放显式使用
+**P 与单个工具不设置执行时限。v13 的 F 使用同配对 P 批次时长 2 倍截止。** `REPLAY_TIMEOUT_S=0`，回放显式使用
 `--disable-command-timeouts`；原输入内的 API timeout 作为元数据保留，不用于把较慢执行判成失败。
 外层 VM SSH 建连 240 秒、L2 READY/释放屏障 1800 秒、故障取证和清理等待属于基础设施保护，
 不能计成 workload 超时失败。准备失败、手工中断和资源保护退出须单列 censored/infrastructure。
 `REPLAY_EXPORT_TIMEOUT_S` 是继承环境字段，当前无执行路径据此截止；不要据其名字解释轨迹结果。
-正常完成的 L2 留在宿主上直到整组完成，统一释放，避免提前销毁改变驻留密度。
+正常完成的 L2 留在宿主上直到整组完成或 F 达配对截止，统一释放，避免提前销毁改变驻留密度。
+
+F 参考必须是同介质、DRAM、N、seed、slots 与重复编号下已正确完成且无 OOM 的 P。
+阈值为 `2 × (P.all_done_epoch − P.release_epoch)`；F 以释放后的单调时钟计时，完成屏障优先于截止检查，启动和归档不参与计时。
+达到阈值仍未完成则记录 `control-relative-timeout`、保存截止时内核/资源/控制器状态与已完成结果，再强制清理所属 VM 并继续。
+P 失败时不运行其 F；控制器故障、业务错误和 OOM 优先按各自原因停止诊断。
+未完成 F 不填写 `batch_s`，保留阈值、实际停止用时及参考身份；不能当作 P 失败或伪造有限完成时间。
 
 ## 3. 策略与矩阵
 
@@ -81,10 +87,11 @@ F 不是未经修改的 Linux 或论文原始机制。
 | v9 | 6 GiB | SSD × P/F | 1 | 2 | 延后初始预算提交与 READY 入场门控；同资源回归 |
 | v10 | 6 GiB | SSD × P/F | 1 | 2 | 在相同硬件上改用有界比例预留；P/F 固定相同预留及 ceiling |
 | v11 | 6 GiB | SSD × P/F | 1 | 2 | DAMON 生命周期容错、控制器进程/心跳和容量状态新鲜度回归 |
-| v12 | 7 GiB | SSD × P/F | 3 | 6 | 沿用 v11 实现，验证 6 GiB 真实 OOM 的相邻容量点 |
+| v12 | 7 GiB | SSD × P/F | 3 | 6 | 首 P 通过；首 F 用户采用新截止规则后停止，其余四组移交新版本 |
+| v13 | 7→6 GiB | SSD × P/F | 3 | 12 | 同内存策略，先做 7 GiB 回归，再复测 6 GiB；正式应用 F-only P×2 截止 |
 
-共 44 个计划点。禁止将未运行点或仍运行点当作成功，也不能跨版本平均成“三重复”。
-最新通用入口使用 v12 配置及 v11 控制器健康修正；重跑 12/10/8 GiB 将产生新结果，不会重现旧版本的策略语义。
+累计 56 个计划点（包括历史版本未运行的计划）。禁止将未运行点或仍运行点当作成功，也不能跨版本平均成“三重复”。
+最新通用入口使用 v13 的配对截止及 v11/v12 内存和控制器健康策略；重跑 12/10/8 GiB 将产生新结果，不会重现旧版本的策略语义。
 需要审查旧行为时使用对应 `snapshots/v*/` 和发布协议，不应将旧 OOM 隐藏为最新版本失败。
 
 v6/v7 以 fast 节点实际 managed 容量计算安全预算，扣除运行时非 payload 占用并保留 1 GiB：
@@ -118,7 +125,9 @@ v11 不改变 v10 的预留、ceiling 或硬件，单独增加确认已关闭 DA
 5 秒以上的控制器容量状态不用于新物理信用；进程退出或 30 秒心跳停滞触发控制基础设施故障诊断，不是工作负载执行时限。
 
 v11 在全部控制器存活、心跳新鲜时，于释放 449.135 秒后发生真实 L1 全局 OOM，内核杀死 VMM，保留为资源失败。
-v12 的 7 GiB SSD 三重复与 v11 使用相同实现，仅改变容量与到达重复，不将旧版 7 GiB 数据当作当前版本的通过证据。
+v12 的 7 GiB SSD 与 v11 使用相同实现。首个 P 批次 1296.434 秒、8/8 正确；首 F 的新截止阈值为 2592.869 秒。
+用户提出规则时 F 已超阈值，实际停止用时 3307.923 秒，6/8 正确、无 L1 OOM，标记 `cutoff_adopted_late=true`。
+原协议和源码不倒改。v13 使用全新标签重跑 7 GiB 三配对后，再在同一冻结实现下复测 6 GiB；旧 6 GiB 真实 OOM 保留。
 
 ## 4. 容量、性能和内存口径
 
@@ -219,20 +228,23 @@ python3 tools/concurrent.py prepare --config .state/site.json
 python3 tools/concurrent.py stage-assets --config .state/site.json
 # 显式启动临时 16 GiB L1，将输入预置到私有 data 盘，再退出；不测 workload。
 python3 tools/concurrent.py bootstrap --config .state/site.json
-# 正式依矩阵逐组启动受限 L1；一组内 8 个 L2 并发。首个异常即停后续点。
+# 正式依矩阵逐组启动受限 L1；8 个 L2 并发。F 性能超时继续，OOM/控制器/业务异常即停。
 python3 tools/concurrent.py run --config .state/site.json
 ```
 
 `dram_gib` 可设 `[12,10,8,7,6]`、`repetitions` 可设 `[1,2,3]`，生成当前策略的 60 个配对点；
-当前样例为 7 GiB、SSD 三重复 6 点；`media` 设为 `["cxl","ssd"]` 可计划两介质，但当前 v12 实测范围只有 SSD。
+当前样例按顺序为 7→6 GiB、SSD 各三重复，共 12 点；`media` 设为 `["cxl","ssd"]` 可计划两介质，但当前 v13 计划范围只有 SSD。
 样例显式设 `reserve_policy=scaled` 并要求控制器健康。设为 `fixed` 可使用固定 1 GiB 规则，但会产生另一种策略配置。
 三重复不能挪用旧 v4 的结果填入。
 更改 N 或加入同步恢复要重新定义 CPU 池、输入副本数、64 GiB 冷层分配与到达协议；当前入口会拒绝 N≠8。
-自动运行不会用墙钟超时判 workload 失败；若人工终止需记录 censored 原因，不能直接重启覆盖标签。
+自动运行只对 F 使用配对 P×2 批次截止，作为删失性能结果并继续；P 与单工具无限时。人工终止需记录 censored 原因，不能重启覆盖标签。
 
 输出位于 `<lab_root>/experiments/agentcgroup-PhaseTieing/results/<run_name>/`：
 `matrix.json`、`protocol.json`、`source-manifest.json`、`staged-assets.json`、`status.json`，
 以及每组的 `audit.json`、`mechanism-audit.json`、L1 资源/配额流和每 lane 的回放结果。
+F 超时还保存 `control-timeout.json`、`cutoff-resources.json`、`cutoff-controller-health.json`、`cutoff-l1-dmesg.log`。
+截止前只有限读取 Guest 内核日志、控制器末尾 128 KiB 以及完整 `result.json`，不强制导出整个工作树，以减少取证本身的换页。
+取证或健康检查不全会停下诊断，不会冒充有效性能超时继续。
 异常时 L1 VM 和磁盘保留用于诊断；按该组 `outer.json` 中的身份检查后，通过生成的
 `outer.py stop --label <label>` 清理所属 VM。不要按模糊进程名批量 kill。
 

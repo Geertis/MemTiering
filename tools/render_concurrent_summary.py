@@ -28,10 +28,16 @@ def render(folder):
         severe=next((v for v in chosen if v['outcome']=='severe-timeout'),None)
         if severe:
             return f"严重超时 ≥{severe['observed_duration_s']/60:.1f} min；{severe.get('correct_instances',0)}/8 已审计"
+        relative=[v for v in chosen if v['outcome']=='control-relative-timeout']
+        if relative:
+            return f"{len(relative)} 组达 P×2 性能超时；{len(passed)} 组通过；部分轨迹另列"
         if any(v['outcome'] in ['startup-budget-check-rejected','startup-resource-admission-blocked'] for v in chosen):
             return '启动预算检查退出；轨迹未释放'
         if any(v['outcome'].startswith('infrastructure-') for v in chosen):
             return '控制器故障，策略结果无效'
+        if passed:
+            suffix='其余运行中/未运行' if any(v['outcome']=='running' for v in chosen) else '其余未运行'
+            return f"{len(passed)}/{len(chosen)} 组通过，均值 {statistics.mean(v['batch_s'] for v in passed):.1f} s；{suffix}"
         return '运行中' if any(v['outcome'] == 'running' for v in chosen) else '未运行'
 
     table = ['|版本|DRAM|冷层|每策略重复|P 批次完成|F 批次完成|',
@@ -41,17 +47,19 @@ def render(folder):
     pending = sum(v['outcome'] == 'not-run' for v in rows)
     running = sum(v['outcome'] == 'running' for v in rows)
     severe=sum(v['outcome']=='severe-timeout' for v in rows)
+    relative=sum(v['outcome']=='control-relative-timeout' for v in rows)
     startup=sum(v['outcome'] in ['startup-budget-check-rejected','startup-resource-admission-blocked'] for v in rows)
     infrastructure=sum(v['outcome'].startswith('infrastructure-') for v in rows)
-    failed = sum(v['outcome'] not in ['passed', 'not-run', 'running','severe-timeout','startup-budget-check-rejected','startup-resource-admission-blocked'] and not v['outcome'].startswith('infrastructure-') for v in rows)
+    failed = sum(v['outcome'] not in ['passed', 'not-run', 'running','severe-timeout','control-relative-timeout','startup-budget-check-rejected','startup-resource-admission-blocked'] and not v['outcome'].startswith('infrastructure-') for v in rows)
     text = f'''固定 8 个并发 Sandbox、每个 4 vCPU / 12 GiB 名义内存，共享 L1 的 36 vCPU、6–12 GiB DRAM 与 64 GiB CXL 或 SSD，以下按实际冻结版本分别给出容量探索结果。
 
 # 并发实验结果快照
 
 截取时间：**{snapshot['as_of']}**。{len(rows)} 个计划点中，**{snapshot['completed_cohorts']} 组通过、{snapshot['complete_instances']} 个轨迹实例正确完成**；
-{failed} 组资源失败，{startup} 组启动预算检查退出，{infrastructure} 组控制器故障，{severe} 组对照严重超时，{running} 组运行中，{pending} 组未运行。
+{failed} 组资源失败，{startup} 组启动预算检查退出，{infrastructure} 组控制器故障，{severe} 组人工严重超时，{relative} 组 P×2 对照性能超时，{running} 组运行中，{pending} 组未运行。
 用户终止的对照中另有 {snapshot.get('additional_complete_instances_in_stopped_cohorts',0)} 条已审计完成轨迹，单列保留，不计为整组通过。
 控制器故障组另有 {snapshot.get('additional_complete_instances_in_invalid_controller_cohorts',0)} 条完整业务结果；其策略性能无效，不与健康运行比较。
+P×2 对照超时组另有 {snapshot.get('additional_complete_instances_in_relative_timeout_cohorts',0)} 条完整业务结果，未完成轨迹不填有限完成时长。
 通过组均无 L1 OOM、8 个 Guest 确认全局配额，且观测到实际使用冷层；运行中不计成功。
 不同版本不合并估计性能；单次探索不作为稳定性或显著性结论。
 
@@ -94,6 +102,14 @@ v11 的控制器均存活且心跳新鲜，但 6 GiB SSD-P 在释放 449.1 秒�
 非 payload 占用估计约 5484 MiB，有效用户页预算已降至 48 MiB；仅控制 workload 用户页不能完全消除宿主、Guest 系统和未归还页的压力。
 v12 沿用 v11 的实现，以 7 GiB SSD P/F 三重复验证相邻容量点，不把跨版本的旧 7 GiB 结果当作本版通过。
 
+v12 的首组 SSD-P 在 1296.43 秒完成、8/8 正确；F 未完成时用户新增 P×2 截止规则。
+对应阈值 2592.87 秒，规则采用时已超阈值，实际于 3307.92 秒停止，6/8 正确且无 L1 OOM。
+该点明确标记为事后采用规则，不能伪造为准时在阈值停止。
+v13 固定相同内存策略，正式实现 F-only P×2 批次截止：P 和单工具仍无限时；
+只有同介质、同 DRAM、N、seed、到达序列和重复编号且已通过审计的 P 可作参考。
+先运行 7 GiB 三个 P/F 配对，再复测 6 GiB 三个配对；F 性能超时继续，真实资源/控制器/语义错误停止诊断。
+此前 v11 的 6 GiB 真实 OOM 继续保留。未完成 F 的时间按右删失处理，不计为 P 系统失败。
+
 ## 12 GiB 三重复：资源节约与时间代价
 
 以下为每策略三组指标的算术均值，内存公式见 [复现说明](../../docs/concurrent-reproduction.md)。
@@ -128,7 +144,7 @@ v7 再修复配对 ceiling 后探索 7 GiB。通过低 DRAM 点证明本输入�
 
 嵌套 PEBS 不可用，冻结实验禁用采样；采样驱动 promote/exchange 尚未得到本轮实证覆盖。
 同步恢复、更高 N、边界三重复、完整采样对照和正式吞吐/承载量曲线均尚待完成。
-工具/轨迹/整组没有执行时间上限；基础设施保护和人工中断必须单列。
+v4–v12 原协议没有执行时间上限；v13 的 P 与单工具无限时，F 使用配对 P×2 批次截止。基础设施保护、人工中断、对照性能超时和 OOM 分别记录。
 
 ## 数据与复现
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan and stage the measured v12 experiment in an owned, site-configured lab.
+"""Plan and stage the measured v13 experiment in an owned, site-configured lab.
 
 Staging never starts a VM. bootstrap/run are explicit operations on that lab.
 Large assets and SSH credentials stay outside the source release.
@@ -18,7 +18,7 @@ import sys
 REPO = Path(__file__).resolve().parents[1]
 SOURCE = REPO / 'experiments/concurrent'
 OLD = '/r0/home/geerties/HW/Demeter'
-OLD_RUN = 'PhaseTieing-concurrent-20261030-v12-ssd7-boundary'
+OLD_RUN = 'PhaseTieing-concurrent-20261031-v13-relative-control'
 VARIANTS = ['vmm-v66-ssd-compact', 'vmm-v66-ssd-compact-readguard',
             'vmm-v67-compact-cxl', 'vmm-v67-compact-cxl-readguard']
 
@@ -53,6 +53,8 @@ def config(path):
     for name, choices in [('media', {'cxl', 'ssd'}), ('strategies', {'P', 'F'})]:
         if not c[name] or not set(c[name]) <= choices or len(set(c[name])) != len(c[name]):
             raise ValueError('invalid or duplicated ' + name)
+    if 'F' in c['strategies'] and ('P' not in c['strategies'] or c['strategies'].index('P') > c['strategies'].index('F')):
+        raise ValueError('F requires a preceding valid P in the same repetition')
     for name in ['dram_gib', 'repetitions']:
         if len(set(c[name])) != len(c[name]):
             raise ValueError('duplicated ' + name)
@@ -77,9 +79,9 @@ def config(path):
 def matrix(c):
     refs = read(SOURCE / 'arrivals.json')
     rows = []
-    for repetition in c['repetitions']:
-        ref = next(x for x in refs if x['n'] == 8 and x['repetition'] == repetition)
-        for dram in c['dram_gib']:
+    for dram in c['dram_gib']:
+        for repetition in c['repetitions']:
+            ref = next(x for x in refs if x['n'] == 8 and x['repetition'] == repetition)
             for medium in c['media']:
                 for strategy in c['strategies']:
                     rows.append(dict(label=f'repro-{medium}-{strategy}-d{dram}-n8-r{repetition}',
@@ -95,7 +97,7 @@ def matrix(c):
 def layout(c):
     base = Path(c['lab_root'])
     w = base / 'experiments/agentcgroup-PhaseTieing'
-    h = w / 'phase/PhaseTieing_concurrent_v12'
+    h = w / 'phase/PhaseTieing_concurrent_v13'
     root = w / 'results' / c['run_name']
     return base, w, h, root
 
@@ -144,13 +146,13 @@ def prepare(c):
         raise FileExistsError('refusing to overwrite a lab; choose a new lab_root: ' + str(base))
     base.mkdir(parents=True, mode=0o700)
     save(base / 'site.json', c)
-    text_tree(SOURCE / 'snapshots/v12', h, c)
+    text_tree(SOURCE / 'snapshots/v13', h, c)
     for name in ['all_traces_v67', 'ssd_placement_v54', 'cold_media', 'three_modes']:
         text_tree(REPO / 'experiments/phase' / name, w / 'phase' / name, c)
     for name in VARIANTS:
         target = h / 'artifacts' / name
         text_tree(REPO / 'experiments/phase/artifacts' / name, target, c)
-        (target / 'start-vm.sh').write_text(render((SOURCE / 'snapshots/v12' / ('start-' + name + '.sh')).read_text(), c))
+        (target / 'start-vm.sh').write_text(render((SOURCE / 'snapshots/v13' / ('start-' + name + '.sh')).read_text(), c))
     replace_assignments(h / 'outer.py', {
         'BASE': 'Path(' + repr(c['assets']['l1_base']) + ')',
         'KEY': 'Path(' + repr(c['assets']['outer_ssh_key']) + ')',
@@ -197,8 +199,8 @@ def prepare(c):
         cases.append(dict(case, golden=str(w / 'inputs/golden' / case['golden_filename']),
                           trace=str(w / 'inputs/traces' / case['name'])))
     save(root / 'inputs/cases.json', cases)
-    save(root / 'protocol.json', dict(read(REPO / 'published/concurrent-20261030/protocols/v12.json'),
-         version='v12-configured-reproduction', site=c, note='Configured port of measured v12; validate on destination hardware.'))
+    save(root / 'protocol.json', dict(read(REPO / 'published/concurrent-20261030/protocols/v13.json'),
+         version='v13-configured-reproduction', site=c, note='Configured port of measured v13; validate on destination hardware.'))
     for name in ['plans', 'cohorts', '_input_blobs']:
         (root / name).mkdir()
     (base / 'experiments/swebench/swesmith').mkdir(parents=True)
