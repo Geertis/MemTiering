@@ -2,6 +2,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -26,6 +27,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -50,6 +52,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -74,6 +77,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -98,6 +102,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -122,6 +127,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -146,6 +152,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -170,6 +177,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -194,6 +202,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -218,6 +227,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -242,6 +252,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -266,6 +277,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -290,6 +302,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -314,6 +327,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -338,6 +352,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -362,6 +377,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -386,6 +402,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -410,6 +427,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -434,6 +452,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -458,6 +477,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -482,6 +502,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -506,6 +527,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -530,6 +552,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -554,6 +577,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -578,6 +602,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -602,6 +627,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -626,6 +652,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -650,6 +677,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -674,6 +702,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -698,6 +727,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -722,6 +752,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -746,6 +777,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -770,6 +802,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -794,6 +827,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -818,6 +852,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -842,6 +877,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -866,6 +902,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -890,6 +927,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -914,6 +952,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -938,6 +977,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -962,6 +1002,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -986,6 +1027,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1010,6 +1052,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1034,6 +1077,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1058,6 +1102,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1082,6 +1127,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1106,6 +1152,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1130,6 +1177,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1154,6 +1202,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1178,6 +1227,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1202,6 +1252,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1226,6 +1277,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1250,6 +1302,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1274,6 +1327,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1298,6 +1352,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1322,6 +1377,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1346,6 +1402,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1370,6 +1427,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1394,6 +1452,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1418,6 +1477,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1442,6 +1502,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1466,6 +1527,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1490,6 +1552,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1514,6 +1577,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r2",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1538,6 +1602,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1562,6 +1627,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1586,6 +1652,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1610,6 +1677,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1634,6 +1702,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1658,6 +1727,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1682,6 +1752,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1706,6 +1777,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1730,6 +1802,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1754,6 +1827,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1778,6 +1852,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1802,6 +1877,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1826,6 +1902,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1850,6 +1927,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1874,6 +1952,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -1898,6 +1977,7 @@
   {
     "version": "v4",
     "label": "v4-cxl-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1922,6 +2002,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -1946,6 +2027,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -1970,6 +2052,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -1994,6 +2077,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2018,6 +2102,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2042,6 +2127,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2066,6 +2152,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2090,6 +2177,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-P-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2114,6 +2202,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2138,6 +2227,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2162,6 +2252,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2186,6 +2277,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2210,6 +2302,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2234,6 +2327,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2258,6 +2352,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2282,6 +2377,7 @@
   {
     "version": "v4",
     "label": "v4-ssd-F-d12-n8-r3",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2306,6 +2402,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2330,6 +2427,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2354,6 +2452,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2378,6 +2477,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2402,6 +2502,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2426,6 +2527,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2450,6 +2552,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2474,6 +2577,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2498,6 +2602,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2522,6 +2627,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2546,6 +2652,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2570,6 +2677,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2594,6 +2702,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2618,6 +2727,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2642,6 +2752,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2666,6 +2777,7 @@
   {
     "version": "v5",
     "label": "v5-cxl-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2690,6 +2802,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2714,6 +2827,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2738,6 +2852,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2762,6 +2877,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2786,6 +2902,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2810,6 +2927,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2834,6 +2952,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2858,6 +2977,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-P-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2882,6 +3002,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -2906,6 +3027,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -2930,6 +3052,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -2954,6 +3077,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -2978,6 +3102,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3002,6 +3127,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3026,6 +3152,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3050,6 +3177,7 @@
   {
     "version": "v5",
     "label": "v5-ssd-F-d10-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3074,6 +3202,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3098,6 +3227,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3122,6 +3252,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3146,6 +3277,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3170,6 +3302,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3194,6 +3327,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3218,6 +3352,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3242,6 +3377,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3266,6 +3402,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3290,6 +3427,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3314,6 +3452,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3338,6 +3477,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3362,6 +3502,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3386,6 +3527,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3410,6 +3552,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3434,6 +3577,7 @@
   {
     "version": "v6",
     "label": "v6-cxl-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3458,6 +3602,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3482,6 +3627,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3506,6 +3652,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3530,6 +3677,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3554,6 +3702,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3578,6 +3727,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3602,6 +3752,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3626,6 +3777,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-P-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3650,6 +3802,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3674,6 +3827,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3698,6 +3852,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3722,6 +3877,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3746,6 +3902,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3770,6 +3927,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3794,6 +3952,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3818,6 +3977,7 @@
   {
     "version": "v6",
     "label": "v6-ssd-F-d8-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3842,6 +4002,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3866,6 +4027,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -3890,6 +4052,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3914,6 +4077,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -3938,6 +4102,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -3962,6 +4127,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -3986,6 +4152,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4010,6 +4177,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4034,6 +4202,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-F-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -4058,6 +4227,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-F-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4082,6 +4252,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-F-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4106,6 +4277,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-F-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4130,6 +4302,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-F-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4154,6 +4327,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-F-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -4178,6 +4352,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-F-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4202,6 +4377,7 @@
   {
     "version": "v7",
     "label": "v7-cxl-F-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4226,6 +4402,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -4250,6 +4427,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4274,6 +4452,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4298,6 +4477,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4322,6 +4502,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4346,6 +4527,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -4370,6 +4552,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4394,6 +4577,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-P-d7-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4418,6 +4602,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-F-d7-n8-r1",
+    "experiment_outcome": "severe-timeout",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4442,6 +4627,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-F-d7-n8-r1",
+    "experiment_outcome": "severe-timeout",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4466,6 +4652,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-F-d7-n8-r1",
+    "experiment_outcome": "severe-timeout",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4490,6 +4677,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-F-d7-n8-r1",
+    "experiment_outcome": "severe-timeout",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4514,6 +4702,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-F-d7-n8-r1",
+    "experiment_outcome": "severe-timeout",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4538,6 +4727,7 @@
   {
     "version": "v7",
     "label": "v7-ssd-F-d7-n8-r1",
+    "experiment_outcome": "severe-timeout",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4562,6 +4752,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-P-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -4586,6 +4777,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-P-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4610,6 +4802,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-P-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4634,6 +4827,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-P-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4658,6 +4852,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-P-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4682,6 +4877,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-P-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -4706,6 +4902,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-P-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4730,6 +4927,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-P-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4754,6 +4952,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-F-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 0,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -4778,6 +4977,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-F-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 1,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4802,6 +5002,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-F-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 2,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4826,6 +5027,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-F-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 3,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4850,6 +5052,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-F-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 4,
     "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
     "complete": true,
@@ -4874,6 +5077,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-F-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 5,
     "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
     "complete": true,
@@ -4898,6 +5102,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-F-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 6,
     "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
     "complete": true,
@@ -4922,6 +5127,7 @@
   {
     "version": "v8",
     "label": "v8-cxl-F-d6-n8-r1",
+    "experiment_outcome": "passed",
     "slot": 7,
     "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
     "complete": true,
@@ -4940,6 +5146,156 @@
     "swap_peak_mib": 0.0,
     "pswpin_pages": 0,
     "pswpout_pages": 0,
+    "comparison_scope": "paired-replay",
+    "original_observable_fidelity": "different"
+  },
+  {
+    "version": "v10",
+    "label": "v10-ssd-P-d6-n8-r1",
+    "experiment_outcome": "infrastructure-controller-exited",
+    "slot": 1,
+    "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+    "complete": true,
+    "valid": true,
+    "reasons": [],
+    "e2e_s": 1065.5589273209998,
+    "service_s": 852.9649146360001,
+    "execution_s": 850.8455675799997,
+    "executed_calls": 75,
+    "longest_tool_s": 225.558150298,
+    "sampling_coverage": 1.0000000000000002,
+    "fast_mean_mib": 602.2938788923594,
+    "cold_mean_mib": 0.0,
+    "fast_sampled_peak_mib": 716.29296875,
+    "cold_sampled_peak_mib": 0.0,
+    "swap_peak_mib": 1075.0859375,
+    "pswpin_pages": 3017672,
+    "pswpout_pages": 2561393,
+    "comparison_scope": "paired-replay",
+    "original_observable_fidelity": "different"
+  },
+  {
+    "version": "v10",
+    "label": "v10-ssd-P-d6-n8-r1",
+    "experiment_outcome": "infrastructure-controller-exited",
+    "slot": 2,
+    "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+    "complete": true,
+    "valid": true,
+    "reasons": [],
+    "e2e_s": 847.630662627,
+    "service_s": 127.54096639199966,
+    "execution_s": 125.40505823600026,
+    "executed_calls": 55,
+    "longest_tool_s": 25.328921034000018,
+    "sampling_coverage": 1.0,
+    "fast_mean_mib": 532.66926818483,
+    "cold_mean_mib": 0.0,
+    "fast_sampled_peak_mib": 612.1328125,
+    "cold_sampled_peak_mib": 0.0,
+    "swap_peak_mib": 35.0859375,
+    "pswpin_pages": 184195,
+    "pswpout_pages": 143314,
+    "comparison_scope": "paired-replay",
+    "original_observable_fidelity": "matched"
+  },
+  {
+    "version": "v10",
+    "label": "v10-ssd-P-d6-n8-r1",
+    "experiment_outcome": "infrastructure-controller-exited",
+    "slot": 3,
+    "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+    "complete": true,
+    "valid": true,
+    "reasons": [],
+    "e2e_s": 830.78330818,
+    "service_s": 452.84923792799975,
+    "execution_s": 449.42972557499996,
+    "executed_calls": 65,
+    "longest_tool_s": 67.28097222499997,
+    "sampling_coverage": 1.0000000000000002,
+    "fast_mean_mib": 566.2011642572835,
+    "cold_mean_mib": 0.0,
+    "fast_sampled_peak_mib": 614.51171875,
+    "cold_sampled_peak_mib": 0.0,
+    "swap_peak_mib": 4147.1875,
+    "pswpin_pages": 801335,
+    "pswpout_pages": 1611856,
+    "comparison_scope": "paired-replay",
+    "original_observable_fidelity": "different"
+  },
+  {
+    "version": "v10",
+    "label": "v10-ssd-P-d6-n8-r1",
+    "experiment_outcome": "infrastructure-controller-exited",
+    "slot": 4,
+    "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+    "complete": true,
+    "valid": true,
+    "reasons": [],
+    "e2e_s": 845.061586813,
+    "service_s": 124.95392457100004,
+    "execution_s": 122.27139119899968,
+    "executed_calls": 55,
+    "longest_tool_s": 21.224070254000026,
+    "sampling_coverage": 1.0,
+    "fast_mean_mib": 536.1013388868824,
+    "cold_mean_mib": 0.0,
+    "fast_sampled_peak_mib": 607.734375,
+    "cold_sampled_peak_mib": 0.0,
+    "swap_peak_mib": 35.88671875,
+    "pswpin_pages": 176391,
+    "pswpout_pages": 139674,
+    "comparison_scope": "paired-replay",
+    "original_observable_fidelity": "matched"
+  },
+  {
+    "version": "v10",
+    "label": "v10-ssd-P-d6-n8-r1",
+    "experiment_outcome": "infrastructure-controller-exited",
+    "slot": 6,
+    "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+    "complete": true,
+    "valid": true,
+    "reasons": [],
+    "e2e_s": 1057.547559227,
+    "service_s": 844.9973364300001,
+    "execution_s": 842.2957416600004,
+    "executed_calls": 75,
+    "longest_tool_s": 155.020876757,
+    "sampling_coverage": 1.0,
+    "fast_mean_mib": 623.1630283386214,
+    "cold_mean_mib": 0.0,
+    "fast_sampled_peak_mib": 674.64453125,
+    "cold_sampled_peak_mib": 0.0,
+    "swap_peak_mib": 1075.49609375,
+    "pswpin_pages": 3002151,
+    "pswpout_pages": 2632426,
+    "comparison_scope": "paired-replay",
+    "original_observable_fidelity": "different"
+  },
+  {
+    "version": "v10",
+    "label": "v10-ssd-P-d6-n8-r1",
+    "experiment_outcome": "infrastructure-controller-exited",
+    "slot": 7,
+    "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+    "complete": true,
+    "valid": true,
+    "reasons": [],
+    "e2e_s": 823.25862795,
+    "service_s": 445.31711956799995,
+    "execution_s": 442.686209513,
+    "executed_calls": 65,
+    "longest_tool_s": 67.33043603799996,
+    "sampling_coverage": 1.0,
+    "fast_mean_mib": 559.7860489470448,
+    "cold_mean_mib": 0.0,
+    "fast_sampled_peak_mib": 605.30859375,
+    "cold_sampled_peak_mib": 0.0,
+    "swap_peak_mib": 4141.43359375,
+    "pswpin_pages": 767189,
+    "pswpout_pages": 1605495,
     "comparison_scope": "paired-replay",
     "original_observable_fidelity": "different"
   }

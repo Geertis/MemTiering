@@ -17,6 +17,7 @@
   "observation_points": 9046,
   "reference": null,
   "latency": null,
+  "operational_classification": "passed",
   "rows": [
     {
       "slot": 0,

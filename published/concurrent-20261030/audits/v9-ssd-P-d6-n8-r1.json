@@ -19,6 +19,7 @@
   "latency": null,
   "business_failure": false,
   "diagnosis": "Fixed 1GiB software reserve, not L1 OOM, prevented workload admission after READY.",
+  "operational_classification": "startup-resource-admission-blocked",
   "rows": [
     {
       "slot": 0,

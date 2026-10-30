@@ -1,11 +1,13 @@
 {
   "lab_root": "/absolute/path/to/owned/PhaseTieing-lab",
-  "run_name": "PhaseTieing-repro-scaled-6g",
+  "run_name": "PhaseTieing-repro-ssd7-boundary",
   "dram_gib": [
-    6
+    7
   ],
   "repetitions": [
-    1
+    1,
+    2,
+    3
   ],
   "n": 8,
   "media": [

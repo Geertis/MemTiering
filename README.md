@@ -24,10 +24,10 @@ Runtime 事件感知资源阶段，在多个 Sandbox 之间分配 DRAM，在每�
 [实验设置与步骤](docs/concurrent-reproduction.md) 开始；
 [结果包](published/concurrent-20261030/README.md) 附逐组矩阵、逐实例指标和 OOM 证据。
 7 GiB SSD 均分对照按用户指示单列为严重超时（6/8 条轨迹完成、无 L1 OOM）；
-下一轮 v8 沿用 v7 策略，开始 6 GiB DRAM / 64 GiB 冷层、N=8 的配对探索。
-6 GiB CXL 两组均 8/8 通过；SSD-P 的启动预算检查退出单列为启动问题。
-v9 将初始预算提交延后至 READY 后，确认固定 1 GiB 预留仍阻止空 workload 入场。
-当前独立 v10 保持硬件不变，以有界比例预留回归 SSD P/F；两策略匹配预留和 ceiling，轨迹等待物理入场成功才释放。
+6 GiB CXL 两组均 8/8 通过；SSD 的启动入场受限和 v10 控制器故障分别保留，后者的策略性能无效。
+v11 修复 DAMON 生命周期和控制器健康监督后，在 6 GiB SSD 点记录到真实 L1 OOM。
+当前 v12 沿用该实现，在 36 vCPU / 7 GiB DRAM / 64 GiB SSD、N=8 下对 P/F 做三次配对重复。
+两策略匹配预留和 ceiling，当前实现与测量限制见复现文档。
 
 ## 源码检查
 

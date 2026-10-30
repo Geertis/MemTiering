@@ -23,6 +23,7 @@
   "censoring": "User-directed termination; no finite completion duration inferred",
   "full_observation_l1_oom_kill_at_stop": 0,
   "live_vmms_at_stop": 8,
+  "operational_classification": "severe-timeout",
   "rows": [
     {
       "slot": 0,

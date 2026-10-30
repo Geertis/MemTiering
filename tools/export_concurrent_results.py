@@ -17,6 +17,8 @@ CAMPAIGNS={
  'v8':'PhaseTieing-concurrent-20261030-v8-pressure-6g',
  'v9':'PhaseTieing-concurrent-20261030-v9-startup-admission',
  'v10':'PhaseTieing-concurrent-20261030-v10-scaled-reserve',
+ 'v11':'PhaseTieing-concurrent-20261030-v11-controller-health',
+ 'v12':'PhaseTieing-concurrent-20261030-v12-ssd7-boundary',
 }
 FIELDS=['version','label','dram_gib','n','medium','strategy','repetition','outcome',
  'correct_instances','l1_oom','minimum_live_vmms','batch_s','trace_makespan_s',
@@ -41,7 +43,7 @@ def export(source,output):
     for version,name in CAMPAIGNS.items():
         root=source/name
         if not (root/'matrix.json').exists():continue
-        state=read(root/'status.json');snapshot[version]={k:state.get(k) for k in ['stage','active','completed','failed','startup_blocked','severe_timeouts','updated_epoch']}
+        state=read(root/'status.json');snapshot[version]={k:state.get(k) for k in ['stage','active','completed','failed','startup_blocked','infrastructure_failed','severe_timeouts','updated_epoch']}
         save(output/'protocols'/f'{version}.json',read(root/'protocol.json'))
         save(output/'source-manifests'/f'{version}.json',read(root/'source-manifest.json'))
         for spec in read(root/'matrix.json'):
@@ -63,6 +65,8 @@ def export(source,output):
                 row['physical_reserve_mib']=m.get('reserve_mib',1024 if spec.get('reserve_policy','fixed')=='fixed' else None)
                 if group.get('result')=='startup-resource-admission-blocked' and not audit['l1_oom']:
                     row['outcome']='startup-resource-admission-blocked'
+                if group.get('result') in ['controller-exited','controller-heartbeat-stalled'] and not audit['l1_oom']:
+                    row['outcome']='infrastructure-'+group['result']
                 if 'all_done_epoch' in group:
                     row['batch_s']=group['all_done_epoch']-group['release_epoch']
                 complete=[v for v in audit['rows'] if v.get('complete') and 'e2e_s' in v]
@@ -70,13 +74,14 @@ def export(source,output):
                     row['trace_makespan_s']=max(v['e2e_s']+spec['slots'][v['slot']]['offset_s'] for v in complete)
                     row['service_sum_s']=sum(v['service_s'] for v in complete)
                 clean={k:v for k,v in audit.items() if k!='rows'}
+                clean['operational_classification']=row['outcome']
                 clean['rows']=[{k:v[k] for k in row_fields if k in v} for v in audit['rows']]
                 clean['mechanism']=m
                 clean['evidence_hashes']={n:sha(folder/n) for n in ['audit.json','status.json','l1-resources.jsonl.gz','global-pool.jsonl.gz','l1-dmesg.log'] if (folder/n).exists()}
                 clean['source_manifest_sha256']=sha(root/'source-manifest.json')
                 save(output/'audits'/(spec['label']+'.json'),clean)
                 for v in complete:
-                    instances.append(dict(version=version,label=spec['label'],**{k:v[k] for k in row_fields if k in v and k!='signature'}))
+                    instances.append(dict(version=version,label=spec['label'],experiment_outcome=row['outcome'],**{k:v[k] for k in row_fields if k in v and k!='signature'}))
             decision_path=folder/'user-stop.json'
             if decision_path.exists():
                 decision=read(decision_path)
@@ -95,6 +100,7 @@ def export(source,output):
         completed_cohorts=sum(v['outcome']=='passed' for v in rows),
         complete_instances=sum(v.get('correct_instances',0) for v in rows if v['outcome']=='passed'),
         additional_complete_instances_in_stopped_cohorts=sum(v.get('correct_instances',0) for v in rows if v['outcome']=='severe-timeout'),
+        additional_complete_instances_in_invalid_controller_cohorts=sum(v.get('correct_instances',0) for v in rows if v['outcome']=='infrastructure-controller-exited'),
         note='Version-separated snapshot; running and unrun points are not successes. Raw binaries/traces/log streams are external.'))
     bad=source/CAMPAIGNS['v5']/'cohorts/v5-cxl-P-d8-n8-r1/l1-dmesg.log'
     lines=[s for s in bad.read_text().splitlines() if any(k in s for k in ['invoked oom-killer','oom-kill:','Out of memory:'])]

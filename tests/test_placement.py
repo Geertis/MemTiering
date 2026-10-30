@@ -116,5 +116,30 @@ class PlacementSafety(unittest.TestCase):
         path=Mock();path.write_text.side_effect=OSError(errno.EINVAL,'invalid')
         with self.assertRaises(OSError):Placement.write(path,'on')
 
+    def test_stopping_an_already_finished_kdamond_is_idempotent(self):
+        from unittest.mock import Mock
+        import errno
+        path=Mock();path.name='state';path.write_text.side_effect=PermissionError(errno.EPERM,'already stopped')
+        path.read_text.return_value='off\n'
+        Placement.write(path,'off')
+        path.write_text.assert_called_once_with('off')
+
+    def test_damon_permission_errors_are_not_hidden_while_running_or_starting(self):
+        from unittest.mock import Mock
+        import errno
+        for command,state in [('off','on'),('on','off'),('commit','off')]:
+            path=Mock();path.name='state';path.write_text.side_effect=PermissionError(errno.EPERM,'denied')
+            path.read_text.return_value=state
+            with self.assertRaises(PermissionError):Placement.write(path,command)
+
+    def test_stats_after_kdamond_finished_can_read_final_counters(self):
+        from unittest.mock import Mock
+        import errno
+        path=Mock();path.name='state';path.write_text.side_effect=OSError(errno.EINVAL,'not running')
+        path.read_text.return_value='off\n'
+        Placement.write(path,'update_schemes_stats')
+        path.read_text.return_value='on\n'
+        with self.assertRaises(OSError):Placement.write(path,'update_schemes_stats')
+
 
 if __name__=='__main__':unittest.main()

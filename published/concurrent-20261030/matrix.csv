@@ -33,5 +33,13 @@ v8,v8-ssd-P-d6-n8-r1,6,8,ssd,P,1,startup-budget-check-rejected,0,False,0,,,,,,0,
 v8,v8-ssd-F-d6-n8-r1,6,8,ssd,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,fixed,
 v9,v9-ssd-P-d6-n8-r1,6,8,ssd,P,1,startup-resource-admission-blocked,0,False,0,,,,,0,0,False,phase-blind equal share with common adaptive reserve,,,fixed,1024
 v9,v9-ssd-F-d6-n8-r1,6,8,ssd,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,fixed,
-v10,v10-ssd-P-d6-n8-r1,6,8,ssd,P,1,running,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,
+v10,v10-ssd-P-d6-n8-r1,6,8,ssd,P,1,infrastructure-controller-exited,6,False,8,,,,272,0,8,True,phase-blind equal share with common adaptive reserve,,,scaled,368
 v10,v10-ssd-F-d6-n8-r1,6,8,ssd,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,
+v11,v11-ssd-P-d6-n8-r1,6,8,ssd,P,1,resource-failure,0,True,8,,,,288,0,0,True,phase-blind equal share with common adaptive reserve,,,scaled,368
+v11,v11-ssd-F-d6-n8-r1,6,8,ssd,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,
+v12,v12-ssd-P-d7-n8-r1,7,8,ssd,P,1,running,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,
+v12,v12-ssd-F-d7-n8-r1,7,8,ssd,F,1,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,
+v12,v12-ssd-P-d7-n8-r2,7,8,ssd,P,2,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,
+v12,v12-ssd-F-d7-n8-r2,7,8,ssd,F,2,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,
+v12,v12-ssd-P-d7-n8-r3,7,8,ssd,P,3,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,
+v12,v12-ssd-F-d7-n8-r3,7,8,ssd,F,3,not-run,,,,,,,,,,,phase-blind equal share with common adaptive reserve,,,scaled,

@@ -1,0 +1,56 @@
+{
+  "version": "v12-ssd7-boundary",
+  "created_epoch": 1793370845.7460492,
+  "authorization": "Existing instruction to diagnose any failure and optimize system problems immediately.",
+  "initial": {
+    "n": 8,
+    "vcpus": 36,
+    "dram_gib": 7,
+    "cxl_gib": 0,
+    "aggregate_ssd_swap_gib": 64,
+    "guest_vcpus": 4,
+    "guest_nominal_gib": 12
+  },
+  "treatments": [
+    "PhaseTieing-CXL",
+    "same-budget static-CXL",
+    "PhaseTieing-SSD",
+    "same-budget static-SSD"
+  ],
+  "cold_resources": "64GiB shared per cohort, never per VM; CXL adds real physical RAM; SSD is storage",
+  "global_quota": "existing waterfill + settle_grants, guest grants delivered over existing telemetry channel; credit comes from actual controlled DRAM residency",
+  "pressure": "per-node fast memory use, controlled residency, PSI, reclaim; compare same medium/capacity/layout",
+  "no_timeouts": true,
+  "stop_on_anomaly": true,
+  "known_limit": "nested PEBS unsupported; no claim of sampled promotion/exchange unless measured",
+  "old_baseline": "v3 completed cohorts retained only as correctness and performance references",
+  "scan_dram_gib": [
+    7
+  ],
+  "scan_repetitions": 3,
+  "scope": "SSD P/F at N8, 7GiB shared DRAM, 64GiB aggregate swap, three paired repetitions; same controller and reserve policy as v11.",
+  "comparison": "P/F use the same v11 implementation and matched scaled reserve/payload ceiling; 7GiB validates a boundary neighbor, does not prove a universal capacity limit.",
+  "known_measurement_limit": "Version v10 reserve differs from earlier fixed 1GiB versions; do not pool performance across versions.",
+  "previous_completed": "v11: 6GiB SSD P global L1 OOM at 449.135s after release; controllers alive with fresh heartbeats, no L2 memcg OOM.",
+  "regression": "8GiB CXL OOM fixed by adaptive managed-capacity guard in v6; v7 increases pressure",
+  "common_guard": "managed fast capacity, runtime nonpayload occupancy, 1GiB reserve; shrink immediately, grow only on observed physical headroom; settle physical credit for both policies",
+  "control_label": "F: phase-blind equal share under same common host reserve guard; not the immutable-v5 static-quota treatment",
+  "previous_version": "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/results/PhaseTieing-concurrent-20261030-v11-controller-health",
+  "numerator_definition": "DRAM-only denominator; CXL/SSD capacity ratios separate; offline host numerator still under profiling review",
+  "code_delta": "Only configuration, versioned paths, and three published arrival schedules; no memory or health algorithm change.",
+  "operational_stop_policy": "No automatic workflow cutoff. The v7 F/SSD severe timeout is explicitly user-directed, right-censored, and a control performance result rather than a PhaseTieing P failure.",
+  "reserve_policy": {
+    "mode": "scaled",
+    "fraction": "1/16 managed DRAM",
+    "granularity_mib": 16,
+    "minimum_mib": 256,
+    "maximum_mib": 1024,
+    "paired": true
+  },
+  "controller_health": {
+    "required": true,
+    "maximum_credit_sample_age_s": 5,
+    "unresponsive_heartbeat_s": 30,
+    "process_identity": "PID+start ticks; reject zombie/reused PID"
+  }
+}

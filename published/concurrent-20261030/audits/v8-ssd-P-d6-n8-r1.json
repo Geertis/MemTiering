@@ -20,6 +20,7 @@
   "failure_scope": "startup admission, before any replay release",
   "business_failure": false,
   "diagnosis": "First complete guest sample had zero controlled payload; a transient boot occupancy plus fixed 1GiB reserve produced safe budget 0, triggering a Python exception rather than an OOM.",
+  "operational_classification": "startup-budget-check-rejected",
   "rows": [
     {
       "slot": 0,

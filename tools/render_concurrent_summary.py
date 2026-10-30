@@ -30,6 +30,8 @@ def render(folder):
             return f"严重超时 ≥{severe['observed_duration_s']/60:.1f} min；{severe.get('correct_instances',0)}/8 已审计"
         if any(v['outcome'] in ['startup-budget-check-rejected','startup-resource-admission-blocked'] for v in chosen):
             return '启动预算检查退出；轨迹未释放'
+        if any(v['outcome'].startswith('infrastructure-') for v in chosen):
+            return '控制器故障，策略结果无效'
         return '运行中' if any(v['outcome'] == 'running' for v in chosen) else '未运行'
 
     table = ['|版本|DRAM|冷层|每策略重复|P 批次完成|F 批次完成|',
@@ -40,14 +42,16 @@ def render(folder):
     running = sum(v['outcome'] == 'running' for v in rows)
     severe=sum(v['outcome']=='severe-timeout' for v in rows)
     startup=sum(v['outcome'] in ['startup-budget-check-rejected','startup-resource-admission-blocked'] for v in rows)
-    failed = sum(v['outcome'] not in ['passed', 'not-run', 'running','severe-timeout','startup-budget-check-rejected','startup-resource-admission-blocked'] for v in rows)
+    infrastructure=sum(v['outcome'].startswith('infrastructure-') for v in rows)
+    failed = sum(v['outcome'] not in ['passed', 'not-run', 'running','severe-timeout','startup-budget-check-rejected','startup-resource-admission-blocked'] and not v['outcome'].startswith('infrastructure-') for v in rows)
     text = f'''固定 8 个并发 Sandbox、每个 4 vCPU / 12 GiB 名义内存，共享 L1 的 36 vCPU、6–12 GiB DRAM 与 64 GiB CXL 或 SSD，以下按实际冻结版本分别给出容量探索结果。
 
 # 并发实验结果快照
 
 截取时间：**{snapshot['as_of']}**。{len(rows)} 个计划点中，**{snapshot['completed_cohorts']} 组通过、{snapshot['complete_instances']} 个轨迹实例正确完成**；
-{failed} 组资源失败，{startup} 组启动预算检查退出，{severe} 组对照严重超时，{running} 组运行中，{pending} 组未运行。
+{failed} 组资源失败，{startup} 组启动预算检查退出，{infrastructure} 组控制器故障，{severe} 组对照严重超时，{running} 组运行中，{pending} 组未运行。
 用户终止的对照中另有 {snapshot.get('additional_complete_instances_in_stopped_cohorts',0)} 条已审计完成轨迹，单列保留，不计为整组通过。
+控制器故障组另有 {snapshot.get('additional_complete_instances_in_invalid_controller_cohorts',0)} 条完整业务结果；其策略性能无效，不与健康运行比较。
 通过组均无 L1 OOM、8 个 Guest 确认全局配额，且观测到实际使用冷层；运行中不计成功。
 不同版本不合并估计性能；单次探索不作为稳定性或显著性结论。
 
@@ -77,6 +81,18 @@ v8 的 6 GiB CXL P/F 均为 8/8 正确完成、无 L1 OOM。SSD-P 在轨迹释�
 v9 全 READY 后仍被固定预留挡住，作为准备阶段诊断保留。独立 v10 将物理预留改为 managed DRAM 的 1/16，
 向下取整至 16 MiB，并限制在 256–1024 MiB；当前 6 GiB 点约 368 MiB。P/F 匹配相同预留和 ceiling。
 硬件配置不变，但预留策略变更，因此不可将 v10 与早期固定预留版本混为相同处理。
+
+v10 SSD-P 被发现 Guest slot-5 控制器在启动后约 7 分钟退出：DAMON 停止已结束的 kdamond 返回 EPERM，
+异常导致控制器终止。Guest 遥测连接仍新鲜，但容量记录已旧约一小时，宿主未及时识别。
+该点归为 `infrastructure-controller-exited`，不把一小时长跑作为有效 PhaseTieing 时延或 OOM 边界。
+6 条完整业务结果与原盘保留，另两条不伪造完成时间。原 L1 kernel 文本未捕获，OOM 判断范围为原资源流的计数和 Guest dmesg。
+v11 保持 v10 的硬件、预留、ceiling 与到达序列策略，单独修复已关闭 DAMON 的幂等处理，
+增加控制器 PID+启动时间校验与心跳新鲜度检查；异常控制器不能继续提供放置证据或物理信用。
+
+v11 的控制器均存活且心跳新鲜，但 6 GiB SSD-P 在释放 449.1 秒后出现真实 L1 全局 OOM，VMM 被内核杀死。
+该点保留为资源失败，与 v10 的机制失效分开。最后一条可用全局记录中受控驻留约 138 MiB，
+非 payload 占用估计约 5484 MiB，有效用户页预算已降至 48 MiB；仅控制 workload 用户页不能完全消除宿主、Guest 系统和未归还页的压力。
+v12 沿用 v11 的实现，以 7 GiB SSD P/F 三重复验证相邻容量点，不把跨版本的旧 7 GiB 结果当作本版通过。
 
 ## 12 GiB 三重复：资源节约与时间代价
 

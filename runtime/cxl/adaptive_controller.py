@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 import errno
 import json
+import os
 from pathlib import Path
 import selectors
 import socket
@@ -149,9 +150,12 @@ class Controller:
         return min(target, getattr(self, 'host_grant_mib', target))
 
     def emit(self,event,**kw):
+        if not hasattr(self,'process_identity'):
+            rest=Path('/proc/self/stat').read_text().rsplit(')',1)[1].split()
+            self.process_identity=dict(controller_pid=os.getpid(),controller_start_ticks=int(rest[19]))
         self.seq+=1
         self.log.write(json.dumps(dict(event=event,event_seq=self.seq,
-            monotonic_ns=time.monotonic_ns(),controller_cpu_ns=time.process_time_ns(),**kw),default=str)+'\n')
+            monotonic_ns=time.monotonic_ns(),controller_cpu_ns=time.process_time_ns(),**self.process_identity,**kw),default=str)+'\n')
         self.log.flush()
 
     def measure(self):

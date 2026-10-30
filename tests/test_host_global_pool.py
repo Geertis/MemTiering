@@ -13,6 +13,28 @@ H = Path(__file__).resolve().parents[1] / 'experiments/phase'
 
 
 class GlobalPoolTest(unittest.TestCase):
+    def test_fresh_transport_cannot_reuse_a_stale_controller_snapshot(self):
+        point=dict(memory=dict(MemTotal=8192*MIB,MemFree=4096*MIB,Cached=0,Shmem=0,Buffers=0,SReclaimable=0))
+        sample=dict(guest=dict(guest_monotonic_ns=10_000_000_000,capacity_state=dict(
+            active=True,monotonic_ns=1,controller_alive=True,measurement=dict(fast_bytes=0))))
+        with tempfile.TemporaryDirectory() as tmp:
+            p=GlobalPool(Path(tmp),dict(n=1,medium='ssd',strategy='P',dram_gib=8,require_controller_health=True))
+            p.tick(point,[sample]);self.assertIsNone(p.budget);self.assertEqual(p.seq,0)
+            sample['guest']['capacity_state']['monotonic_ns']=sample['guest']['guest_monotonic_ns']
+            p.next_tick=0;p.tick(point,[sample]);self.assertEqual(p.seq,1)
+            sample['guest']['capacity_state']['controller_alive']=False
+            p.next_tick=0;p.tick(point,[sample]);self.assertEqual(p.seq,1)
+            p.close()
+
+    def test_required_controller_health_must_be_positive_before_admission(self):
+        point=dict(memory=dict(MemTotal=8192*MIB,MemFree=4096*MIB,Cached=0,Shmem=0,Buffers=0,SReclaimable=0))
+        sample=dict(guest=dict(capacity_state=dict(active=False,measurement=dict(fast_bytes=0))))
+        with tempfile.TemporaryDirectory() as tmp:
+            p=GlobalPool(Path(tmp),dict(n=1,medium='ssd',strategy='F',dram_gib=8,require_controller_health=True))
+            p.tick(point,[sample]);self.assertIsNone(p.budget)
+            sample['guest']['capacity_state']['controller_alive']=True
+            p.next_tick=0;p.tick(point,[sample]);self.assertIsNotNone(p.budget)
+            p.close()
     def test_scaled_reserve_admits_observed_small_host_without_inventing_credit(self):
         point=dict(memory=dict(MemTotal=int(5901.4453125*MIB),MemFree=int(720.03125*MIB),
             Cached=0,Shmem=0,Buffers=0,SReclaimable=0))

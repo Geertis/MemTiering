@@ -83,6 +83,17 @@ class GlobalPool:
         states = [sample['guest'].get('capacity_state') for sample in samples]
         if any(state is None for state in states):
             return
+        for sample,state in zip(samples,states):
+            # Transport freshness does not imply the controller is alive:
+            # guest_state may keep streaming the same old capacity record.
+            if state.get('controller_alive') is False:
+                return
+            if self.spec.get('require_controller_health') and state.get('controller_alive') is not True:
+                return
+            guest_now=sample['guest'].get('guest_monotonic_ns')
+            capacity_at=state.get('monotonic_ns')
+            if guest_now is not None and capacity_at is not None and not 0 <= guest_now-capacity_at <= 5_000_000_000:
+                return
         resident = {f'slot-{i}': math.ceil(state['measurement']['fast_bytes'] / MIB)
                     for i, state in enumerate(states)}
         reserve = physical_reserve(point, self.spec)

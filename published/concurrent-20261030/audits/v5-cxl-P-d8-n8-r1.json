@@ -17,6 +17,7 @@
   "observation_points": 0,
   "reference": null,
   "latency": null,
+  "operational_classification": "resource-failure",
   "rows": [
     {
       "slot": 0,

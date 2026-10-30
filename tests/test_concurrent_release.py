@@ -43,7 +43,7 @@ class ConcurrentReleaseTest(unittest.TestCase):
             self.assertFalse((base / 'storage').exists())
             self.assertFalse((root / 'bootstrap-complete.json').exists())
             program = ('import pressure; from environment import environment; '
-                       'assert len(pressure.plans()) == 2; '
+                       'assert len(pressure.plans()) == 6; '
                        f'assert pressure.ROOT.name == {c["run_name"]!r}')
             subprocess.run(['python3', '-B', '-c', program], cwd=h, check=True,
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)

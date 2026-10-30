@@ -1,0 +1,118 @@
+{
+  "classification": "resource-failure",
+  "label": "v11-ssd-P-d6-n8-r1",
+  "strategy": "P",
+  "medium": "ssd",
+  "n": 8,
+  "repetition": 1,
+  "driver_result": "l1-oom",
+  "correctness_valid": 0,
+  "valid": false,
+  "minimum_live_vmms": 8,
+  "maximum_live_vmms": 8,
+  "l1_oom": true,
+  "l1_swap_peak_bytes": 0,
+  "parent_charge_peak_mib": 5557.8984375,
+  "minimum_available_mib": 98.8984375,
+  "observation_points": 3409,
+  "reference": null,
+  "latency": null,
+  "operational_classification": "resource-failure",
+  "rows": [
+    {
+      "slot": 0,
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 1,
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 2,
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 3,
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 4,
+      "trace": "experiments-all_images_local-streamlink__streamlink-3485-attempt_1-fbaf2590",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 5,
+      "trace": "experiments-all_images_local-numba__numba-9636-attempt_1-5df8ce89",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 6,
+      "trace": "experiments-all_images_local-dask__dask-5510-attempt_1-32dbedc8",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    },
+    {
+      "slot": 7,
+      "trace": "experiments-all_images_local-pydicom__pydicom-2065-attempt_1-106ff1b1",
+      "complete": false,
+      "valid": false,
+      "reasons": [
+        "missing complete replay result"
+      ]
+    }
+  ],
+  "mechanism": {
+    "pool_ticks": 3077,
+    "budget_mib": 48,
+    "reserve_mib": 368,
+    "budget_ceiling_mib": 288,
+    "minimum_budget_mib": 0,
+    "minimum_physical_headroom_mib": 188.0234375,
+    "total_grants_within_budget": true,
+    "guest_global_grant_acknowledgements": 0,
+    "distinct_effective_targets_mib": [],
+    "distinct_grants_mib": [],
+    "per_slot_cold_rss_peak_bytes": 0,
+    "per_slot_swap_peak_bytes": 3563249664,
+    "actual_cold_tier_used": true
+  },
+  "evidence_hashes": {
+    "audit.json": "7e6db38e4cd067a9b050eb7ea33d8a023be0e49f849eb1bd68f7b901df5492a4",
+    "status.json": "e10b6afcef571760b545f4dd3a5423e13907c59f18560b0d53ab6a2b64872559",
+    "l1-resources.jsonl.gz": "47c1172b45f08907c835a4dbd150a0dbc8dcc031f37569aaddca63e2dff0adb0",
+    "global-pool.jsonl.gz": "cde454db49acb966f775f9fd6f4bcda965f482a21a4fd6122f98b621ad25aaf7",
+    "l1-dmesg.log": "5f484f53974bfe65312b516ca3cfd598b48be37ddb3ca34c5e50e73c3c18295d"
+  },
+  "source_manifest_sha256": "70b255fb3c746d180a1097ddeae6ac32dd36dd68272057bc7830a3388cc76258"
+}

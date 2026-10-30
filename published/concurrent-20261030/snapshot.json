@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-30T20:48:59.902626+08:00",
+  "as_of": "2026-10-30T22:44:02.020895+08:00",
   "campaigns": {
     "v4": {
       "stage": "tiered-pressure-pairs-complete",
@@ -20,6 +20,7 @@
       ],
       "failed": [],
       "startup_blocked": null,
+      "infrastructure_failed": null,
       "severe_timeouts": null,
       "updated_epoch": 1793308081.9903257
     },
@@ -36,6 +37,7 @@
         "v5-cxl-P-d8-n8-r1"
       ],
       "startup_blocked": null,
+      "infrastructure_failed": null,
       "severe_timeouts": null,
       "updated_epoch": 1793324093.3838632
     },
@@ -50,6 +52,7 @@
       ],
       "failed": [],
       "startup_blocked": null,
+      "infrastructure_failed": null,
       "severe_timeouts": null,
       "updated_epoch": 1793340806.5741582
     },
@@ -63,6 +66,7 @@
       ],
       "failed": [],
       "startup_blocked": null,
+      "infrastructure_failed": null,
       "severe_timeouts": [
         "v7-ssd-F-d7-n8-r1"
       ],
@@ -79,6 +83,7 @@
       "startup_blocked": [
         "v8-ssd-P-d6-n8-r1"
       ],
+      "infrastructure_failed": null,
       "severe_timeouts": null,
       "updated_epoch": 1793362613.5797942
     },
@@ -90,21 +95,48 @@
       "startup_blocked": [
         "v9-ssd-P-d6-n8-r1"
       ],
+      "infrastructure_failed": null,
       "severe_timeouts": null,
       "updated_epoch": 1793364268.9105248
     },
     "v10": {
-      "stage": "running-cohort",
-      "active": "v10-ssd-P-d6-n8-r1",
+      "stage": "controller-fault-preserved",
+      "active": null,
       "completed": [],
       "failed": [],
       "startup_blocked": null,
+      "infrastructure_failed": [
+        "v10-ssd-P-d6-n8-r1"
+      ],
       "severe_timeouts": null,
-      "updated_epoch": 1793364320.1928384
+      "updated_epoch": 1793369248.9822419
+    },
+    "v11": {
+      "stage": "failure-needs-immediate-diagnosis",
+      "active": null,
+      "completed": [],
+      "failed": [
+        "v11-ssd-P-d6-n8-r1"
+      ],
+      "startup_blocked": null,
+      "infrastructure_failed": null,
+      "severe_timeouts": null,
+      "updated_epoch": 1793370485.60872
+    },
+    "v12": {
+      "stage": "running-cohort",
+      "active": "v12-ssd-P-d7-n8-r1",
+      "completed": [],
+      "failed": [],
+      "startup_blocked": null,
+      "infrastructure_failed": null,
+      "severe_timeouts": null,
+      "updated_epoch": 1793371020.2603223
     }
   },
   "completed_cohorts": 25,
   "complete_instances": 200,
   "additional_complete_instances_in_stopped_cohorts": 6,
+  "additional_complete_instances_in_invalid_controller_cohorts": 6,
   "note": "Version-separated snapshot; running and unrun points are not successes. Raw binaries/traces/log streams are external."
 }

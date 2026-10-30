@@ -57,6 +57,7 @@ def select_protection(history,target_mib,active):
 
 class Placement:
     busy_retries=0
+    already_off_requests=0
     def __init__(self, group, mode, emit, root=Path('/sys/kernel/mm/damon/admin'), fast_wait_cache=False):
         if mode not in ('cold', 'cold-cache'):
             raise ValueError('unknown SSD placement mode')
@@ -151,6 +152,15 @@ class Placement:
             try:
                 path.write_text(str(value));return
             except OSError as exc:
+                # damon_stop() returns EPERM when kdamond already finished.
+                # Treat only a verified, already-off stop/stat request as done.
+                if path.name=='state' and ((str(value)=='off' and exc.errno in (errno.EPERM,errno.EINVAL)) or
+                        (str(value)=='update_schemes_stats' and exc.errno==errno.EINVAL)):
+                    try:already_off=path.read_text().strip()=='off'
+                    except OSError:already_off=False
+                    if already_off:
+                        Placement.already_off_requests+=1
+                        return
                 if exc.errno!=errno.EBUSY or time.monotonic()>=deadline:raise
                 Placement.busy_retries+=1;time.sleep(.002)
 
@@ -252,6 +262,7 @@ class Placement:
                     selected_protection_bytes=sum(hi-lo for lo,hi in protected),
                     main_monitor_running=self.main_running,per_scope_scan_budget_bytes=budget,
                     transient_sysfs_busy_retries=Placement.busy_retries,
+                    already_off_sysfs_requests=Placement.already_off_requests,
                     scheme_stats_refresh_s=1.,scheme_counters_sampled_lower_bound=True,
                     hot_lru_statistics=self.hot.stats(),
                     native_fallback=fallback, capacity_override=False,

@@ -1,7 +1,7 @@
 # 实验源码与结果
 
 2026-10-30 的当前并发容量实验从 [concurrent](../experiments/concurrent/README.md)
-进入：包含 L0/L1/L2 设置、36 点矩阵、配置化 v10 入口、固定公开 trace 提取工具、
+进入：包含 L0/L1/L2 设置、44 点矩阵、配置化 v12 入口、固定公开 trace 提取工具、
 逐版结果及失败证据。完整复现步骤见 [concurrent-reproduction](../docs/concurrent-reproduction.md)，
 已探索结果见 [并发结果包](../published/concurrent-20261030/README.md)。
 下文描述此前的串行全量实验，不与当前容量探索混算。
