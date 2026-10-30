@@ -23,7 +23,6 @@ Runtime 事件感知资源阶段，在多个 Sandbox 之间分配 DRAM，在每�
 配对 ceiling 修复与无执行时限回放。复现从
 [实验设置与步骤](docs/concurrent-reproduction.md) 开始；
 [结果包](published/concurrent-20261030/README.md) 附逐组矩阵、逐实例指标和 OOM 证据。
-不同冻结版本分别统计；当前嵌套环境的 PEBS 采样未启用，已测路径与限制见结果说明。
 
 ## 源码检查
 
