@@ -1,0 +1,21 @@
+{
+  "version": "host-returns-v20-iowq-cap",
+  "created_epoch": 1793417448.5875309,
+  "binary_sha256": "7db01f875e793e6bf2016367be514a3d75dd96b0e34707d254a9b21435187b26",
+  "previous_v19_binary_sha256": "7035986a2d11bce2ed6bfca76eaf7e0e2ea9af13eca955078e073ca83f50bf65",
+  "modified_source": "block/src/raw_async.rs",
+  "modified_source_sha256": "8339e319d3b1f38ed7fb707d06a5b080a9821b335fdd81470747d68d234b5ff7",
+  "cargo_lock_sha256": "d7351afa23ef27acb96527caac57822a4d5c47bf348929fec83a801ede0baedd",
+  "rust_version": "1.76.0",
+  "target": "x86_64-unknown-linux-musl",
+  "build": "cargo build --offline --locked --release --target x86_64-unknown-linux-musl --bin cloud-hypervisor",
+  "worker_limits": [
+    8,
+    8
+  ],
+  "io_test": {
+    "returncode": 0,
+    "stdout": "\nrunning 1 test\ntest raw_async::tests::capped_workers_preserve_async_write_read_and_fsync ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 36 filtered out; finished in 0.00s\n\n",
+    "stderr": "Warning: Permanently added '[127.0.0.1]:22944' (ED25519) to the list of known hosts.\n"
+  }
+}

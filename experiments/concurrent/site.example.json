@@ -1,6 +1,6 @@
 {
   "lab_root": "/absolute/path/to/owned/PhaseTieing-lab",
-  "run_name": "PhaseTieing-repro-relative-control",
+  "run_name": "PhaseTieing-repro-iowq-cap",
   "dram_gib": [
     7,
     6

@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "ea9b7045ad236ab66f648fc048e2b4baa3c452e9ddf3ae99add85af79e5ad9ce",
-      "bytes": 5194
+      "sha256": "7eadd00a8856250d8c87e773d714fc4733508e96fc7c23545b664765ea8ff049",
+      "bytes": 5377
     },
     {
       "path": "backend/LICENSE",
@@ -583,8 +583,8 @@
     },
     {
       "path": "backend/vmm/block/src/raw_async.rs",
-      "sha256": "d913a3385eea5e636a696a0efa2eabeca36248f253c296872542cced569d15d1",
-      "bytes": 4799
+      "sha256": "8339e319d3b1f38ed7fb707d06a5b080a9821b335fdd81470747d68d234b5ff7",
+      "bytes": 7187
     },
     {
       "path": "backend/vmm/block/src/raw_async_aio.rs",
@@ -2003,8 +2003,8 @@
     },
     {
       "path": "docs/concurrent-reproduction.md",
-      "sha256": "14d9292be212efc489b4ae9fb386af2989eafcb4a96fee64ae347af8ac5ce02f",
-      "bytes": 23216
+      "sha256": "c43cfe29811765ead93aaa2e3b3d678cdf29def8e541bc3d3b80faec05451e55",
+      "bytes": 24947
     },
     {
       "path": "docs/filename-renames.json",
@@ -2018,8 +2018,8 @@
     },
     {
       "path": "docs/verification.md",
-      "sha256": "0d22bdbebc6497bedd6c2eedbd6d1e48a0ee16ba81db7a6ab0330c1d4e9aa074",
-      "bytes": 2980
+      "sha256": "603504a931f0cee1cdfda1751caa1ef33b3f1f17525249c701603d30024d67be",
+      "bytes": 3400
     },
     {
       "path": "evaluation/README.md",
@@ -2158,8 +2158,8 @@
     },
     {
       "path": "experiments/concurrent/README.md",
-      "sha256": "f8406b581d27207630ae00068821ba997faeea0b377e312dbd6106e15a646a0a",
-      "bytes": 2065
+      "sha256": "17091baee4398f0163b046b8ffda59ca600e32761a55d15c015e3cc78d1d650b",
+      "bytes": 2234
     },
     {
       "path": "experiments/concurrent/arrivals.json",
@@ -2198,8 +2198,8 @@
     },
     {
       "path": "experiments/concurrent/site.example.json",
-      "sha256": "d303d895fd16f4f4a1e25b150d1f4a28fdd1e592d39c2ce6bb683a80a2979b57",
-      "bytes": 2038
+      "sha256": "aadcfd911fca699f0ee13d1d5ba88f7cc3d8d7ee91582be09fccae3081d12963",
+      "bytes": 2030
     },
     {
       "path": "experiments/concurrent/snapshots/v10/audit.py",
@@ -2778,6 +2778,136 @@
     },
     {
       "path": "experiments/concurrent/snapshots/v15/verify_topology.py",
+      "sha256": "adebe3399853627df63580701f0eec5cf3a2974426813952b09cb904a0f1af6f",
+      "bytes": 2107
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/audit.py",
+      "sha256": "16b1331d5282ac3777d0400966c013ccd980e80524ba4c6882c42c418e35af60",
+      "bytes": 11732
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/baseline.py",
+      "sha256": "4370032aba75534753b03cd1cbc2cdfc2fe0f1f76a07e8ab8b9672ac2876540c",
+      "bytes": 6831
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/campaign.py",
+      "sha256": "501d15c7fa83ee246ee6df4689d798202f9af5ca3dfb24cb985cabf894993ae2",
+      "bytes": 13728
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/cohort.py",
+      "sha256": "2fd9aab8dbb79b7294ae6fb37a2b7a2e8a096647c9d0bafdcc1f5fd74a01f90a",
+      "bytes": 18997
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/control_timeout.py",
+      "sha256": "8c0644bf43f450c37c4e4ec7387e00449c933ef3409ce41c344b21ccc66fb816",
+      "bytes": 1440
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/deploy.py",
+      "sha256": "1195c2dd93a313c0b7262cd28a3e609ec2d046f13ff19127838a721008c5dcf8",
+      "bytes": 3330
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/environment.py",
+      "sha256": "1e78cc9af37ff0ed375f3ac29208feb05af7898c0632da2e96cacf49f86bf72b",
+      "bytes": 2159
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/global_pool.py",
+      "sha256": "179a4b1f6e46021f8265ff67375ba8200778daf656bb8b1c98e1b10d5faba927",
+      "bytes": 7127
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/guest_state.py",
+      "sha256": "593925af14d161734c3555558eae2e3439e0db1ab598947043f236f9ecb6e4dd",
+      "bytes": 5649
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/host_monitor.py",
+      "sha256": "ecbb2b0edc2ccaa615002caa3e843f5862f9d7c7056767b8aa4e81325457680c",
+      "bytes": 15421
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/kernel_sigsys_probe.py",
+      "sha256": "4962211fa914cfef499e568472838e7cdee91dd0467f258ff900850f406fa4ac",
+      "bytes": 4229
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/make_plans.py",
+      "sha256": "8e3b94ea0d5f54c6f3e0c0ee5fef387bf9693ec857b89989edb877b027c96d14",
+      "bytes": 2671
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/outer.py",
+      "sha256": "518630705fb0102b501d7d2bb7480505671aadf48f23f6967bec83591e02e55f",
+      "bytes": 8462
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/preflight_l1.py",
+      "sha256": "eb63278c6181ae55d952e7603c8253f2d439a457eeb2270a5ee2bc0249d87a7d",
+      "bytes": 1605
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/pressure.py",
+      "sha256": "51652c4aed8e2dd8109085ea1c4f04e3a076c87a1c72fe1f67310f8b1926dbb8",
+      "bytes": 9147
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/resource_window.py",
+      "sha256": "90010d903e28a907394ffe48677949bfe5af5c7649bb8170a65504eb3393528b",
+      "bytes": 672
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/run_single.sh",
+      "sha256": "81eaf4f9d5c79bb697079992371952014b1b5d75efd9687e1648ea482ddf67ef",
+      "bytes": 40244
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/start-vmm-v66-ssd-compact-readguard.sh",
+      "sha256": "0c3684d4d0ca5bcb8466806735bc4a032b01ffed296ea39ff11c4a0068283480",
+      "bytes": 3850
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/start-vmm-v66-ssd-compact.sh",
+      "sha256": "0c3684d4d0ca5bcb8466806735bc4a032b01ffed296ea39ff11c4a0068283480",
+      "bytes": 3850
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/start-vmm-v67-compact-cxl-readguard.sh",
+      "sha256": "0c3684d4d0ca5bcb8466806735bc4a032b01ffed296ea39ff11c4a0068283480",
+      "bytes": 3850
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/start-vmm-v67-compact-cxl.sh",
+      "sha256": "0c3684d4d0ca5bcb8466806735bc4a032b01ffed296ea39ff11c4a0068283480",
+      "bytes": 3850
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/startup_monitor.py",
+      "sha256": "0e0454e46257cb40a75950fd7f96a241117b081bd9d3cc36a1c6125d22bab942",
+      "bytes": 2649
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/test_global_pool.py",
+      "sha256": "322e065e32363f2ae923e2cacf573419c475b2b8e99cda276bd7db30b33f4044",
+      "bytes": 11941
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/test_timeout_policy.py",
+      "sha256": "31b0828b11345cc8c0fa41bbd883624f9c30f9c20be2ab600ffba92422ceddb6",
+      "bytes": 1532
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/timeout_evidence.py",
+      "sha256": "edd13823b0b1868322c704ae82bd1ee8c2af07c2f80afedf1333a37730f5bad9",
+      "bytes": 3436
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v16/verify_topology.py",
       "sha256": "adebe3399853627df63580701f0eec5cf3a2974426813952b09cb904a0f1af6f",
       "bytes": 2107
     },
@@ -3383,8 +3513,8 @@
     },
     {
       "path": "experiments/concurrent/source-provenance.json",
-      "sha256": "673c7a41bd6b3c000f895e57edf1bfcf658ea407913cb3463e0534d49b9237c5",
-      "bytes": 75547
+      "sha256": "b182410a5ae0fdff2748fb1b208ba6d5a307e69baa79ed33b15cab5fd5b5368d",
+      "bytes": 84119
     },
     {
       "path": "experiments/concurrent/templates/deploy.py",
@@ -6073,8 +6203,13 @@
     },
     {
       "path": "published/diagnostics-20261031-sigsys/README.md",
-      "sha256": "b3ddefb1c1a96e79af9586f622a393da578b6a20aa380676ba4abf9cf004f9d3",
-      "bytes": 2183
+      "sha256": "a095f31a010aaa4f770ebd4a81959b7040618dbd2fb2c53704864310bee52fea",
+      "bytes": 3552
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/iowq-cap-io-test.json",
+      "sha256": "7db553d6027fc11932b7dd99ac6149b4d819ec0436ab1aa79cae93433e0a6afe",
+      "bytes": 340
     },
     {
       "path": "published/diagnostics-20261031-sigsys/sigsys-probe-selftest.json",
@@ -6097,6 +6232,11 @@
       "bytes": 69248
     },
     {
+      "path": "published/diagnostics-20261031-sigsys/v15-diagnosis.json",
+      "sha256": "f3f13d41b0c3d8318f3df06b48607bff171496bb4923cdee01be2d5a1c27dbe3",
+      "bytes": 3472
+    },
+    {
       "path": "published/diagnostics-20261031-sigsys/v15-protocol.json",
       "sha256": "76bb63063bcec4a14c3b3855ee3bbb93c1638cbd3654c0c5c693433825a030a4",
       "bytes": 3827
@@ -6105,6 +6245,21 @@
       "path": "published/diagnostics-20261031-sigsys/v15-source-manifest.json",
       "sha256": "e940d468be10132cf62775f09e991290e1b75d45a671902d5569b9538c32cb48",
       "bytes": 69624
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/v16-protocol.json",
+      "sha256": "55915096dba57da41ed03ad20f3df04934443e65c6e28d249221856261666ec0",
+      "bytes": 4127
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/v16-source-manifest.json",
+      "sha256": "7936cc8dae521299b8338641c757c461d513b4af66460c8fe35e50625ecb6b7c",
+      "bytes": 69775
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/v20-vmm-build-proof.json",
+      "sha256": "556a560c4bb30883530ff1a879c00b2cffed61da664b88f59728b5a17280abcd",
+      "bytes": 1088
     },
     {
       "path": "published/v67/case-coverage.csv",
@@ -6283,8 +6438,8 @@
     },
     {
       "path": "tools/concurrent.py",
-      "sha256": "7d2e76ce58950e4ef84aebbe4cd47fd12f6898626f92deb3ed0ceb9ac13296e3",
-      "bytes": 15226
+      "sha256": "7a6d5ea1b1c3807f4eb3021fb35ae8619cf08c5f32a58b932fc9aef59364576b",
+      "bytes": 15391
     },
     {
       "path": "tools/export_concurrent_results.py",

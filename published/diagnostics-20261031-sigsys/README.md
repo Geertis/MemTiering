@@ -18,8 +18,24 @@ v15 改为在独占 L1 的独立 tracefs 实例中探测 `force_sig_seccomp`，�
 |版本|用途|当前结论|
 |---|---|---|
 |v14|slot-0 strace / P6 r1|失败，首次丢失 slot-3；未捕获被拦 syscall，4/8 完成，无 L1 OOM|
-|v15|全 L1 内核信号探针 / P6 r1|独立后台诊断，运行中不计通过；源文件及协议已冻结|
+|v15|全 L1 内核信号探针 / P6 r1|240.050 秒发生真实 L1 OOM，0/8 完成；没有 SIGSYS，探针未丢事件|
+|v16|I/O worker 上限修复 / P6 r1|同资源回归，未完成前不计通过|
 
 相关源码：`experiments/concurrent/diagnostics/`、`experiments/concurrent/snapshots/v15/`。
 正式并发结果仍见 `published/concurrent-20261030/`；v14/v15 不混入其正式矩阵。
 移机的通用入口仍使用 v13；本诊断源码用于审查和在具备相同专属 L1/tracefs 条件下复现，未声称在第二台机器完成运行。
+
+## v15 OOM 与 I/O worker 异常增长
+
+2026-10-31 10:05 停止，轨迹释放 240.050 秒后发生真实 L1 全局 OOM，内核杀死 slot-5 的 VMM（PID 2800）。
+本次探针正常退出，没有 SIGSYS，也没有覆盖或丢失记录，与 v13/v14 的 seccomp 提示分别记录。
+原驱动 result 字段由 l1-oom 被后续 vmm-loss 覆盖；内核日志和 oom_kill=1 是本次原因依据。v16 保留 OOM 的主因优先级。
+
+slot-5 最后可用样本有 5243 个 io_uring worker；故障快照中 slot-0 的总线程达到 6647。
+L1 KernelStack 约 192 MiB；当时受控 payload 预算已降至 0，而非 payload 估计仍约 5529 MiB。
+该估计也包含 Guest 系统等占用，不能将全部数值归因于 worker。
+
+新 VMM 在每个异步 I/O 队列首次提交前使用 IORING_REGISTER_IOWQ_MAX_WORKERS，将 bounded/unbounded 上限分别设为 8。
+保持异步 I/O、队列深度、seccomp、每 Sandbox 4 vCPU/12 GiB 名义内存与共享冷层不变。
+真实异步写入、fsync、读取数据校验及内核限额回读测试已通过；不能以单元测试代替同资源容量回归。
+v16 先运行同配置 P6/r1/N8 回归，保留 SIGSYS 探针；之后的正式比较必须使用同一新 VMM，不与旧版本混合计算性能收益。

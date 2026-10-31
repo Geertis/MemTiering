@@ -1,0 +1,119 @@
+{
+  "version": "v15",
+  "diagnostic_only": true,
+  "formal_performance_eligible": false,
+  "classification": "resource-failure",
+  "primary_reason": "L1 global OOM",
+  "raw_driver_result": "vmm-loss",
+  "release_to_failure_s": 240.05041599273682,
+  "correct_complete_instances": 0,
+  "l1_oom_kill": 1,
+  "kernel_oom": [
+    "[  429.099505] _disk1_q0 invoked oom-killer: gfp_mask=0x40cc0(GFP_KERNEL|__GFP_COMP), order=2, oom_score_adj=0",
+    "[  429.100295] oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=/,mems_allowed=0,global_oom,task_memcg=/PhaseTieing-formal/slot-5,task=cloud-hyperviso,pid=2800,uid=0",
+    "[  429.127463] Out of memory: Killed process 2800 (cloud-hyperviso) total-vm:12622168kB, anon-rss:3168kB, file-rss:296kB, shmem-rss:703908kB, UID:0 pgtables:1592kB oom_score_adj:0"
+  ],
+  "sigsys_event_count": 0,
+  "sigsys_probe_lost_events": 0,
+  "sigsys_probe_returncode": 0,
+  "last_pool": {
+    "budget_mib": 0,
+    "reserve_mib": 368,
+    "resident_mib": {
+      "slot-0": 26,
+      "slot-1": 13,
+      "slot-2": 10,
+      "slot-3": 13,
+      "slot-4": 12,
+      "slot-5": 11,
+      "slot-6": 15,
+      "slot-7": 13
+    },
+    "nonpayload_overhead_mib": 5529.1328125,
+    "safe_payload_budget_mib": 0,
+    "physical_headroom_mib": 259.3125
+  },
+  "last_fresh_thread_samples": [
+    {
+      "lane": 0,
+      "epoch": 1793412292.0267186,
+      "sampled_threads": 82,
+      "sampled_iowq_workers": 66
+    },
+    {
+      "lane": 1,
+      "epoch": 1793412292.0974615,
+      "sampled_threads": 76,
+      "sampled_iowq_workers": 60
+    },
+    {
+      "lane": 2,
+      "epoch": 1793412292.0744534,
+      "sampled_threads": 19,
+      "sampled_iowq_workers": 3
+    },
+    {
+      "lane": 3,
+      "epoch": 1793412292.0719907,
+      "sampled_threads": 77,
+      "sampled_iowq_workers": 61
+    },
+    {
+      "lane": 4,
+      "epoch": 1793412292.0807626,
+      "sampled_threads": 20,
+      "sampled_iowq_workers": 4
+    },
+    {
+      "lane": 5,
+      "epoch": 1793412257.7284834,
+      "sampled_threads": 5259,
+      "sampled_iowq_workers": 5243
+    },
+    {
+      "lane": 6,
+      "epoch": 1793412292.1348798,
+      "sampled_threads": 33,
+      "sampled_iowq_workers": 17
+    },
+    {
+      "lane": 7,
+      "epoch": 1793412292.1461637,
+      "sampled_threads": 73,
+      "sampled_iowq_workers": 57
+    }
+  ],
+  "failure_snapshot_vmm_threads": {
+    "slot-0": [
+      6647
+    ],
+    "slot-1": [
+      1490
+    ],
+    "slot-2": [
+      20
+    ],
+    "slot-3": [
+      1616
+    ],
+    "slot-4": [
+      19
+    ],
+    "slot-5": [],
+    "slot-6": [
+      1386
+    ],
+    "slot-7": [
+      441
+    ]
+  },
+  "l1_kernel_stack_mib": 192.3984375,
+  "evidence_hashes": {
+    "status.json": "86c4efc242d5f5b4a1cf7dbb27dba39643c044288065baca6e3cfab256df8311",
+    "l1-dmesg.log": "e111b442528421e10e4d7cbfdc373a744e91cb5bcdfb1b967bc58a1d8f90401a",
+    "global-pool.jsonl.gz": "fad57c01bb252b6fb04cd52346cdd38a86c786d042d69b5c7cb176aee268e248",
+    "sigsys-events.jsonl.gz": "12fb9aacaf6c54fb474edb948f2bb88628cc0ec7e62c9231088e73d2a755aba5"
+  },
+  "interpretation": "A real L1 OOM, distinct from prior SIGSYS failures. Thousands of io_uring workers are a concrete abnormal growth path. Not all nonpayload overhead is attributable to workers; a same-resource regression must validate the cap.",
+  "next": "v16 P6/r1 regression with IORING_REGISTER_IOWQ_MAX_WORKERS [8,8], same memory, CPU, cold storage and workload; original seccomp and page policy retained."
+}

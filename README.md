@@ -32,6 +32,7 @@ v13 在 36 vCPU / 7 GiB DRAM / 64 GiB SSD、N=8 下，P 三次均 8/8 正确，F
 F 达同重复 P 批次时间两倍仍未完成则记性能超时、强制停止并继续；P 和单工具无限时。
 两策略匹配预留和 ceiling，当前实现与测量限制见复现文档。
 全实例 SIGSYS 取证和完整物理审计窗口修正另见[独立诊断](published/diagnostics-20261031-sigsys/README.md)。
+v15 又记录到真实 L1 OOM，发现单 VMM 数千个 io_uring worker；新增 8/8 worker 限额，实际 I/O 与限额回读测试通过，v16 按相同 6 GiB / N8 资源回归。
 
 ## 源码检查
 

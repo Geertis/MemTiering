@@ -91,7 +91,7 @@ F 不是未经修改的 Linux 或论文原始机制。
 | v13 | 7→6 GiB | SSD × P/F | 3 | 12 | 7 GiB P 三次全通过、F 三次有效两倍截止；6 GiB 首 P 因 VMM SIGSYS 未通过，其余停止 |
 
 累计 56 个计划点（包括历史版本未运行的计划）。禁止将未运行点或仍运行点当作成功，也不能跨版本平均成“三重复”。
-最新通用入口使用 v13 的配对截止及 v11/v12 内存和控制器健康策略；重跑 12/10/8 GiB 将产生新结果，不会重现旧版本的策略语义。
+最新通用入口使用 v16 的 I/O worker 上限与完整物理审计窗口、v13 配对截止及 v11/v12 内存和控制器健康策略；重跑 12/10/8 GiB 将产生新结果，不会重现旧版本的策略语义。
 需要审查旧行为时使用对应 `snapshots/v*/` 和发布协议，不应将旧 OOM 隐藏为最新版本失败。
 
 v6/v7 以 fast 节点实际 managed 容量计算安全预算，扣除运行时非 payload 占用并保留 1 GiB：
@@ -279,3 +279,24 @@ v15 改为 cohort release 至全部完成、性能截止或清理前失败快照
 
 源码见 `experiments/concurrent/diagnostics/` 与 `snapshots/v15/`；
 [诊断证据与限制](../published/diagnostics-20261031-sigsys/README.md) 单独发布，不混入正式并发矩阵。
+
+
+## 9. v15 OOM 与 worker 上限回归
+
+v15 在释放 240.050 秒后发生 L1 全局 OOM，内核杀死 slot-5；本次没有 SIGSYS，探针无丢失。
+最后可用 slot-5 样本中 io_uring worker 达 5243 个；故障快照中 slot-0 总线程为 6647。
+工作负载的受控总预算已降至 0，非 payload 占用仍约 5529 MiB；该值也包括 Guest 系统等开销。
+
+新 VMM 在 `RawFileAsync::new` 中、首次提交之前，通过 IORING_REGISTER_IOWQ_MAX_WORKERS
+将 bounded/unbounded 限额各设为 8；错误直接作为创建失败返回，不静默回到未限制状态。
+此限额遵循内核 I/O 工作队列/NUMA 作用域，不等同于整个 VMM 最多 16 个线程。
+异步 I/O、队列深度、seccomp、内存分层策略、36 vCPU / 6 GiB / 64 GiB SSD 及各 L2 的 4 vCPU / 12 GiB 配置保持一致。
+
+v16 先做 P6/r1/N8 的系统修复回归，保留全 L1 SIGSYS 探针，记录实际 VMM/worker 线程数和 OOM。
+通过单次回归后仍需同一新 VMM 下的 P/F 配对和重复；不能混合旧 VMM 的时延计算策略收益。
+旧 v19 二进制与原始失败点保留，公开仓库只提交源码与二进制哈希。
+
+通用入口已切换到 v16 源码。站点的 `cloud_hypervisor` 外部制品需使用包含 worker 上限的新构建；
+已测新制品身份见 `published/diagnostics-20261031-sigsys/v20-vmm-build-proof.json`，旧 measured-binaries 清单继续描述历史 v19。
+L1 还需可写 tracefs 和 CONFIG_KPROBES/force_sig_seccomp，以保留已自测的全实例 SIGSYS 取证。
+默认通用矩阵仍为 7→6 GiB 各三重复 P/F，测量机当前的 v16 单次 P6 修复回归不填充这些新重复。

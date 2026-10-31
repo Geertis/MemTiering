@@ -55,6 +55,14 @@ pub struct RawFileAsync {
 impl RawFileAsync {
     pub fn new(fd: RawFd, ring_depth: u32) -> std::io::Result<Self> {
         let io_uring = IoUring::new(ring_depth)?;
+        // Buffered image/swap I/O may block on host reclaim. The kernel's
+        // unbounded pool otherwise scales with RLIMIT_NPROC, allowing one VMM
+        // to create thousands of workers under memory pressure. Bound both
+        // pools before the first submission; keep asynchronous I/O and seccomp.
+        let mut previous_worker_limits = [8, 8];
+        io_uring
+            .submitter()
+            .register_iowq_max_workers(&mut previous_worker_limits)?;
         let eventfd = EventFd::new(libc::EFD_NONBLOCK)?;
 
         // Register the io_uring eventfd that will notify when something in
@@ -161,5 +169,59 @@ impl AsyncIo for RawFileAsync {
             .completion()
             .next()
             .map(|entry| (entry.user_data(), entry.result()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs::OpenOptions;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn capped_workers_preserve_async_write_read_and_fsync() {
+        let path = std::env::temp_dir().join(format!(
+            "PhaseTieing-iowq-{}-{}",
+            std::process::id(),
+            SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        let file = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create_new(true)
+            .open(&path)
+            .unwrap();
+        std::fs::remove_file(&path).unwrap();
+        let mut io = RawFileAsync::new(file.as_raw_fd(), 8).unwrap();
+        let mut written = vec![0x5au8; 4096];
+        let input = [libc::iovec {
+            iov_base: written.as_mut_ptr().cast(),
+            iov_len: written.len(),
+        }];
+        io.write_vectored(0, &input, 1).unwrap();
+        io.io_uring.submitter().submit_and_wait(1).unwrap();
+        assert_eq!(io.next_completed_request(), Some((1, 4096)));
+        io.fsync(Some(2)).unwrap();
+        io.io_uring.submitter().submit_and_wait(1).unwrap();
+        assert_eq!(io.next_completed_request(), Some((2, 0)));
+        let mut read = vec![0u8; 4096];
+        let output = [libc::iovec {
+            iov_base: read.as_mut_ptr().cast(),
+            iov_len: read.len(),
+        }];
+        io.read_vectored(0, &output, 3).unwrap();
+        io.io_uring.submitter().submit_and_wait(1).unwrap();
+        assert_eq!(io.next_completed_request(), Some((3, 4096)));
+        assert_eq!(read, written);
+        // After actual ASYNC work, zero requests query the existing pool limits.
+        let mut limits = [0, 0];
+        io.io_uring
+            .submitter()
+            .register_iowq_max_workers(&mut limits)
+            .unwrap();
+        assert_eq!(limits, [8, 8]);
     }
 }
