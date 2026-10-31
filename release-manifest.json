@@ -33,8 +33,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "749e04120638380d70cb4d34c26e98e643c4c69c3d3c8dd32284852124d0f4dc",
-      "bytes": 5065
+      "sha256": "ea9b7045ad236ab66f648fc048e2b4baa3c452e9ddf3ae99add85af79e5ad9ce",
+      "bytes": 5194
     },
     {
       "path": "backend/LICENSE",
@@ -2003,8 +2003,8 @@
     },
     {
       "path": "docs/concurrent-reproduction.md",
-      "sha256": "b2a704d8a0d4b74f27123eee308351f41cc3bedc2ff1c222b0b9cf885590c2cb",
-      "bytes": 22159
+      "sha256": "14d9292be212efc489b4ae9fb386af2989eafcb4a96fee64ae347af8ac5ce02f",
+      "bytes": 23216
     },
     {
       "path": "docs/filename-renames.json",
@@ -2018,8 +2018,8 @@
     },
     {
       "path": "docs/verification.md",
-      "sha256": "56fabb6a2d2efc96057587ec2b63f081c7958e9a7618ecdf2585647549b4a91f",
-      "bytes": 2667
+      "sha256": "0d22bdbebc6497bedd6c2eedbd6d1e48a0ee16ba81db7a6ab0330c1d4e9aa074",
+      "bytes": 2980
     },
     {
       "path": "evaluation/README.md",
@@ -2165,6 +2165,21 @@
       "path": "experiments/concurrent/arrivals.json",
       "sha256": "2e1054a46110f98fd369f2c6178497be66ff3caec7d01b7820c9c0ce429eaff6",
       "bytes": 7957
+    },
+    {
+      "path": "experiments/concurrent/diagnostics/kernel_sigsys_probe.py",
+      "sha256": "4962211fa914cfef499e568472838e7cdee91dd0467f258ff900850f406fa4ac",
+      "bytes": 4229
+    },
+    {
+      "path": "experiments/concurrent/diagnostics/probe_sigsys.c",
+      "sha256": "4fa01ebb543948b518890f20acd4fcaab74ece0f3dba1c39cde1fdb1b49010eb",
+      "bytes": 1027
+    },
+    {
+      "path": "experiments/concurrent/diagnostics/resource_window.py",
+      "sha256": "90010d903e28a907394ffe48677949bfe5af5c7649bb8170a65504eb3393528b",
+      "bytes": 672
     },
     {
       "path": "experiments/concurrent/environment.json",
@@ -2633,6 +2648,136 @@
     },
     {
       "path": "experiments/concurrent/snapshots/v13/verify_topology.py",
+      "sha256": "adebe3399853627df63580701f0eec5cf3a2974426813952b09cb904a0f1af6f",
+      "bytes": 2107
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/audit.py",
+      "sha256": "39f52f501e992007bb49d8e8c95d61836fe4ad55a6d325c9acd8a13eaaa7f27f",
+      "bytes": 11736
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/baseline.py",
+      "sha256": "4370032aba75534753b03cd1cbc2cdfc2fe0f1f76a07e8ab8b9672ac2876540c",
+      "bytes": 6831
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/campaign.py",
+      "sha256": "501d15c7fa83ee246ee6df4689d798202f9af5ca3dfb24cb985cabf894993ae2",
+      "bytes": 13728
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/cohort.py",
+      "sha256": "e2abb419fc0ba64ff70deb7291db1e82abff77175612e36a9b09ad8a890d7ea4",
+      "bytes": 18909
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/control_timeout.py",
+      "sha256": "8c0644bf43f450c37c4e4ec7387e00449c933ef3409ce41c344b21ccc66fb816",
+      "bytes": 1440
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/deploy.py",
+      "sha256": "6b2e8d837a211dbd259ad9c68f1f9d86a2e45642ff5d23d2278476e0b83e6d9c",
+      "bytes": 3321
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/environment.py",
+      "sha256": "1e78cc9af37ff0ed375f3ac29208feb05af7898c0632da2e96cacf49f86bf72b",
+      "bytes": 2159
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/global_pool.py",
+      "sha256": "179a4b1f6e46021f8265ff67375ba8200778daf656bb8b1c98e1b10d5faba927",
+      "bytes": 7127
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/guest_state.py",
+      "sha256": "593925af14d161734c3555558eae2e3439e0db1ab598947043f236f9ecb6e4dd",
+      "bytes": 5649
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/host_monitor.py",
+      "sha256": "ecbb2b0edc2ccaa615002caa3e843f5862f9d7c7056767b8aa4e81325457680c",
+      "bytes": 15421
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/kernel_sigsys_probe.py",
+      "sha256": "4962211fa914cfef499e568472838e7cdee91dd0467f258ff900850f406fa4ac",
+      "bytes": 4229
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/make_plans.py",
+      "sha256": "8e3b94ea0d5f54c6f3e0c0ee5fef387bf9693ec857b89989edb877b027c96d14",
+      "bytes": 2671
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/outer.py",
+      "sha256": "f3e5cd8a82dd0dea89a35241fed73108f639ef2286b9006cdff46a6fd2a7ed87",
+      "bytes": 8466
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/preflight_l1.py",
+      "sha256": "9f008307785783550fce69b363e1a7b9016534256adb9c5bd224b8f8c9c1c56f",
+      "bytes": 1609
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/pressure.py",
+      "sha256": "8e1be61f3ddafd7888846b12b5237363f4a994c2b8be945d580c2c156b769149",
+      "bytes": 9016
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/resource_window.py",
+      "sha256": "90010d903e28a907394ffe48677949bfe5af5c7649bb8170a65504eb3393528b",
+      "bytes": 672
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/run_single.sh",
+      "sha256": "f251b5bb0767d6c2480f0f4a89e514f3dbe88900469f3da909bfd342d8390db2",
+      "bytes": 40239
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/start-vmm-v66-ssd-compact-readguard.sh",
+      "sha256": "56be0e8e48bb42e8fb6e2c5a626679c4d39745e92d03a12785b54144b3f090df",
+      "bytes": 3841
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/start-vmm-v66-ssd-compact.sh",
+      "sha256": "56be0e8e48bb42e8fb6e2c5a626679c4d39745e92d03a12785b54144b3f090df",
+      "bytes": 3841
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/start-vmm-v67-compact-cxl-readguard.sh",
+      "sha256": "56be0e8e48bb42e8fb6e2c5a626679c4d39745e92d03a12785b54144b3f090df",
+      "bytes": 3841
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/start-vmm-v67-compact-cxl.sh",
+      "sha256": "56be0e8e48bb42e8fb6e2c5a626679c4d39745e92d03a12785b54144b3f090df",
+      "bytes": 3841
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/startup_monitor.py",
+      "sha256": "0e0454e46257cb40a75950fd7f96a241117b081bd9d3cc36a1c6125d22bab942",
+      "bytes": 2649
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/test_global_pool.py",
+      "sha256": "322e065e32363f2ae923e2cacf573419c475b2b8e99cda276bd7db30b33f4044",
+      "bytes": 11941
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/test_timeout_policy.py",
+      "sha256": "31b0828b11345cc8c0fa41bbd883624f9c30f9c20be2ab600ffba92422ceddb6",
+      "bytes": 1532
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/timeout_evidence.py",
+      "sha256": "edd13823b0b1868322c704ae82bd1ee8c2af07c2f80afedf1333a37730f5bad9",
+      "bytes": 3436
+    },
+    {
+      "path": "experiments/concurrent/snapshots/v15/verify_topology.py",
       "sha256": "adebe3399853627df63580701f0eec5cf3a2974426813952b09cb904a0f1af6f",
       "bytes": 2107
     },
@@ -3238,8 +3383,8 @@
     },
     {
       "path": "experiments/concurrent/source-provenance.json",
-      "sha256": "a3f99234d440200f8c95c4d0224bf07397932ff7eefbe0c4a5a67215d48e6794",
-      "bytes": 66975
+      "sha256": "673c7a41bd6b3c000f895e57edf1bfcf658ea407913cb3463e0534d49b9237c5",
+      "bytes": 75547
     },
     {
       "path": "experiments/concurrent/templates/deploy.py",
@@ -5927,6 +6072,41 @@
       "bytes": 3840
     },
     {
+      "path": "published/diagnostics-20261031-sigsys/README.md",
+      "sha256": "b3ddefb1c1a96e79af9586f622a393da578b6a20aa380676ba4abf9cf004f9d3",
+      "bytes": 2183
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/sigsys-probe-selftest.json",
+      "sha256": "60e1e399766471b81dc6b08d21a04840805a36a6d5859bd0d37156733a2ad321",
+      "bytes": 939
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/v14-diagnosis.json",
+      "sha256": "794f2098aecc7c6e6d2d2663f929fb4823a611f55c8f3a5bbe6d0672d54d9221",
+      "bytes": 1240
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/v14-protocol.json",
+      "sha256": "0dae088852e148fcf0c8a0e19741dae6cf5c5db5301f2fc1114be4f31b6626a0",
+      "bytes": 3769
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/v14-source-manifest.json",
+      "sha256": "3709e9fde9412e9960f397768cfd5a1c91178643deda00c0e36e9e3b0d59269d",
+      "bytes": 69248
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/v15-protocol.json",
+      "sha256": "76bb63063bcec4a14c3b3855ee3bbb93c1638cbd3654c0c5c693433825a030a4",
+      "bytes": 3827
+    },
+    {
+      "path": "published/diagnostics-20261031-sigsys/v15-source-manifest.json",
+      "sha256": "e940d468be10132cf62775f09e991290e1b75d45a671902d5569b9538c32cb48",
+      "bytes": 69624
+    },
+    {
       "path": "published/v67/case-coverage.csv",
       "sha256": "f6544a9e8d818f22d6ff43d1028b9371c5d17de0cacba561d6883998799d079c",
       "bytes": 43426
@@ -6085,6 +6265,16 @@
       "path": "tests/test_reporting.py",
       "sha256": "99fba39aa0752b187567ad4a7be6d3998801f5ad541e802b4517bac632405596",
       "bytes": 7883
+    },
+    {
+      "path": "tests/test_resource_window.py",
+      "sha256": "e138996ce0e5e1de927403e01f40ac45d210065f75789cbf29af514c119e8675",
+      "bytes": 1264
+    },
+    {
+      "path": "tests/test_sigsys_probe.py",
+      "sha256": "6bf3b8b02049a3c2582b1338bfc508560fe9e169c34c2ae3266d85eaf0add4ae",
+      "bytes": 882
     },
     {
       "path": "tools/check_release.py",

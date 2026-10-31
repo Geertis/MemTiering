@@ -1,0 +1,66 @@
+{
+  "version": "v14-seccomp-diagnostic-only",
+  "created_epoch": 1793391195.084194,
+  "authorization": "Existing instruction to diagnose any failure and optimize system problems immediately.",
+  "initial": {
+    "n": 8,
+    "vcpus": 36,
+    "dram_gib": 7,
+    "cxl_gib": 0,
+    "aggregate_ssd_swap_gib": 64,
+    "guest_vcpus": 4,
+    "guest_nominal_gib": 12
+  },
+  "treatments": [
+    "PhaseTieing-SSD",
+    "same-budget phase-blind equal-share SSD"
+  ],
+  "cold_resources": "64GiB shared per cohort, never per VM; CXL adds real physical RAM; SSD is storage",
+  "global_quota": "existing waterfill + settle_grants, guest grants delivered over existing telemetry channel; credit comes from actual controlled DRAM residency",
+  "pressure": "per-node fast memory use, controlled residency, PSI, reclaim; compare same medium/capacity/layout",
+  "no_timeouts": false,
+  "stop_on_anomaly": true,
+  "known_limit": "nested PEBS unsupported; no claim of sampled promotion/exchange unless measured",
+  "old_baseline": "v3 completed cohorts retained only as correctness and performance references",
+  "scan_dram_gib": [
+    6
+  ],
+  "scan_repetitions": 1,
+  "scope": "Only P6 r1 N8 reproducer; strace -ff trace=none signal=SIGSYS on lane0, unchanged seccomp filter; no change in memory/controller code",
+  "comparison": "P/F use the same v11 implementation and matched scaled reserve/payload ceiling; 7GiB validates a boundary neighbor, does not prove a universal capacity limit.",
+  "known_measurement_limit": "Version v10 reserve differs from earlier fixed 1GiB versions; do not pool performance across versions.",
+  "previous_completed": "v11: 6GiB SSD P global L1 OOM at 449.135s after release; controllers alive with fresh heartbeats, no L2 memcg OOM.",
+  "regression": "8GiB CXL OOM fixed by adaptive managed-capacity guard in v6; v7 increases pressure",
+  "common_guard": "Managed fast capacity, runtime nonpayload occupancy, paired scaled reserve; shrink immediately, grow only on observed physical headroom; settle physical credit for both policies.",
+  "control_label": "F: phase-blind equal share under same common host reserve guard; not the immutable-v5 static-quota treatment",
+  "previous_version": "/r0/home/geerties/HW/Demeter/experiments/agentcgroup-demeter/results/PhaseTieing-concurrent-20261031-v13-relative-control",
+  "numerator_definition": "DRAM-only denominator; CXL/SSD capacity ratios separate; offline host numerator still under profiling review",
+  "code_delta": "Same v11/v12 memory and controller-health implementation; F-only paired 2x batch cutoff and bounded timeout evidence collection.",
+  "operational_stop_policy": "P and each tool unlimited. Unfinished F cohort at 2x same-repetition P release-to-all-done duration is right-censored and forcibly stopped; expected performance timeout continues queue. OOM/controller/semantic faults stop for diagnosis.",
+  "reserve_policy": {
+    "mode": "scaled",
+    "fraction": "1/16 managed DRAM",
+    "granularity_mib": 16,
+    "minimum_mib": 256,
+    "maximum_mib": 1024,
+    "paired": true
+  },
+  "controller_health": {
+    "required": true,
+    "maximum_credit_sample_age_s": 5,
+    "unresponsive_heartbeat_s": 30,
+    "process_identity": "PID+start ticks; reject zombie/reused PID"
+  },
+  "control_timeout": {
+    "factor": 2,
+    "reference": "completed-valid P with identical medium,DRAM,N,seed,slots and repetition",
+    "metric": "all_done_epoch minus release_epoch",
+    "clock": "monotonic F elapsed after cohort release",
+    "scope": "F cohort only",
+    "completion_precedence": true,
+    "failed_reference": "do not run F",
+    "observation": "record actual cutoff separately; do not impute finite completion time"
+  },
+  "diagnostic_only": true,
+  "formal_performance_eligible": false
+}

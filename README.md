@@ -31,6 +31,7 @@ v13 在 36 vCPU / 7 GiB DRAM / 64 GiB SSD、N=8 下，P 三次均 8/8 正确，F
 6 GiB 首 P 因 slot-0 VMM 打印 seccomp/SIGSYS 信息后退出，本次无 L1 OOM；未计通过，独立诊断不纳入正式性能。
 F 达同重复 P 批次时间两倍仍未完成则记性能超时、强制停止并继续；P 和单工具无限时。
 两策略匹配预留和 ceiling，当前实现与测量限制见复现文档。
+全实例 SIGSYS 取证和完整物理审计窗口修正另见[独立诊断](published/diagnostics-20261031-sigsys/README.md)。
 
 ## 源码检查
 

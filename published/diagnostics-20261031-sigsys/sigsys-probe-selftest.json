@@ -1,0 +1,28 @@
+{
+  "test": "owned-L1 process-local getpid SIGSYS",
+  "passed": true,
+  "probe_stdout": "EXPECTED_SIGSYS syscall=39 arch=c000003e\n",
+  "seccomp_events": [
+    {
+      "epoch": 1793411678.3703434,
+      "raw": "           <...>-1271529 [009] ..... 20407.993547: trap: (force_sig_seccomp+0x4/0xc0) syscall=39 reason=0 fatal=0",
+      "syscall": 39,
+      "reason": 0,
+      "fatal": 0,
+      "comm": "<...>",
+      "tid": 1271529
+    }
+  ],
+  "probe_setup": {
+    "pid": 1271528,
+    "trace_instance": "/sys/kernel/tracing/instances/PhaseTieing_SIGSYS_1271528",
+    "event": "PhaseTieing_SIGSYS_1271528/trap",
+    "function": "force_sig_seccomp",
+    "buffer_kib_per_cpu": 16,
+    "seccomp_filters_changed": false,
+    "ptrace": false
+  },
+  "collector_exit_code": 0,
+  "note": "This validates the new probe, not a diagnosis of the VMM syscall.",
+  "raw_receipt_sha256": "3166efa4dc368248c567b588360c97dbeadf71b95604149cdf94c3d4b6212ec5"
+}

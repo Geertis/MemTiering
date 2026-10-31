@@ -264,3 +264,18 @@ F 超时还保存 `control-timeout.json`、`cutoff-resources.json`、`cutoff-con
 `snapshot.json` 提供截取时间；`protocols/` 和 `source-manifests/` 保留每版协议和原始源文件哈希。
 原始完整日志在测量机保留，发布摘要附有其 SHA256；Git 不包含 VM 磁盘、原始长日志和凭据。
 源码、测量制品与可复现资产的不同身份不能用同一 SHA 混写。
+
+
+## 8. SIGSYS 诊断与物理窗口修正
+
+v14 仅跟踪 slot-0；释放 7190.052 秒后首次丢失 slot-3，slot-3/4 日志有 seccomp 提示。
+4/8 完整结果通过、L1 OOM 计数为 0；未捕获被拦调用。此诊断不计正式性能，不声称 6 GiB 已成功或容量必然不足。
+v15 使用独立 L1 tracefs 实例的 `force_sig_seccomp` 探针，覆盖全部 VMM，记录 syscall/TID，无 ptrace。
+过滤规则和内存算法不变，先自测捕获 syscall=39，再启动专属 P6/r1 复现。
+
+v14 原物理审计只覆盖完整轨迹的较早窗口，导致 minimum_live_vmms=8 漏掉后期 VMM 丢失。
+v15 改为 cohort release 至全部完成、性能截止或清理前失败快照的完整区间；退出清理不计入业务窗口。
+原审计文件不倒改；失败身份由当时的资源快照补充，首次丢失为 slot-3。
+
+源码见 `experiments/concurrent/diagnostics/` 与 `snapshots/v15/`；
+[诊断证据与限制](../published/diagnostics-20261031-sigsys/README.md) 单独发布，不混入正式并发矩阵。

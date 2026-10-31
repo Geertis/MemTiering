@@ -1,0 +1,35 @@
+{
+  "version": "v14",
+  "diagnostic_only": true,
+  "formal_performance_eligible": false,
+  "result": "infrastructure-vmm-sigsys",
+  "n": 8,
+  "dram_gib": 6,
+  "cold_medium": "ssd",
+  "cold_gib": 64,
+  "l1_vcpus": 36,
+  "correct_complete_instances": 4,
+  "l1_oom_kill": 0,
+  "release_to_first_vmm_loss_s": 7190.052246809006,
+  "missing_at_first_failure": [
+    "slot-3"
+  ],
+  "seccomp_message_lanes": [
+    3,
+    4
+  ],
+  "strace_lanes": [
+    0
+  ],
+  "blocked_syscall_known": false,
+  "raw_audit_minimum_live_vmms": 8,
+  "original_audit_scope": "Only complete-instance windows; misses the late VMM loss. The first-failure snapshot is authoritative for lost VMM identity.",
+  "evidence_hashes": {
+    "status.json": "f48b5c9f960851841af8dd70fba41823e745a0fa8e95e5f443cea6888f51b327",
+    "audit.json": "9c5f78a1972d39d033256f66a58b92dc768d9c278eda8dec30589788c54af59c",
+    "l1-dmesg.log": "a633930ce01240fb18009663eac2af1016c7717679bc83a3be8dbce5e5a92d15",
+    "slot-3/vm.log": "8aa0b91065faee3d90a1006762e61a30eff3ef21737468aa4a63363399fba55c",
+    "slot-4/vm.log": "609a9151abec3ce5d454464ff40f63340eb93d3b0734d2880b8d4492b7e7fac5",
+    "l1-resources.jsonl.gz": "af8e1cfa3daafc04ef32d6193f1583ae6b7cbd8465f610885dde61f4f24d4e45"
+  }
+}
